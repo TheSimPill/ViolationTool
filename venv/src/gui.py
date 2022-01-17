@@ -1,16 +1,27 @@
-from email.mime import image
 import tkinter as tk
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
+import sys, os
+
+def resource_path(relative_path):
+    """ Get the absolute path to the resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 root = tk.Tk()
-root.title = "Nursing Home Inspect Scraper"
-canvas = tk.Canvas(root, width=600, height=400)
+root.title("NHI Scraper")
+startpage = tk.Frame(root, width=600, height=400)
 # Splits canvas into 3 identical invisible elements
-canvas.grid(columnspan=3, rowspan=3)
+startpage.grid(columnspan=3, rowspan=3)
 
 # Logo
-logo = Image.open("../logo.png")
+logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
 logo = ImageTk.PhotoImage(logo)
 logo_label = tk.Label(image=logo)
 logo_label.image = logo
