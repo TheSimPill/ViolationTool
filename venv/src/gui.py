@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
+import src.nhi_functions as nhi
   
  
 LARGEFONT =("Verdana", 35)
@@ -29,7 +31,7 @@ class tkinterApp(tk.Tk):
   
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1, Page2):
+        for F in (StartPage, DownloadPage, DownloadingPage, Page2):
   
             frame = F(container, self)
   
@@ -48,12 +50,10 @@ class tkinterApp(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
   
-# first window frame startpage
-  
+# Startpage
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
 
         # Logo
         logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
@@ -69,7 +69,7 @@ class StartPage(tk.Frame):
 
         # Yes button
         browse_text = tk.StringVar()
-        yes_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(Page1), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        yes_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(DownloadPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         browse_text.set("Yes")
         yes_btn.grid(column=1, row=2, pady=10)
 
@@ -79,18 +79,14 @@ class StartPage(tk.Frame):
         browse_text.set("No")
         no_btn.grid(column=3, row=2, pady=10)
 
-        
   
-  
-          
-  
-  
-# second window frame page1
-class Page1(tk.Frame):
-     
+# Download page
+class DownloadPage(tk.Frame):
     def __init__(self, parent, controller):
          
         tk.Frame.__init__(self, parent)
+        self.controller = controller
+
         # Logo
         logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)
@@ -100,17 +96,50 @@ class Page1(tk.Frame):
          
         # Instructions
         global instructions
-        instructions = ttk.Label(self, text="Choose folder to save to", font=("Times", 15))
+        instructions = ttk.Label(self, text="Choose folder to save to and download will start", font=("Times", 15))
         instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        # Instructions line 2
+        instructions2 = ttk.Label(self, text="Screen will update when finished", font=("Times", 15))
+        instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
 
         # Download button
         browse_text = tk.StringVar()
-        dl_btn = tk.Button(self, command=lambda:controller.show_frame(StartPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        dl_btn.grid(column=2, row=2, pady=10)
+        self.dl_btn = tk.Button(self, command=lambda:self.open_file(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn.grid(column=2, row=3, pady=10)
         browse_text.set("Browse")
-  
-  
-  
+
+    # Choose save location and start download
+    def open_file(self):
+        dir = askdirectory()
+        self.dl_btn.grid_forget()
+        self.controller.show_frame(DownloadingPage)
+
+        self.download(dir)
+    
+    def download(self, dir):
+        self.update_idletasks()
+        nhi.download(dir)
+            
+
+class DownloadingPage(tk.Frame):
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+
+        # Logo
+        logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
+        logo = ImageTk.PhotoImage(logo)
+        logo_label = ttk.Label(self, image=logo)
+        logo_label.image = logo
+        logo_label.grid(column=1, row=0, columnspan=3)
+        
+        # Instructions
+        global instructions
+        instructions = ttk.Label(self, text="Download in progress", font=("Times", 15))
+        instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
   
 # third window frame page2
 class Page2(tk.Frame):
@@ -122,7 +151,7 @@ class Page2(tk.Frame):
         # button to show frame 2 with text
         # layout2
         button1 = ttk.Button(self, text ="Page 1",
-                            command = lambda : controller.show_frame(Page1))
+                            command = lambda : controller.show_frame(DownloadPage))
      
         # putting the button in its place by
         # using grid
