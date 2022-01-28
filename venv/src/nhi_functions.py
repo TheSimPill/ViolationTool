@@ -43,22 +43,14 @@ def download(save_path):
 def parse_data(save_path):
     files = os.listdir(save_path)
     states = {}
-    start_time = time.time()
-    numtoload = input("How many Workbooks do you want to load? ")
-    if numtoload == " " or int(numtoload) > len(files) or int(numtoload) < 1:
-        print("Total Workbooks to load: " + str(len(files)))
-        numtoload = len(files)
-    else: 
-        print("Total Workbooks to load: " + str(numtoload))
+    start_time = time.time() 
+    numtoload = len(files)
+    print("Total Workbooks to load: " + str(numtoload))
 
-    loaded = 0
     for file in files:
-        if loaded >= numtoload:
-            break
         xlsx_file = Path(save_path, file)
         start = time.time()
         wb = openpyxl.load_workbook(xlsx_file)
-        loaded += 1
 
         # Search rows for relevant tags
         for sheet in wb:
@@ -85,14 +77,7 @@ def parse_data(save_path):
 
         print("Workbook parsed in " + str(time.time() - start) + " seconds")
 
-    for state in states.keys():
-        print(state + ": " + str(len(states[state])))
-
     print("Parsed Raw Data in " + str(time.time() - start_time) + " seconds")
-
-    # Makes sure no duplicate cases
-    for state in states:
-        states[state] = list(set(states[state]))
     return states
 
 # Match up incidents with corresponding fines, returns -> 
@@ -105,7 +90,7 @@ def parse_data(save_path):
     State hash: { "ST" : (facility, date, writeup, fine) list}
     Fine hash: { "ST" : (facility, date, fine) list }
 '''
-def match_fines(states_hash, fines_hash, save):
+def match_fines(states_hash, fines_hash):
     for state in fines_hash.keys():
         for fine_incident_tuple in fines_hash[state]:
             if state in states_hash.keys():
@@ -116,16 +101,11 @@ def match_fines(states_hash, fines_hash, save):
                         temp = list(incident_tuple)
                         temp[3] = fine_incident_tuple[2]
                         states_hash[state][i] = tuple(temp)
-
-    if save:
-        with open("parsed_state_data.pkl", 'wb') as outp:
-            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
-            print("Successfully matched fines and saved states hash")
     
     return states_hash
         
 # Matches url hash returned from url_scraper with states_hash
-def match_urls(states_hash, url_hash, save):
+def match_urls(states_hash, url_hash):
     for state in states_hash.keys():
         for i in range(len(states_hash[state])):
             if state in url_hash.keys():
@@ -135,11 +115,6 @@ def match_urls(states_hash, url_hash, save):
                         temp = list(incident_tuple)
                         temp[-1] = truple[-1]
                         states_hash[state][i] = tuple(temp)
-
-    if save:
-        with open("parsed_state_data.pkl", 'wb') as outp:
-            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
-            print("Successfully matched urls and saved states hash")
 
 # Trys connecting to a website with proxy, refreshes proxy if needed
 # Used to try and minimize number of proxies used and therefore API calls
