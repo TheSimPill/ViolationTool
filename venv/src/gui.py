@@ -6,7 +6,9 @@ from PIL import Image, ImageTk
 import src.nhi_functions as nhi
 import src.fine_scraper as scraper
 from time import sleep
-import pickle
+import pickle, time
+import requests, os, zipfile
+import threading
   
  
 LARGEFONT = ("Verdana", 35)
@@ -101,12 +103,12 @@ class DownloadPage(tk.Frame):
         self.controller = controller
          
         # Instructions
-        instructions = ttk.Label(self, text="Choose folder to save to and download will start", font=("Times", 15))
-        instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        self.instructions = ttk.Label(self, text="Choose folder to save to and download will start", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        instructions2 = ttk.Label(self, text="Screen will update when processing is finished", font=("Times", 15))
-        instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        self.instructions2 = ttk.Label(self, text="Screen will update when processing is finished", font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Download button
         browse_text = tk.StringVar()
@@ -118,16 +120,56 @@ class DownloadPage(tk.Frame):
     def download_and_parse(self):
         global filepath
         global states_hash
-        #filepath = askdirectory()
-        #nhi.download(filepath)
+        filepath = askdirectory()
 
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                self.func(filepath)
+
+        thread(self.download).start()
+        
+    def download(self, save_path):
+        self.instructions.config(text="Download Started")
+        self.instructions2.grid_forget()
+        self.dl_btn.grid_forget()
         '''
-        states_hash = nhi.parse_data(filepath)
-        with open("./hashes/states_hash.pkl", 'wb') as outp:
+        url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
+        r = requests.get(url, allow_redirects=True)
+
+        filename = 'Raw_Data.zip'
+        filepath = os.path.join(save_path, filename)
+        open(filepath, 'wb').write(r.content)
+        self.instructions.config(text="Download Done")
+
+        zip_path = save_path + '/Raw_Data.zip'
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(save_path)
+        self.instructions.config(text="Unzip Done")
+
+        files_in_directory = os.listdir(save_path)
+        filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
+        for file in filtered_files:
+            path_to_file = os.path.join(save_path, file)
+            os.remove(path_to_file)
+        self.instructions.config(text="Deleted Extra Files")
+        '''
+        
+        global states_hash
+        self.instructions.config(text="Parsing Data")
+        states_hash = nhi.parse_data(self, save_path)
+
+        with open("./hashes_and_pages/states_hash.pkl", 'wb') as outp:
             pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
+        self.instructions.config(text="Finished Parsing")
+        time.sleep(5)
         '''
         #with open(filepath + "/states_hash.pkl", 'rb') as inp:
          #   states_hash = pickle.load(inp)
+        '''
         self.controller.show_frame(WebscrapingChoicePage)
 
             

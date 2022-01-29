@@ -12,7 +12,7 @@ from email.message import EmailMessage
 
 # Download raw data if user says yes, returns ->
 # Nothing
-def download(save_path):
+def download(frame, save_path):
 	print('Download started')
 	url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
 	r = requests.get(url, allow_redirects=True)
@@ -40,11 +40,12 @@ def download(save_path):
     Cases that took place on the same date at the same facility
     are each counted as their own incident in the excel raw data.
 '''
-def parse_data(save_path):
+def parse_data(frame, save_path):
     files = os.listdir(save_path)
     states = {}
     start_time = time.time() 
     numtoload = len(files)
+    frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
     print("Total Workbooks to load: " + str(numtoload))
 
     for file in files:
@@ -75,9 +76,12 @@ def parse_data(save_path):
                             else:
                                 states[state] = [(facility, date, writeup, "No Fine", severity, tag, "No url")]
 
+        frame.instructions.config(text="Workbook parsed in " + str(time.time() - start) + " seconds")
         print("Workbook parsed in " + str(time.time() - start) + " seconds")
 
+    frame.instructions.config("Parsed Raw Data in " + str(time.time() - start_time) + " seconds")
     print("Parsed Raw Data in " + str(time.time() - start_time) + " seconds")
+    time.sleep(3)
     return states
 
 # Match up incidents with corresponding fines, returns -> 
