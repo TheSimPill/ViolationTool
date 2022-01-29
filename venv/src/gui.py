@@ -6,7 +6,9 @@ from PIL import Image, ImageTk
 import src.nhi_functions as nhi
 import src.fine_scraper as scraper
 from time import sleep
-import pickle
+import pickle, time
+import requests, os, zipfile
+import threading
   
  
 LARGEFONT = ("Verdana", 35)
@@ -96,40 +98,45 @@ class StartPage(tk.Frame):
 
 # Download page
 class DownloadPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
          
         # Instructions
-        instructions = ttk.Label(self, text="Choose folder to save to and download will start", font=("Times", 15))
-        instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        thisframe.instructions = ttk.Label(thisframe, text="Choose folder to save to and download will start", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        instructions2 = ttk.Label(self, text="Screen will update when processing is finished", font=("Times", 15))
-        instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        thisframe.instructions2 = ttk.Label(thisframe, text="Screen will update when processing is finished", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Download button
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.download_and_parse(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        self.dl_btn.grid(column=2, row=3, pady=10)
+        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.download_and_parse(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn.grid(column=2, row=3, pady=10)
         browse_text.set("Browse")
 
     # Choose save location and start download
-    def download_and_parse(self):
+    def download_and_parse(thisframe):
         global filepath
+        filepath = askdirectory()
+
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                self.func(thisframe, filepath)
+
+        thread(nhi.download).start()
+
+    def advance_page(thisframe):
         global states_hash
-        #filepath = askdirectory()
-        #nhi.download(filepath)
-
-        '''
-        states_hash = nhi.parse_data(filepath)
-        with open("./hashes/states_hash.pkl", 'wb') as outp:
-            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
-        '''
-        #with open(filepath + "/states_hash.pkl", 'rb') as inp:
-         #   states_hash = pickle.load(inp)
-        self.controller.show_frame(WebscrapingChoicePage)
-
+        with open(filepath + "/hashes_and_pages/states_hash.pkl", 'rb') as inp:
+            states_hash = pickle.load(inp)
+            
+        thisframe.controller.show_frame(WebscrapingChoicePage)
             
 # Webscraping choice page - shown after downloading raw data if yes is chosen on initial screen
 class WebscrapingChoicePage(tk.Frame):
