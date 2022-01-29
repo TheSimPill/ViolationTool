@@ -1,3 +1,4 @@
+from genericpath import exists
 from openpyxl.descriptors.base import String
 import openpyxl.workbook
 from openpyxl.workbook.workbook import Workbook
@@ -13,26 +14,34 @@ from email.message import EmailMessage
 # Download raw data if user says yes, returns ->
 # Nothing
 def download(frame, save_path):
-	print('Download started')
-	url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
-	r = requests.get(url, allow_redirects=True)
+    frame.instructions.config(text="Download Started")
+    frame.instructions2.grid_forget()
+    frame.dl_btn.grid_forget()
+    time.sleep(2)
+    '''
+    url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
+    r = requests.get(url, allow_redirects=True)
 
-	filename = 'Raw_Data.zip'
-	filepath = os.path.join(save_path, filename)
-	open(filepath, 'wb').write(r.content)
-	print("Download Done")
+    filename = 'Raw_Data.zip'
+    filepath = os.path.join(save_path, filename)
+    open(filepath, 'wb').write(r.content)
+    frame.instructions.config(text="Download Done")
 
-	zip_path = save_path + '/Raw_Data.zip'
-	with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-		zip_ref.extractall(save_path)
-	print("Unzip Done")
+    zip_path = save_path + '/Raw_Data.zip'
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(save_path)
+    frame.instructions.config(text="Unzip Done")
 
-	files_in_directory = os.listdir(save_path)
-	filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
-	for file in filtered_files:
-		path_to_file = os.path.join(save_path, file)
-		os.remove(path_to_file)
-	print("Deleted Extra Files")
+    files_in_directory = os.listdir(save_path)
+    filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
+    for file in filtered_files:
+        path_to_file = os.path.join(save_path, file)
+        os.remove(path_to_file)
+    frame.instructions.config(text="Deleted Extra Files")
+    '''
+    frame.instructions.config(text="Parsing Data")
+    time.sleep(3)
+    parse_data(frame, save_path)
 
 # Parses raw data, returns -> 
 # {ST : (facility, date, writeup, fine, severity, tag)}
@@ -44,10 +53,12 @@ def parse_data(frame, save_path):
     files = os.listdir(save_path)
     states = {}
     start_time = time.time() 
+    '''
     numtoload = len(files)
     frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
     print("Total Workbooks to load: " + str(numtoload))
 
+    counter = 1
     for file in files:
         xlsx_file = Path(save_path, file)
         start = time.time()
@@ -76,13 +87,21 @@ def parse_data(frame, save_path):
                             else:
                                 states[state] = [(facility, date, writeup, "No Fine", severity, tag, "No url")]
 
-        frame.instructions.config(text="Workbook parsed in " + str(time.time() - start) + " seconds")
-        print("Workbook parsed in " + str(time.time() - start) + " seconds")
-
-    frame.instructions.config("Parsed Raw Data in " + str(time.time() - start_time) + " seconds")
+        frame.instructions.config(text="Workbook " + str(counter) + " parsed in " + str(int(time.time() - start)) + " seconds")
+        print("Workbook " + str(counter) + " parsed in " + str(time.time() - start) + " seconds")
+        counter += 1
+    '''
+    frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     print("Parsed Raw Data in " + str(time.time() - start_time) + " seconds")
     time.sleep(3)
-    return states
+    '''
+    if not exists(save_path + "/hashes_and_pages"):
+        os.mkdir(save_path + "/hashes_and_pages")
+    with open(save_path + "/hashes_and_pages/states_hash.pkl", 'wb') as outp:
+            pickle.dump(states, outp, pickle.HIGHEST_PROTOCOL)
+    '''
+    frame.instructions.config(text="Saved as states_hash.pkl in hashes_and_pages folder")
+    frame.advance_page()
 
 # Match up incidents with corresponding fines, returns -> 
 # {ST : (facility, date, writeup, fine)} with updated fine values

@@ -98,26 +98,26 @@ class StartPage(tk.Frame):
 
 # Download page
 class DownloadPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
          
         # Instructions
-        self.instructions = ttk.Label(self, text="Choose folder to save to and download will start", font=("Times", 15))
-        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        thisframe.instructions = ttk.Label(thisframe, text="Choose folder to save to and download will start", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        self.instructions2 = ttk.Label(self, text="Screen will update when processing is finished", font=("Times", 15))
-        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        thisframe.instructions2 = ttk.Label(thisframe, text="Screen will update when processing is finished", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Download button
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.download_and_parse(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        self.dl_btn.grid(column=2, row=3, pady=10)
+        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.download_and_parse(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn.grid(column=2, row=3, pady=10)
         browse_text.set("Browse")
 
     # Choose save location and start download
-    def download_and_parse(self):
+    def download_and_parse(thisframe):
         global filepath
         global states_hash
         filepath = askdirectory()
@@ -128,50 +128,15 @@ class DownloadPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                self.func(filepath)
+                self.func(thisframe, filepath)
 
-        thread(self.download).start()
-        
-    def download(self, save_path):
-        self.instructions.config(text="Download Started")
-        self.instructions2.grid_forget()
-        self.dl_btn.grid_forget()
-        '''
-        url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
-        r = requests.get(url, allow_redirects=True)
+        thread(nhi.download).start()
 
-        filename = 'Raw_Data.zip'
-        filepath = os.path.join(save_path, filename)
-        open(filepath, 'wb').write(r.content)
-        self.instructions.config(text="Download Done")
-
-        zip_path = save_path + '/Raw_Data.zip'
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(save_path)
-        self.instructions.config(text="Unzip Done")
-
-        files_in_directory = os.listdir(save_path)
-        filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
-        for file in filtered_files:
-            path_to_file = os.path.join(save_path, file)
-            os.remove(path_to_file)
-        self.instructions.config(text="Deleted Extra Files")
-        '''
-        
+    def advance_page(thisframe):
         global states_hash
-        self.instructions.config(text="Parsing Data")
-        states_hash = nhi.parse_data(self, save_path)
-
-        with open("./hashes_and_pages/states_hash.pkl", 'wb') as outp:
-            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
-        self.instructions.config(text="Finished Parsing")
-        time.sleep(5)
-        '''
-        #with open(filepath + "/states_hash.pkl", 'rb') as inp:
-         #   states_hash = pickle.load(inp)
-        '''
-        self.controller.show_frame(WebscrapingChoicePage)
-
+        with open(filepath + "/hashes_and_pages/states_hash.pkl", 'rb') as inp:
+            states_hash = pickle.load(inp)
+        thisframe.controller.show_frame(WebscrapingChoicePage)
             
 # Webscraping choice page - shown after downloading raw data if yes is chosen on initial screen
 class WebscrapingChoicePage(tk.Frame):
