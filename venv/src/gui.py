@@ -1,4 +1,5 @@
 from dis import Instruction
+from json import load
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askdirectory
@@ -19,6 +20,7 @@ fines_hash = {}
 partial_instructions = None
 partial_instructions2 = None
 dl_btn = None
+load_scraper = False
   
 class tkinterApp(tk.Tk):
      
@@ -167,7 +169,8 @@ class WebscrapingChoicePage(tk.Frame):
     # Choose location of saved data -> used when user chooses partial data
     def open_and_scrape(self):
         global savepath
-        #savepath = askdirectory()
+        global load_scraper
+        savepath = askdirectory()
         self.controller.show_frame(WebscrapingPartialPage)
 
 # Webscraping page - shown if partial data choice is yes
@@ -177,14 +180,12 @@ class WebscrapingPartialPage(tk.Frame):
         self.controller = controller
          
         # Instructions
-        global partial_instructions
-        partial_instructions = ttk.Label(self, text="Press start to begin webscraping, screen won't update", font=("Times", 15))
-        partial_instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        self.instructions = ttk.Label(self, text="Press start to begin webscraping, screen won't update", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        global partial_instructions2
-        partial_instructions2 = ttk.Label(self, text="WILL TAKE ALMOST AN HOUR", font=("Times", 15))
-        partial_instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        self.instructions2 = ttk.Label(self, text="WILL TAKE ALMOST AN HOUR", font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Start button
         browse_text = tk.StringVar()
