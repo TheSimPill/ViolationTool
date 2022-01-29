@@ -119,7 +119,6 @@ class DownloadPage(tk.Frame):
     # Choose save location and start download
     def download_and_parse(thisframe):
         global filepath
-        global states_hash
         filepath = askdirectory()
 
         class thread(threading.Thread):
@@ -136,6 +135,7 @@ class DownloadPage(tk.Frame):
         global states_hash
         with open(filepath + "/hashes_and_pages/states_hash.pkl", 'rb') as inp:
             states_hash = pickle.load(inp)
+            
         thisframe.controller.show_frame(WebscrapingChoicePage)
             
 # Webscraping choice page - shown after downloading raw data if yes is chosen on initial screen
