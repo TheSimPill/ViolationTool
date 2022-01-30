@@ -6,6 +6,7 @@ import requests, os, zipfile, openpyxl
 from pathlib import Path
 import smtplib, time, getpass, random, pickle
 from . import info
+from tkinter.ttk import Progressbar, Label
 
 
 #from info import get_state_codes
@@ -15,10 +16,11 @@ from email.message import EmailMessage
 # Download raw data if user says yes, returns ->
 # Nothing
 def download(frame, save_path):
+    
     frame.instructions.config(text="Download Started")
     frame.instructions2.grid_forget()
     frame.dl_btn.grid_forget()
-
+    
     url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
     r = requests.get(url, allow_redirects=True)
 
@@ -37,7 +39,9 @@ def download(frame, save_path):
     for file in filtered_files:
         path_to_file = os.path.join(save_path, file)
         os.remove(path_to_file)
+
     frame.instructions.config(text="Deleted Extra Files")
+    time.sleep(1.5)
     frame.instructions.config(text="Parsing Data")
     time.sleep(1.5)
     parse_data(frame, save_path)
@@ -54,6 +58,17 @@ def parse_data(frame, save_path):
     start_time = time.time() 
     numtoload = len(files)
     frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
+    frame.dl_btn.grid_forget()
+
+    # Initialize Progress Bar
+    progress = Progressbar(frame, orient = "horizontal",
+        length = 300, mode = 'determinate')
+    progress.grid(column=1, row=2, columnspan=3, pady=10)
+
+    # Progress bar's label
+    x = 0
+    plabel = Label(frame, text=str(x) + " out of " + str(len(files)) + " workbooks parsed", font=("Times", 15))
+    plabel.grid(column=1, row=4, columnspan=3, pady=10)
 
     counter = 1
     for file in files:
@@ -84,9 +99,15 @@ def parse_data(frame, save_path):
                             else:
                                 states[state] = [(facility, date, writeup, "No Fine", severity, tag, "No url")]
 
+        # Update labels and progress bar
         frame.instructions.config(text="Workbook " + str(counter) + " parsed in " + str(int(time.time() - start)) + " seconds")
+        x += 1
+        progress["value"] += (1/len(files))*100
+        plabel.config(text=str(x) + " out of " + str(len(files)) + " workbooks parsed", font=("Times", 15))
         counter += 1
     
+    plabel.grid_forget()
+    progress.grid_forget()
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
@@ -99,17 +120,14 @@ def parse_data(frame, save_path):
     time.sleep(2)
     frame.advance_page()
 
-# Match up incidents with corresponding fines, returns -> 
-# {ST : (facility, date, writeup, fine)} with updated fine values
+# Match up incidents with corresponding fines
 '''
     Incidents that took place on the same date will each have a fine added to
     their tuple, even though all incidents at the same facility on the same
-    date have on total fine applied to them.
+    date have one total fine applied to them.
 
-    State hash: { "ST" : (facility, date, writeup, fine) list}
-    Fine hash: { "ST" : (facility, date, fine) list }
 '''
-def match_fines(states_hash, fines_hash):
+def match_fines(hashpath, frame, states_hash, fines_hash):
     for state in fines_hash.keys():
         for fine_incident_tuple in fines_hash[state]:
             if state in states_hash.keys():
@@ -121,7 +139,14 @@ def match_fines(states_hash, fines_hash):
                         temp[3] = fine_incident_tuple[2]
                         states_hash[state][i] = tuple(temp)
     
-    return states_hash
+    if not exists(hashpath + "/hashes"):
+        os.mkdir(hashpath + "/hashes")
+    with open(hashpath + "/hashes/states_hash.pkl", 'wb') as outp:
+            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
+
+    frame.instructions.config(text="Finished matching")
+    time.sleep(2)
+    frame.advance_page()
         
 # Matches url hash returned from url_scraper with states_hash
 def match_urls(states_hash, url_hash):

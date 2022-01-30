@@ -6,6 +6,7 @@ import src.save_load_html as sl
 from src.nhi_functions import get_proxy
 from os.path import exists
 from tkinter.ttk import Progressbar, Label
+import src.nhi_functions as nhi
 
 homes = 0
 totalhomes = 0
@@ -36,6 +37,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
         }
 
         try:
+            
             # Logic: We will try and pull a webpage again under two conditions:
             #           1. We've chosen to use saved pages, but a given page doesn't have a save file
             #           2. We've chosen to rescrape (reparse) everything
@@ -64,7 +66,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
             x = 0
             plabel = Label(frame, text=str(x) + " out of " + str(len(rows)) + " scraped", font=("Times", 15))
             plabel.grid(column=1, row=4, columnspan=3, pady=10)
-
+            '''
             # Gets link for each state from page of all states
             for state_url in rows:
                 params["url"] = "https://projects.propublica.org" + state_url["href"]
@@ -130,14 +132,23 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 os.mkdir(hashpath + "/hashes/fines_hash.pkl")
             with open(hashpath + "/hashes/fines_hash.pkl", 'wb') as outp:
                 pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
-
+            '''
             # Once all scraping is finished
+            time.sleep(2)
             curframe.instructions2.grid_forget()
             progress.grid_forget()
             plabel.grid_forget()
             curframe.instructions.config(text="Saved fines_hash.pkl in hashes folder")
+
             time.sleep(2)
-            frame.advance_page()
+            curframe.instructions.config(text="Matching fines...")
+            with open(hashpath + "/hashes/fines_hash.pkl", 'rb') as inp:
+                fines_hash = pickle.load(inp)
+            with open(hashpath + "/hashes/states_hash.pkl", 'rb') as inp:
+                states_hash = pickle.load(inp)
+            nhi.match_fines(hashpath, curframe, states_hash, fines_hash)
+            break
+            
 
         except AttributeError as e:
             print("Caught Exception!" + str(e) + "---------------------------------------")

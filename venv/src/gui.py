@@ -41,7 +41,7 @@ class tkinterApp(tk.Tk):
   
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingFullPage, WebscrapingPage, WebscrapingMatchingPage):
+        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage, OptionsPage):
   
             frame = F(container, self)
   
@@ -89,7 +89,7 @@ class StartPage(tk.Frame):
 
         # No button
         browse_text = tk.StringVar()
-        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(WebscrapingFullPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(OptionsPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         browse_text.set("No")
         no_btn.grid(column=3, row=2, pady=10)
 
@@ -100,11 +100,11 @@ class DownloadPage(tk.Frame):
         thisframe.controller = controller
          
         # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Choose folder to save to and download will start", font=("Times", 15))
+        thisframe.instructions = ttk.Label(thisframe, text="Choose empty folder to save to and download will start", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        thisframe.instructions2 = ttk.Label(thisframe, text="Screen will update when processing is finished", font=("Times", 15))
+        thisframe.instructions2 = ttk.Label(thisframe, text="MAKE SURE FOLDER IS EMPTY", font=("Times", 15))
         thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Download button
@@ -126,8 +126,8 @@ class DownloadPage(tk.Frame):
             def run(self):
                 self.func(thisframe, filepath)
 
-        #thread(nhi.download).start()
-        thisframe.advance_page()
+        thread(nhi.download).start()
+        #thisframe.advance_page()
 
     def advance_page(thisframe):
         global states_hash
@@ -224,64 +224,19 @@ class WebscrapingPage(tk.Frame):
         
         thread(scraper.scrape_fines).start()
 
+    # Called after scraper is done and fines have been matched
     def advance_page(thisframe):
         global fines_hash
         global filepath
 
         with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
             fines_hash = pickle.load(inp)
-            
-        thisframe.controller.show_frame(WebscrapingMatchingPage)
 
-
-
-        
-
-        
-
-# Webscraping fine match page
-class WebscrapingMatchingPage(tk.Frame):
+# Shown if user didn't reinitialize data, or if reinitialization is complete
+class OptionsPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
-         
-        # Instructions
-        global instructions
-        instructions = ttk.Label(self, text="Matching fines to cases...", font=("Times", 15))
-        instructions.grid(column=1, row=1, columnspan=3, pady=10)
-
-        global filepath
-        global states_hash
-        global fines_hash
-        '''
-        nhi.match_fines(states_hash, fines_hash)
-        with open(filepath + "/states_hash.pkl", 'rb') as inp:
-            states_hash = pickle.load(inp)
-            '''
-        
-# Webscraping page
-class WebscrapingFullPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
-         
-        # Instructions
-        global instructions
-        instructions = ttk.Label(self, text="Press start to begin webscraping, screen won't update", font=("Times", 15))
-        instructions.grid(column=1, row=1, columnspan=3, pady=10)
-
-        # Instructions line 2
-        global instructions2
-        instructions2 = ttk.Label(self, text="WILL TAKE ALMOST AN HOUR", font=("Times", 15))
-        instructions2.grid(column=1, row=2, columnspan=3, pady=10)
-
-        # Start button
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.open_and_download(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        self.dl_btn.grid(column=2, row=3, pady=10)
-        browse_text.set("Start Webscraping")
-
-
   
 # Driver Code
 app = tkinterApp()
