@@ -1,4 +1,4 @@
-from genericpath import exists
+from os.path import exists
 from openpyxl.descriptors.base import String
 import openpyxl.workbook
 from openpyxl.workbook.workbook import Workbook
@@ -89,12 +89,12 @@ def parse_data(frame, save_path):
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
-    if not exists(save_path + "/hashes_and_pages"):
-        os.mkdir(save_path + "/hashes_and_pages")
-    with open(save_path + "/hashes_and_pages/states_hash.pkl", 'wb') as outp:
+    if not exists(save_path + "/hashes"):
+        os.mkdir(save_path + "/hashes")
+    with open(save_path + "/hashes/states_hash.pkl", 'wb') as outp:
             pickle.dump(states, outp, pickle.HIGHEST_PROTOCOL)
 
-    frame.instructions.config(text="Saved as states_hash.pkl in hashes_and_pages folder")
+    frame.instructions.config(text="Saved as states_hash.pkl in hashes folder")
     time.sleep(2)
     frame.advance_page()
 

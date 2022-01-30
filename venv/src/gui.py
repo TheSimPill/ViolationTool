@@ -1,16 +1,11 @@
-from dis import Instruction
-from json import load
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
 import src.nhi_functions as nhi
 import src.fine_scraper as scraper
-from time import sleep
-import pickle, time
-import requests, os, zipfile
-import threading
-  
+import pickle, threading, os
+from os.path import exists
  
 LARGEFONT = ("Verdana", 35)
 savepath = ""
@@ -46,7 +41,7 @@ class tkinterApp(tk.Tk):
   
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingFullPage, WebscrapingPartialPage, WebscrapingMatchingPage):
+        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingFullPage, WebscrapingPage, WebscrapingMatchingPage):
   
             frame = F(container, self)
   
@@ -131,11 +126,14 @@ class DownloadPage(tk.Frame):
             def run(self):
                 self.func(thisframe, filepath)
 
-        thread(nhi.download).start()
+        #thread(nhi.download).start()
+        thisframe.advance_page()
 
     def advance_page(thisframe):
         global states_hash
-        with open(filepath + "/hashes_and_pages/states_hash.pkl", 'rb') as inp:
+        global filepath
+
+        with open(filepath + "/hashes/states_hash.pkl", 'rb') as inp:
             states_hash = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
@@ -162,25 +160,38 @@ class WebscrapingChoicePage(tk.Frame):
 
         # No button
         browse_text = tk.StringVar()
-        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(WebscrapingFullPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:self.fresh_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         browse_text.set("No")
         no_btn.grid(column=3, row=3, pady=10)
 
-    # Choose location of saved data -> used when user chooses partial data
+    # If yes is chosen -> Choose location of saved data, scrape will used saved pages when possible
     def open_and_scrape(self):
         global savepath
         global load_scraper
-        savepath = askdirectory()
-        self.controller.show_frame(WebscrapingPartialPage)
+        load_scraper = True
 
+        savepath = askdirectory()
+        self.controller.show_frame(WebscrapingPage)
+    
+    # If no is chosen -> means a full scrape will be done
+    def fresh_scrape(self):
+        global filepath
+        global savepath
+
+        savepath = filepath + "/pages"
+        if not exists(savepath):
+            os.mkdir(savepath)
+        
+        self.controller.show_frame(WebscrapingPage)
+        
 # Webscraping page - shown if partial data choice is yes
-class WebscrapingPartialPage(tk.Frame):
+class WebscrapingPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
          
         # Instructions
-        self.instructions = ttk.Label(self, text="Press start to begin webscraping, screen won't update", font=("Times", 15))
+        self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
@@ -189,34 +200,43 @@ class WebscrapingPartialPage(tk.Frame):
 
         # Start button
         browse_text = tk.StringVar()
-        global savepath
-        global states_hash
-        global filepath
-        global dl_btn
-        dl_btn = tk.Button(self, command=lambda:self.scrape(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        dl_btn.grid(column=2, row=3, pady=10)
+        self.dl_btn = tk.Button(self, command=lambda:self.scrape(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn.grid(column=2, row=3, pady=10)
         browse_text.set("Start Webscraping")
 
-    def scrape(self):
+    def scrape(thisframe):
         global fines_hash
-        global dl_btn
-        global partial_instructions
-        global partial_instructions2
-        partial_instructions.config(text="Scraping")
-        partial_instructions2.grid_forget()
-        dl_btn.grid_forget()
-        self.update_idletasks()
-        print("forgot ")
+        global states_hash
+        global load_scraper
+        global savepath
+        global filepath
+
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                if load_scraper:
+                    self.func(thisframe, False, states_hash, savepath, filepath)
+                else:
+                    self.func(thisframe, True, states_hash, savepath, filepath)
+        
+        thread(scraper.scrape_fines).start()
+
+    def advance_page(thisframe):
+        global fines_hash
+        global filepath
+
+        with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
+            fines_hash = pickle.load(inp)
+            
+        thisframe.controller.show_frame(WebscrapingMatchingPage)
+
+
 
         
-        fines_hash = scraper.scrape_fines(False, states_hash, filepath)
-        '''
-        with open("./hashes/fines_hash.pkl", 'wb') as outp:
-            pickle.dump(fines_hash, outp, pickle.HIGHEST_PROTOCOL)
-        '''
-        #with open(filepath + "/fines_hash.pkl", 'rb') as inp:
-         #   fines_hash = pickle.load(inp)
-        #self.controller.show_frame(WebscrapingMatchingPage)
+
         
 
 # Webscraping fine match page

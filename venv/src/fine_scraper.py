@@ -1,5 +1,5 @@
 from datetime import datetime
-import random, re, concurrent.futures, time, os
+import random, re, concurrent.futures, time, os, pickle
 from bs4 import BeautifulSoup as bs
 import src.save_load_html as sl
 from src.nhi_functions import get_proxy
@@ -7,7 +7,12 @@ from os.path import exists
 
 # Scrape fines for relevant cases for each state using threads
 # Returns hash of form: ST => (facility, date, fine) list
-def scrape_fines(reparse, states, dir):
+def scrape_fines(frame, reparse, states, dir, hashpath):
+    
+    # Hide download button from previous page
+    frame.dl_btn.grid_forget()
+
+    # Loop will break once all scraping is done
     while True:
         session = random.randint(900, 793293)
         params = {
@@ -17,14 +22,18 @@ def scrape_fines(reparse, states, dir):
         "country":"us",
         "session": str(session)
         }
+
         try:
+            # Logic: We will try and pull a webpage again under two conditions:
+            #           1. We've chosen to use saved pages, but a given page doesn't have a save file
+            #           2. We've chosen to rescrape (reparse) everything
             if (not reparse and not exists(dir + "/all_states_fines.html")) or reparse:
                 response = get_proxy(params)
                 page = response[0]
                 params = response[1]
 
-                sl.save_obj(page.content, dir + "/all_states_fines.html")
                 # Page of all states
+                sl.save_obj(page.content, dir + "/all_states_fines.html")
                 soup = bs(page.content, 'html.parser')
             else:
                 html = sl.load_obj(dir + "/all_states_fines.html")
@@ -44,10 +53,17 @@ def scrape_fines(reparse, states, dir):
                 if not state in states_fines.keys():
                     states_fines[state] = []
                 
+                # Set label
+                frame.instructions.config(text="Scraping urls from " + state)
                 print("Scraping urls from " + state + " session = " + str(params["session"]))
+
                 # Returns a list of urls to fined homes in a state
                 state_home_links = get_state_fine_links(reparse, params, state, dir)
+                # Set label
+                frame.instructions2.config(text=str(len(state_home_links))+ " homes to scrape")
                 print(str(len(state_home_links))+ " homes to scrape")
+                time.sleep(2)
+
                 args_list = []
                 facility = 1
                 for home_link in state_home_links:
@@ -65,6 +81,9 @@ def scrape_fines(reparse, states, dir):
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
                     # This will be a list of (facility, date, fine) tuple lists
                     state_homes_fines = executor.map(scrape_facility, args_list)
+
+                # Set label
+                frame.instructions.config(text="Scraped " + state)
                 print("Scraped " + state)
 
                 # Adds all fine incidents for each home in a certain state to hash of all states
@@ -73,7 +92,13 @@ def scrape_fines(reparse, states, dir):
                         # Appending each incident tuple from all homes in a state
                         states_fines[state].append(homes_fines)
 
-            return states_fines
+            if not exists(hashpath + "/hashes/fines_hash.pkl"):
+                os.mkdir(hashpath + "/hashes/fines_hash.pkl")
+            with open(hashpath + "/hashes/fines_hash.pkl", 'wb') as outp:
+                pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
+
+            frame.advance_page()
+
         except AttributeError as e:
             print("Caught Exception!" + str(e) + "---------------------------------------")
             print("Session failed: " + str(params["session"]))
@@ -156,6 +181,7 @@ def scrape_facility(args):
                                 
             print("Scraped " + str(facilitynumber) + facility.upper() + " in " + state)
             return home_fines
+
         except AttributeError as e:
             print("Caught Exception!" + str(e) + "---------------------------------------")
             print("Session failed: " + str(state_params["session"]))
