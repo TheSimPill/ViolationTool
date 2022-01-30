@@ -1,16 +1,28 @@
 from datetime import datetime
 import random, re, concurrent.futures, time, os, pickle
+from turtle import home
 from bs4 import BeautifulSoup as bs
 import src.save_load_html as sl
 from src.nhi_functions import get_proxy
 from os.path import exists
+from tkinter.ttk import Progressbar, Label
+
+homes = 0
+totalhomes = 0
+curframe = None
 
 # Scrape fines for relevant cases for each state using threads
 # Returns hash of form: ST => (facility, date, fine) list
 def scrape_fines(frame, reparse, states, dir, hashpath):
-    
-    # Hide download button from previous page
+    # Allows frame to be updated in different functions without directly passing it in
+    global curframe
+    curframe = frame
+
+    # Hide elements from previous screen
     frame.dl_btn.grid_forget()
+    frame.instructions2.grid_forget()
+    curframe.instructions2 = Label(curframe, text="", font=("Times", 9))
+    curframe.instructions2.grid(column=1, row=2, columnspan=3)
 
     # Loop will break once all scraping is done
     while True:
@@ -42,6 +54,16 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
             # State hash: { "ST" : (facility, date, fine) list}
             states_fines = {}
             rows = soup.find(id="data").find("tbody").find_all("a")
+            
+            # Initialize Progress Bar
+            progress = Progressbar(frame, orient = "horizontal",
+                length = 300, mode = 'determinate')
+            progress.grid(column=2, row=3, pady=10)
+
+            # Progress bar's label
+            x = 0
+            plabel = Label(frame, text=str(x) + " out of " + str(len(rows)) + " scraped", font=("Times", 15))
+            plabel.grid(column=1, row=4, columnspan=3, pady=10)
 
             # Gets link for each state from page of all states
             for state_url in rows:
@@ -55,13 +77,13 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 
                 # Set label
                 frame.instructions.config(text="Scraping urls from " + state)
-                print("Scraping urls from " + state + " session = " + str(params["session"]))
 
                 # Returns a list of urls to fined homes in a state
                 state_home_links = get_state_fine_links(reparse, params, state, dir)
-                # Set label
-                frame.instructions2.config(text=str(len(state_home_links))+ " homes to scrape")
-                print(str(len(state_home_links))+ " homes to scrape")
+
+                # Allows for home count to be updated after each one is scraped
+                global totalhomes
+                totalhomes = len(state_home_links)
                 time.sleep(2)
 
                 args_list = []
@@ -77,6 +99,10 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                     args_list.append((facility, state, params, states, reparse, dir))
                     facility += 1
 
+                # Progress bar for homes in a state
+                global homes
+                frame.instructions.config(text=str(homes) + " out of " + str(totalhomes) + " homes scraped")
+
                 # Concurrently parse all homes for a certain state
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
                     # This will be a list of (facility, date, fine) tuple lists
@@ -84,25 +110,39 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
 
                 # Set label
                 frame.instructions.config(text="Scraped " + state)
-                print("Scraped " + state)
 
                 # Adds all fine incidents for each home in a certain state to hash of all states
                 for homes_fines_list in state_homes_fines:
                     for homes_fines in homes_fines_list:
                         # Appending each incident tuple from all homes in a state
                         states_fines[state].append(homes_fines)
+                
+                # Updates progress bar label and value
+                x += 1
+                progress["value"] += (1/len(rows))*100
+                plabel.config(text=str(x) + " out of " + str(len(rows)) + " states scraped")
 
+                # Reset home count for the next state
+                homes = 0
+
+            # Check to see if folder exists and if it doesn't, create it
             if not exists(hashpath + "/hashes/fines_hash.pkl"):
                 os.mkdir(hashpath + "/hashes/fines_hash.pkl")
             with open(hashpath + "/hashes/fines_hash.pkl", 'wb') as outp:
                 pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
 
+            # Once all scraping is finished
+            curframe.instructions2.grid_forget()
+            progress.grid_forget()
+            plabel.grid_forget()
+            curframe.instructions.config(text="Saved fines_hash.pkl in hashes folder")
+            time.sleep(2)
             frame.advance_page()
 
         except AttributeError as e:
             print("Caught Exception!" + str(e) + "---------------------------------------")
             print("Session failed: " + str(params["session"]))
-            time.sleep(5)
+            time.sleep(3)
         
 # Gets links from a specific states page for facilities that have fines
 def get_state_fine_links(reparse, state_params, cur_state, dir):
@@ -131,6 +171,7 @@ def get_state_fine_links(reparse, state_params, cur_state, dir):
     
 # Scrapes a specific facilities page for relevant fines.
 def scrape_facility(args):
+    global curframe
     retries = 0
     while True:
         facilitynumber = args[0]
@@ -141,8 +182,8 @@ def scrape_facility(args):
         dir = args[5]
         
         # Regrab page if reparsing or reparsing but find a file that doesn't exist
-        if (not reparse and not exists(dir + "/" + state + str(facilitynumber) + "-page.html")) or reparse or (retries != 0 and retries % 5 == 0):
-            if retries != 0 and retries % 5 == 0:
+        if (not reparse and not exists(dir + "/" + state + str(facilitynumber) + "-page.html")) or reparse or (retries != 0 and retries % 3 == 0):
+            if retries != 0 and retries % 3 == 0:
                 print("Max exceptions reached for " + state + str(facilitynumber) + ", retrying")
             response = get_proxy(state_params)
             home_page = response[0]
@@ -172,18 +213,26 @@ def scrape_facility(args):
                         for incident in range(0, len(states[state])):
                             state_incident = states[state][incident]
                             if state_incident[0] == facility.upper() and state_incident[1] == date:
-                                print("Matched " + fine + " in " + state + " from " + date + " at " + facility.upper())
 
+                                # Only let user see one fine match for a day if there are multiple
+                                if len(fine) >= 5 and fine[-4:] == "Fine":
+                                    curframe.instructions2.config(text="Matched " + fine + " in " + state + " from " + date + " at\n    " + facility.upper())
+                    
                                 # Now make fine just an int
                                 numeric_filter = filter(str.isdigit, fine)
                                 fine = "".join(numeric_filter)
                                 home_fines.append((facility.upper(),date,int(fine)))
-                                
-            print("Scraped " + str(facilitynumber) + facility.upper() + " in " + state)
+
+            # Update home count label                  
+            global homes
+            global totalhomes
+            homes += 1
+            curframe.instructions.config(text=str(homes) + " out of " + str(totalhomes) + " homes scraped")
+
             return home_fines
 
         except AttributeError as e:
             print("Caught Exception!" + str(e) + "---------------------------------------")
             print("Session failed: " + str(state_params["session"]))
-            time.sleep(5)
+            time.sleep(3)
             retries += 1
