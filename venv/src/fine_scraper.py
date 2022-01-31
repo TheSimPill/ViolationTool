@@ -21,6 +21,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
 
     # Hide elements from previous screen
     frame.dl_btn.grid_forget()
+    frame.instructions.config(text="Starting scrape")
     frame.instructions2.grid_forget()
     curframe.instructions2 = Label(curframe, text="", font=("Times", 9))
     curframe.instructions2.grid(column=1, row=2, columnspan=3)
@@ -66,7 +67,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
             x = 0
             plabel = Label(frame, text=str(x) + " out of " + str(len(rows)) + " scraped", font=("Times", 15))
             plabel.grid(column=1, row=4, columnspan=3, pady=10)
-            '''
+            
             # Gets link for each state from page of all states
             for state_url in rows:
                 params["url"] = "https://projects.propublica.org" + state_url["href"]
@@ -76,12 +77,18 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 state = state_url["href"][(length - 2):length]
                 if not state in states_fines.keys():
                     states_fines[state] = []
+
+                # Get names of all facilities from states hash
+                # Used so homes that don't have relevant cases are filtered
+                facilities = []
+                for incident_tuple in states_hash[state]:
+                    facilities.append(incident_tuple[0])
                 
                 # Set label
                 frame.instructions.config(text="Scraping urls from " + state)
 
                 # Returns a list of urls to fined homes in a state
-                state_home_links = get_state_fine_links(reparse, params, state, dir)
+                state_home_links = get_state_fine_links(reparse, params, state, dir, facilities)
 
                 # Allows for home count to be updated after each one is scraped
                 global totalhomes
@@ -98,7 +105,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                         "country":"us",
                         "session": random.randint(9000,8000000)
                             }
-                    args_list.append((facility, state, params, states, reparse, dir))
+                    args_list.append((facility, state, params, states[state], reparse, dir))
                     facility += 1
 
                 # Progress bar for homes in a state
@@ -132,7 +139,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 os.mkdir(hashpath + "/hashes/fines_hash.pkl")
             with open(hashpath + "/hashes/fines_hash.pkl", 'wb') as outp:
                 pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
-            '''
+            
             # Once all scraping is finished
             time.sleep(2)
             curframe.instructions2.grid_forget()
@@ -156,7 +163,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
             time.sleep(3)
         
 # Gets links from a specific states page for facilities that have fines
-def get_state_fine_links(reparse, state_params, cur_state, dir):
+def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
 
     if (not reparse and not exists(dir + "/" + cur_state + "-html.html")) or reparse:
         response = get_proxy(state_params)
@@ -168,16 +175,16 @@ def get_state_fine_links(reparse, state_params, cur_state, dir):
         state_page = sl.load_obj(dir + "/" + cur_state + "-html.html")
         page_soup = bs(state_page, "lxml")
 
-    # Get each facility page that has fines
+    # Gets list of all homes on a page
     rows = page_soup.find(id="data").find("tbody").find_all("tr")
     home_urls = []
     for col in rows: 
-        fine = re.search("\$.+<", str(col))
-        # Only want rows that have fines
-        if not fine is None:
-            # Begin grabbing home url if fine found
+        # Only grab relevant homes
+        name = col.find("a").contents[0].upper()
+        if name in facilities:    
             home_url = col.find("a")["href"]
             home_urls.append("https://projects.propublica.org" + home_url)
+
     return home_urls
     
 # Scrapes a specific facilities page for relevant fines.
@@ -188,7 +195,7 @@ def scrape_facility(args):
         facilitynumber = args[0]
         state = args[1]
         state_params = args[2]
-        states = args[3]
+        state_incident_list = args[3]
         reparse = args[4]
         dir = args[5]
         
@@ -208,6 +215,7 @@ def scrape_facility(args):
             # Scrape a specific home's fines
             home_fines = []
             facility = home_soup.find(id="content").find("p", class_="big-name capital").find("b").get_text()
+            # Iterate through incidents for a home
             for fine_incident in home_soup.find_all("div", class_="row"):
                 fine = fine_incident.find("span", class_="nd-left nd-entry fine-label")
                 if not fine is None:
@@ -221,8 +229,8 @@ def scrape_facility(args):
                         date = str(datetime.strptime(date, '%b %d, %Y').strftime('%m/%d/%Y'))
 
                         # Check if this fine relates to a relevant case
-                        for incident in range(0, len(states[state])):
-                            state_incident = states[state][incident]
+                        for incident in range(0, len(state_incident_list)):
+                            state_incident = state_incident_list[incident]
                             if state_incident[0] == facility.upper() and state_incident[1] == date:
 
                                 # Only let user see one fine match for a day if there are multiple
