@@ -126,8 +126,9 @@ class DownloadPage(tk.Frame):
             def run(self):
                 self.func(thisframe, filepath)
 
-        thread(nhi.download).start()
-        #thisframe.advance_page()
+        #thread(nhi.download).start()
+        # For skipping download
+        thisframe.advance_page()
 
     def advance_page(thisframe):
         global states_hash
@@ -195,7 +196,7 @@ class WebscrapingPage(tk.Frame):
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        self.instructions2 = ttk.Label(self, text="WILL TAKE ALMOST AN HOUR", font=("Times", 15))
+        self.instructions2 = ttk.Label(self, text="Will take ~1hour if limited or no save data used", font=("Times", 15))
         self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Start button
@@ -232,11 +233,15 @@ class WebscrapingPage(tk.Frame):
         with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
             fines_hash = pickle.load(inp)
 
+        
+
 # Shown if user didn't reinitialize data, or if reinitialization is complete
 class OptionsPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
+
+
   
 # Driver Code
 app = tkinterApp()

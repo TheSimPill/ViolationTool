@@ -54,7 +54,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 html = sl.load_obj(dir + "/all_states_fines.html")
                 soup = bs(html, "lxml")
                 
-            # State hash: { "ST" : (facility, date, fine) list}
+            # State hash: { "ST" : (facility, date, fine, url) list}
             states_fines = {}
             rows = soup.find(id="data").find("tbody").find_all("a")
             
@@ -81,7 +81,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 # Get names of all facilities from states hash
                 # Used so homes that don't have relevant cases are filtered
                 facilities = []
-                for incident_tuple in states_hash[state]:
+                for incident_tuple in states[state]:
                     facilities.append(incident_tuple[0])
                 
                 # Set label
@@ -89,7 +89,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
 
                 # Returns a list of urls to fined homes in a state
                 state_home_links = get_state_fine_links(reparse, params, state, dir, facilities)
-
+                
                 # Allows for home count to be updated after each one is scraped
                 global totalhomes
                 totalhomes = len(state_home_links)
@@ -135,8 +135,8 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 homes = 0
 
             # Check to see if folder exists and if it doesn't, create it
-            if not exists(hashpath + "/hashes/fines_hash.pkl"):
-                os.mkdir(hashpath + "/hashes/fines_hash.pkl")
+            if not exists(hashpath + "/hashes"):
+                os.mkdir(hashpath + "/hashes")
             with open(hashpath + "/hashes/fines_hash.pkl", 'wb') as outp:
                 pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
             
@@ -158,39 +158,46 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
             
 
         except AttributeError as e:
-            print("Caught Exception!" + str(e) + "---------------------------------------")
+            print("Caught Exception at NHI page!" + str(e) + "---------------------------------------")
             print("Session failed: " + str(params["session"]))
             time.sleep(3)
         
 # Gets links from a specific states page for facilities that have fines
 def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
 
-    if (not reparse and not exists(dir + "/" + cur_state + "-html.html")) or reparse:
-        response = get_proxy(state_params)
-        state_page = response[0]
-        state_params = response[1]
-        sl.save_obj(state_page.content, dir + "/" + cur_state + "-html.html")
-        page_soup = bs(state_page.content, "html.parser")
-    else:
-        state_page = sl.load_obj(dir + "/" + cur_state + "-html.html")
-        page_soup = bs(state_page, "lxml")
+    try:
+        if (not reparse and not exists(dir + "/" + cur_state + "-html.html")) or reparse:
+            response = get_proxy(state_params)
+            state_page = response[0]
+            state_params = response[1]
+            sl.save_obj(state_page.content, dir + "/" + cur_state + "-html.html")
+            page_soup = bs(state_page.content, "html.parser")
+        else:
+            state_page = sl.load_obj(dir + "/" + cur_state + "-html.html")
+            page_soup = bs(state_page, "lxml")
 
-    # Gets list of all homes on a page
-    rows = page_soup.find(id="data").find("tbody").find_all("tr")
-    home_urls = []
-    for col in rows: 
-        # Only grab relevant homes
-        name = col.find("a").contents[0].upper()
-        if name in facilities:    
-            home_url = col.find("a")["href"]
-            home_urls.append("https://projects.propublica.org" + home_url)
+        # Gets list of all homes on a page
+        rows = page_soup.find(id="data").find("tbody").find_all("tr")
+        home_urls = []
+        for col in rows: 
+            # Only grab relevant homes
+            name = col.find("a").contents[0].upper()
+            if name in facilities:    
+                home_url = col.find("a")["href"]
+                home_urls.append("https://projects.propublica.org" + home_url)
 
-    return home_urls
+        return home_urls
+    
+    except AttributeError as e:
+        print("Caught Exception at state page!" + str(e) + "---------------------------------------")
+        time.sleep(3)
     
 # Scrapes a specific facilities page for relevant fines.
 def scrape_facility(args):
+
     global curframe
     retries = 0
+
     while True:
         facilitynumber = args[0]
         state = args[1]
@@ -215,32 +222,46 @@ def scrape_facility(args):
             # Scrape a specific home's fines
             home_fines = []
             facility = home_soup.find(id="content").find("p", class_="big-name capital").find("b").get_text()
-            # Iterate through incidents for a home
+        
+            # Iterate through incidents (rows) for a home
             for fine_incident in home_soup.find_all("div", class_="row"):
-                fine = fine_incident.find("span", class_="nd-left nd-entry fine-label")
-                if not fine is None:
-                    lst = fine.get_text().strip().split("\n")
-                    fine = re.search(".+Fine$", lst[0])
-                    # Grab the fines, but only for cases we need
-                    if not fine is None:
-                        fine = fine.group()
-                        # Want format to be MM/DD/YYYY
-                        date = fine_incident.find("span", class_="nd nd-entry nd-30").find("p").get_text()
-                        date = str(datetime.strptime(date, '%b %d, %Y').strftime('%m/%d/%Y'))
+                
+                # Want format to be MM/DD/YYYY
+                date = fine_incident.find("span", class_="nd nd-entry nd-30")\
 
-                        # Check if this fine relates to a relevant case
-                        for incident in range(0, len(state_incident_list)):
-                            state_incident = state_incident_list[incident]
-                            if state_incident[0] == facility.upper() and state_incident[1] == date:
+                # This handles rows that aren't actually incident rows
+                if date != None:
+                    date = date.find("p").get_text()
+                    date = str(datetime.strptime(date, '%b %d, %Y').strftime('%m/%d/%Y'))
+
+                    # Check to see if this case is relevant
+                    for i in range(len(state_incident_list)):
+                        state_incident_tup = state_incident_list[i]
+                        # Case is relevant if facility name and date matches on in states hash
+                        if state_incident_tup[0] == facility.upper() and state_incident_tup[1] == date:
+                            
+                            # Grab url for incident report
+                            incident_url = fine_incident.find("a")["href"]
+
+                            # Grabs the fine if there is one
+                            fine = fine_incident.find("span", class_="nd-left nd-entry fine-label")     
+                            lst = fine.get_text().strip().split("\n")
+                            fine = re.search(".+Fine$", lst[0])
+                            if not fine is None:
+                                fine = fine.group()
 
                                 # Only let user see one fine match for a day if there are multiple
                                 if len(fine) >= 5 and fine[-4:] == "Fine":
                                     curframe.instructions2.config(text="Matched " + fine + " in " + state + " from " + date + " at\n    " + facility.upper())
-                    
+
                                 # Now make fine just an int
                                 numeric_filter = filter(str.isdigit, fine)
                                 fine = "".join(numeric_filter)
-                                home_fines.append((facility.upper(),date,int(fine)))
+                                home_fines.append((facility.upper(),date,int(fine), incident_url))
+
+                            else:
+                                home_fines.append((facility.upper(),date, "No Fine", incident_url))
+
 
             # Update home count label                  
             global homes

@@ -20,7 +20,7 @@ def download(frame, save_path):
     frame.instructions.config(text="Download Started")
     frame.instructions2.grid_forget()
     frame.dl_btn.grid_forget()
-    
+    '''
     url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
     r = requests.get(url, allow_redirects=True)
 
@@ -39,7 +39,7 @@ def download(frame, save_path):
     for file in filtered_files:
         path_to_file = os.path.join(save_path, file)
         os.remove(path_to_file)
-
+    '''
     frame.instructions.config(text="Deleted Extra Files")
     time.sleep(1.5)
     frame.instructions.config(text="Parsing Data")
@@ -111,6 +111,7 @@ def parse_data(frame, save_path):
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
+    # Create a hashes folder in chosen directory and save the states hash
     if not exists(save_path + "/hashes"):
         os.mkdir(save_path + "/hashes")
     with open(save_path + "/hashes/states_hash.pkl", 'wb') as outp:
@@ -127,16 +128,17 @@ def parse_data(frame, save_path):
     date have one total fine applied to them.
 
 '''
-def match_fines(hashpath, frame, states_hash, fines_hash):
-    for state in fines_hash.keys():
-        for fine_incident_tuple in fines_hash[state]:
+def match_fines(hashpath, frame, states_hash, fines_urls_hash):
+    for state in fines_urls_hash.keys():
+        for fine_url_tuple in fines_urls_hash[state]:
             if state in states_hash.keys():
-                for i in range(0, len(states_hash[state])):
+                for i in range(len(states_hash[state])):
                     incident_tuple = states_hash[state][i]
                     # Check to see if facility and date are the same for an incident from each hash
-                    if fine_incident_tuple[0] == incident_tuple[0] and fine_incident_tuple[1] == incident_tuple[1]:
+                    if fine_url_tuple[0] == incident_tuple[0] and fine_url_tuple[1] == incident_tuple[1]:
                         temp = list(incident_tuple)
-                        temp[3] = fine_incident_tuple[2]
+                        temp[3] = fine_url_tuple[-1]
+                        temp[-1] = fine_url_tuple[-1]
                         states_hash[state][i] = tuple(temp)
     
     if not exists(hashpath + "/hashes"):
