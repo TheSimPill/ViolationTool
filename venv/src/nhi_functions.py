@@ -128,6 +128,8 @@ def parse_data(frame, save_path):
     date have one total fine applied to them.
 
 '''
+# States_hash -> (facility, date, writeup, fine, severity, tag, url)
+# Fines_hash -> (facility, date, fine, url)
 def match_fines(hashpath, frame, states_hash, fines_urls_hash):
     for state in fines_urls_hash.keys():
         for fine_url_tuple in fines_urls_hash[state]:
@@ -137,8 +139,11 @@ def match_fines(hashpath, frame, states_hash, fines_urls_hash):
                     # Check to see if facility and date are the same for an incident from each hash
                     if fine_url_tuple[0] == incident_tuple[0] and fine_url_tuple[1] == incident_tuple[1]:
                         temp = list(incident_tuple)
-                        temp[3] = fine_url_tuple[-1]
+                        # Adding fine to states_hash
+                        temp[3] = fine_url_tuple[-2]
+                        # Adding url to states_hash
                         temp[-1] = fine_url_tuple[-1]
+                        # Convert back to tuple and add back to states_hash
                         states_hash[state][i] = tuple(temp)
     
     if not exists(hashpath + "/hashes"):
