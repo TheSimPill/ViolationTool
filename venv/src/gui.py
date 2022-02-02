@@ -1,3 +1,4 @@
+from optparse import Option
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askdirectory
@@ -60,6 +61,10 @@ class tkinterApp(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
+    # Extend the display when we get to options page
+    def resize(self):
+        self.geometry("500x600")
+
 # Default page layout
 class PageLayout(tk.Frame):
     def __init__(self, parent):
@@ -76,6 +81,7 @@ class PageLayout(tk.Frame):
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
+        self.controller = controller
          
         # Instructions
         start_instructions = ttk.Label(self, text="Reinitialize all data?", font=("Times", 15))
@@ -89,9 +95,14 @@ class StartPage(tk.Frame):
 
         # No button
         browse_text = tk.StringVar()
-        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(OptionsPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:self.show_options(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         browse_text.set("No")
         no_btn.grid(column=3, row=2, pady=10)
+
+    # When no button is pressed, extend window and show options pags
+    def show_options(self):
+        self.controller.resize()
+        self.controller.show_frame(OptionsPage)
 
 # Download page
 class DownloadPage(tk.Frame):
@@ -190,6 +201,7 @@ class WebscrapingPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
+        self.parent = parent
          
         # Instructions
         self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
@@ -223,15 +235,22 @@ class WebscrapingPage(tk.Frame):
                 else:
                     self.func(thisframe, True, states_hash, savepath, filepath)
         
-        thread(scraper.scrape_fines).start()
+        #thread(scraper.scrape_fines).start()
+        thisframe.advance_page()
 
     # Called after scraper is done and fines have been matched
     def advance_page(thisframe):
         global fines_hash
         global filepath
 
+        '''
         with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
             fines_hash = pickle.load(inp)
+        '''
+        thisframe.controller.resize()
+        thisframe.controller.show_frame(OptionsPage)
+        
+    
 
         
 
@@ -240,6 +259,10 @@ class OptionsPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
+
+        # Instructions
+        self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
 
   
