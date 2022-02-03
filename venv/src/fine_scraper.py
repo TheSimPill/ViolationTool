@@ -2,11 +2,15 @@ from datetime import datetime
 import random, re, concurrent.futures, time, os, pickle
 from turtle import home
 from bs4 import BeautifulSoup as bs
-import src.save_load_html as sl
-from src.nhi_functions import get_proxy
+import save_load_html as sl
+from nhi_functions import get_proxy
 from os.path import exists
 from tkinter.ttk import Progressbar, Label
-import src.nhi_functions as nhi
+import nhi_functions as nhi
+# Windows
+# import src.save_load_html as sl
+# from src.nhi_functions import get_proxy
+# import src.nhi_functions as nhi
 
 homes = 0
 totalhomes = 0

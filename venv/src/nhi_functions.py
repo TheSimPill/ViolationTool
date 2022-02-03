@@ -5,7 +5,7 @@ from openpyxl.workbook.workbook import Workbook
 import requests, os, zipfile, openpyxl
 from pathlib import Path
 import smtplib, time, getpass, random, pickle
-from . import info
+import info
 from tkinter.ttk import Progressbar, Label
 
 

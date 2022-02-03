@@ -1,3 +1,3 @@
 # GUI Webscraper Project
 
-Dis da remix baby.
+The gui version of my webscraper project.
