@@ -1,11 +1,12 @@
+from cgitb import text
 from optparse import Option
 import tkinter as tk
-from tkinter import ttk
+from tkinter import NO, ttk
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
 import src.nhi_functions as nhi
 import src.fine_scraper as scraper
-import pickle, threading, os
+import pickle, threading, os, time
 from os.path import exists
  
 LARGEFONT = ("Verdana", 35)
@@ -17,6 +18,7 @@ partial_instructions = None
 partial_instructions2 = None
 dl_btn = None
 load_scraper = False
+nopath = False
   
 class tkinterApp(tk.Tk):
      
@@ -42,7 +44,7 @@ class tkinterApp(tk.Tk):
   
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage, OptionsPage):
+        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage, OptionsPage, NoPathPage):
   
             frame = F(container, self)
   
@@ -101,8 +103,10 @@ class StartPage(tk.Frame):
 
     # When no button is pressed, extend window and show options pags
     def show_options(self):
-        self.controller.resize()
-        self.controller.show_frame(OptionsPage)
+        global nopath
+
+        nopath = True
+        self.controller.show_frame(NoPathPage)
 
 # Download page
 class DownloadPage(tk.Frame):
@@ -249,11 +253,44 @@ class WebscrapingPage(tk.Frame):
         '''
         thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
-        
-    
 
-        
+# If no is selected, choose where the hashes are located
+class NoPathPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+         
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Click browse to select locations of save data", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
+        # Download button
+        browse_text = tk.StringVar()
+        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.choose_path(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn.grid(column=2, row=3, pady=10)
+        browse_text.set("Browse")
+
+    def choose_path(self):
+        global savepath
+        global states_hash
+
+        while True:
+            savepath = askdirectory()
+            # Checks to see if user gave us path with hash we need, otherwise let them retry
+            if exists(savepath + "/states_hash.pkl"):
+                with open(savepath + "/states_hash.pkl", 'rb') as inp:
+                    states_hash = pickle.load(inp)
+
+                self.controller.resize()
+                self.controller.update_idletasks()
+                self.controller.show_frame(OptionsPage)
+                break
+
+            else:
+                self.instructions.config(text="Folder chosen doesn't contain states_hash.pkl, try again")
+                self.controller.update_idletasks()
+                time.sleep(3)
+  
 # Shown if user didn't reinitialize data, or if reinitialization is complete
 class OptionsPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -261,7 +298,7 @@ class OptionsPage(tk.Frame):
         self.controller = controller
 
         # Instructions
-        self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
+        self.instructions = ttk.Label(self, text="Choose your options", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
 
