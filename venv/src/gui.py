@@ -1,15 +1,13 @@
-from dis import Instruction
+from cgitb import text
+from optparse import Option
 import tkinter as tk
-from tkinter import ttk
+from tkinter import NO, ttk
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
 import src.nhi_functions as nhi
 import src.fine_scraper as scraper
-from time import sleep
-import pickle, time
-import requests, os, zipfile
-import threading
-  
+import pickle, threading, os, time
+from os.path import exists
  
 LARGEFONT = ("Verdana", 35)
 savepath = ""
@@ -19,6 +17,8 @@ fines_hash = {}
 partial_instructions = None
 partial_instructions2 = None
 dl_btn = None
+load_scraper = False
+nopath = False
   
 class tkinterApp(tk.Tk):
      
@@ -44,7 +44,7 @@ class tkinterApp(tk.Tk):
   
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingFullPage, WebscrapingPartialPage, WebscrapingMatchingPage):
+        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage, OptionsPage, NoPathPage):
   
             frame = F(container, self)
   
@@ -63,6 +63,10 @@ class tkinterApp(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
+    # Extend the display when we get to options page
+    def resize(self):
+        self.geometry("500x600")
+
 # Default page layout
 class PageLayout(tk.Frame):
     def __init__(self, parent):
@@ -79,6 +83,7 @@ class PageLayout(tk.Frame):
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
+        self.controller = controller
          
         # Instructions
         start_instructions = ttk.Label(self, text="Reinitialize all data?", font=("Times", 15))
@@ -92,9 +97,16 @@ class StartPage(tk.Frame):
 
         # No button
         browse_text = tk.StringVar()
-        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(WebscrapingFullPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:self.show_options(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         browse_text.set("No")
         no_btn.grid(column=3, row=2, pady=10)
+
+    # When no button is pressed, extend window and show options pags
+    def show_options(self):
+        global nopath
+
+        nopath = True
+        self.controller.show_frame(NoPathPage)
 
 # Download page
 class DownloadPage(tk.Frame):
@@ -103,11 +115,11 @@ class DownloadPage(tk.Frame):
         thisframe.controller = controller
          
         # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Choose folder to save to and download will start", font=("Times", 15))
+        thisframe.instructions = ttk.Label(thisframe, text="Choose empty folder to save to and download will start", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        thisframe.instructions2 = ttk.Label(thisframe, text="Screen will update when processing is finished", font=("Times", 15))
+        thisframe.instructions2 = ttk.Label(thisframe, text="MAKE SURE FOLDER IS EMPTY", font=("Times", 15))
         thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Download button
@@ -129,11 +141,15 @@ class DownloadPage(tk.Frame):
             def run(self):
                 self.func(thisframe, filepath)
 
-        thread(nhi.download).start()
+        #thread(nhi.download).start()
+        # For skipping download
+        thisframe.advance_page()
 
     def advance_page(thisframe):
         global states_hash
-        with open(filepath + "/hashes_and_pages/states_hash.pkl", 'rb') as inp:
+        global filepath
+
+        with open(filepath + "/hashes/states_hash.pkl", 'rb') as inp:
             states_hash = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
@@ -160,105 +176,130 @@ class WebscrapingChoicePage(tk.Frame):
 
         # No button
         browse_text = tk.StringVar()
-        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(WebscrapingFullPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:self.fresh_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         browse_text.set("No")
         no_btn.grid(column=3, row=3, pady=10)
 
-    # Choose location of saved data -> used when user chooses partial data
+    # If yes is chosen -> Choose location of saved data, scrape will used saved pages when possible
     def open_and_scrape(self):
         global savepath
-        #savepath = askdirectory()
-        self.controller.show_frame(WebscrapingPartialPage)
+        global load_scraper
+        load_scraper = True
 
-# Webscraping page - shown if partial data choice is yes
-class WebscrapingPartialPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
-         
-        # Instructions
-        global partial_instructions
-        partial_instructions = ttk.Label(self, text="Press start to begin webscraping, screen won't update", font=("Times", 15))
-        partial_instructions.grid(column=1, row=1, columnspan=3, pady=10)
-
-        # Instructions line 2
-        global partial_instructions2
-        partial_instructions2 = ttk.Label(self, text="WILL TAKE ALMOST AN HOUR", font=("Times", 15))
-        partial_instructions2.grid(column=1, row=2, columnspan=3, pady=10)
-
-        # Start button
-        browse_text = tk.StringVar()
+        savepath = askdirectory()
+        self.controller.show_frame(WebscrapingPage)
+    
+    # If no is chosen -> means a full scrape will be done
+    def fresh_scrape(self):
+        global filepath
         global savepath
-        global states_hash
-        global filepath
-        global dl_btn
-        dl_btn = tk.Button(self, command=lambda:self.scrape(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        dl_btn.grid(column=2, row=3, pady=10)
-        browse_text.set("Start Webscraping")
 
-    def scrape(self):
-        global fines_hash
-        global dl_btn
-        global partial_instructions
-        global partial_instructions2
-        partial_instructions.config(text="Scraping")
-        partial_instructions2.grid_forget()
-        dl_btn.grid_forget()
-        self.update_idletasks()
-        print("forgot ")
-
+        savepath = filepath + "/pages"
+        if not exists(savepath):
+            os.mkdir(savepath)
         
-        fines_hash = scraper.scrape_fines(False, states_hash, filepath)
-        '''
-        with open("./hashes/fines_hash.pkl", 'wb') as outp:
-            pickle.dump(fines_hash, outp, pickle.HIGHEST_PROTOCOL)
-        '''
-        #with open(filepath + "/fines_hash.pkl", 'rb') as inp:
-         #   fines_hash = pickle.load(inp)
-        #self.controller.show_frame(WebscrapingMatchingPage)
+        self.controller.show_frame(WebscrapingPage)
         
-
-# Webscraping fine match page
-class WebscrapingMatchingPage(tk.Frame):
+# Webscraping page - shown if partial data choice is yes
+class WebscrapingPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
+        self.parent = parent
          
         # Instructions
-        global instructions
-        instructions = ttk.Label(self, text="Matching fines to cases...", font=("Times", 15))
-        instructions.grid(column=1, row=1, columnspan=3, pady=10)
-
-        global filepath
-        global states_hash
-        global fines_hash
-        '''
-        nhi.match_fines(states_hash, fines_hash)
-        with open(filepath + "/states_hash.pkl", 'rb') as inp:
-            states_hash = pickle.load(inp)
-            '''
-        
-# Webscraping page
-class WebscrapingFullPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
-         
-        # Instructions
-        global instructions
-        instructions = ttk.Label(self, text="Press start to begin webscraping, screen won't update", font=("Times", 15))
-        instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         # Instructions line 2
-        global instructions2
-        instructions2 = ttk.Label(self, text="WILL TAKE ALMOST AN HOUR", font=("Times", 15))
-        instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        self.instructions2 = ttk.Label(self, text="Will take ~1hour if limited or no save data used", font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Start button
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.open_and_download(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn = tk.Button(self, command=lambda:self.scrape(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         self.dl_btn.grid(column=2, row=3, pady=10)
         browse_text.set("Start Webscraping")
+
+    def scrape(thisframe):
+        global fines_hash
+        global states_hash
+        global load_scraper
+        global savepath
+        global filepath
+
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                if load_scraper:
+                    self.func(thisframe, False, states_hash, savepath, filepath)
+                else:
+                    self.func(thisframe, True, states_hash, savepath, filepath)
+        
+        #thread(scraper.scrape_fines).start()
+        thisframe.advance_page()
+
+    # Called after scraper is done and fines have been matched
+    def advance_page(thisframe):
+        global fines_hash
+        global filepath
+
+        '''
+        with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
+            fines_hash = pickle.load(inp)
+        '''
+        thisframe.controller.resize()
+        thisframe.controller.show_frame(OptionsPage)
+
+# If no is selected, choose where the hashes are located
+class NoPathPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+         
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Click browse to select locations of save data", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        # Download button
+        browse_text = tk.StringVar()
+        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.choose_path(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn.grid(column=2, row=3, pady=10)
+        browse_text.set("Browse")
+
+    def choose_path(self):
+        global savepath
+        global states_hash
+
+        while True:
+            savepath = askdirectory()
+            # Checks to see if user gave us path with hash we need, otherwise let them retry
+            if exists(savepath + "/states_hash.pkl"):
+                with open(savepath + "/states_hash.pkl", 'rb') as inp:
+                    states_hash = pickle.load(inp)
+
+                self.controller.resize()
+                self.controller.update_idletasks()
+                self.controller.show_frame(OptionsPage)
+                break
+
+            else:
+                self.instructions.config(text="Folder chosen doesn't contain states_hash.pkl, try again")
+                self.controller.update_idletasks()
+                time.sleep(3)
+  
+# Shown if user didn't reinitialize data, or if reinitialization is complete
+class OptionsPage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
+
+        # Instructions
+        self.instructions = ttk.Label(self, text="Choose your options", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
 
   
