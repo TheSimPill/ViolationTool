@@ -50,9 +50,16 @@ territories = {
 
     "East" : ["Michigan", "Indiana", "Kentucky", "Tennessee", "Alabama", "Ohio", "Georgia", "Florida", "South Carolina", "North Carolina",
              "Virginia", "West Virginia", "Delaware", "Maryland", "New Jersey", "Pennsylvania", "New York", "Connecticut", "Rhode Island",
-             "Massachusetts", "Vermont", "New Hampshire", "Maine"]
+             "Massachusetts", "Vermont", "New Hampshire", "Maine", "District of Columbia", "Guam"]
 }
 
+all_states = ["California", "Oregon", "Washington", "Nevada", "Idaho", "Utah", "Arizona", "Montana", "Alaska", "Hawaii", "Wyoming",
+                "Colorado", "New Mexico", "North Dakota", "South Dakota", "Nebraska", "Kansas", "Oklahoma", "Texas", "Minnesota", "Iowa",
+                "Missouri", "Arkansas", "Louisiana", "Wisconsin", "Illinois", "Mississippi", "Michigan", "Indiana", "Kentucky", "Tennessee", 
+                "Alabama", "Ohio", "Georgia", "Florida", "South Carolina", "North Carolina", "Virginia", "West Virginia", "Delaware", "Maryland",
+                "New Jersey", "Pennsylvania", "New York", "Connecticut", "Rhode Island", "Massachusetts", "Vermont", "New Hampshire", "Maine", "District of Columbia",
+                "Guam"]
+all_states = sorted(all_states)
 
 # Creates hash map where key is two later state code and value is full state
 def get_state_codes(load) -> dict:

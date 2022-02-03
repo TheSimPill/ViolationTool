@@ -8,6 +8,7 @@ import src.nhi_functions as nhi
 import src.fine_scraper as scraper
 import pickle, threading, os, time
 from os.path import exists
+import src.info as info
  
 LARGEFONT = ("Verdana", 35)
 savepath = ""
@@ -44,7 +45,7 @@ class tkinterApp(tk.Tk):
   
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage, OptionsPage, NoPathPage):
+        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage, OptionsPage, NoPathPage, TerritoriesPage):
   
             frame = F(container, self)
   
@@ -65,7 +66,7 @@ class tkinterApp(tk.Tk):
 
     # Extend the display when we get to options page
     def resize(self):
-        self.geometry("500x600")
+        self.geometry("500x500")
 
 # Default page layout
 class PageLayout(tk.Frame):
@@ -251,7 +252,7 @@ class WebscrapingPage(tk.Frame):
         with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
             fines_hash = pickle.load(inp)
         '''
-        thisframe.controller.resize()
+        #thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
 
 # If no is selected, choose where the hashes are located
@@ -273,7 +274,9 @@ class NoPathPage(tk.Frame):
     def choose_path(self):
         global savepath
         global states_hash
-
+        self.controller.resize()
+        self.controller.show_frame(TerritoriesPage)
+        '''
         while True:
             savepath = askdirectory()
             # Checks to see if user gave us path with hash we need, otherwise let them retry
@@ -290,6 +293,8 @@ class NoPathPage(tk.Frame):
                 self.instructions.config(text="Folder chosen doesn't contain states_hash.pkl, try again")
                 self.controller.update_idletasks()
                 time.sleep(3)
+
+        '''
   
 # Shown if user didn't reinitialize data, or if reinitialization is complete
 class OptionsPage(tk.Frame):
@@ -300,6 +305,80 @@ class OptionsPage(tk.Frame):
         # Instructions
         self.instructions = ttk.Label(self, text="Choose your options", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        # Set territories button
+        browse_text = tk.StringVar()
+        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(TerritoriesPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn.grid(column=2, row=2, pady=10)
+        browse_text.set("Set Territories")
+
+# Page where states in each territory is set
+class TerritoriesPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Which territory do you want to set first?", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        # East Button
+        browse_text = tk.StringVar()
+        thisframe.eastbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("E"), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.eastbtn.grid(column=2, row=2, pady=20)
+        browse_text.set("East")
+
+        # Central button
+        browse_text = tk.StringVar()
+        thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("C"), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.cenbtn.grid(column=2, row=3, pady=20)
+        browse_text.set("Central")
+
+        # West button
+        browse_text = tk.StringVar()
+        thisframe.wstbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("W"), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.wstbtn.grid(column=2, row=4, pady=20)
+        browse_text.set("West")
+
+    # Function for choosing states in territories
+    def choose_terrs(thisframe, territory):
+        # Hide buttons
+        thisframe.eastbtn.grid_forget()
+        thisframe.cenbtn.grid_forget()
+        thisframe.wstbtn.grid_forget()
+        thisframe.controller.update_idletasks()
+        thisframe.controller.geometry("500x1000")
+
+        if territory == "W":
+            thisframe.instructions.config(text="Choose states in the west territory")
+        elif territory == "E":
+            thisframe.instructions.config(text="Choose states in the east territory")
+        else:
+            thisframe.instructions.config(text="Choose states in the central territory")
+
+        #thisframe.b1 = ttk.Checkbutton(thisframe, text = "Ark")
+        #thisframe.b1.grid(column=1, row=2)
+
+        crow = 2
+        second = False
+        third = False
+        for state in info.all_states:
+            if crow <= 17:
+                thisframe.b1 = ttk.Checkbutton(thisframe, text = state)
+                thisframe.b1.grid(column=1, row=crow)
+            elif crow <= 34 and not second:
+                second = True
+                thisframe.b1 = ttk.Checkbutton(thisframe, text = state)
+                thisframe.b1.grid(column=2, row=crow)
+            else:
+                thisframe.b1 = ttk.Checkbutton(thisframe, text = state)
+                thisframe.b1.grid(column=3, row=crow)
+
+            crow += 1
+        thisframe.update_idletasks()
+
+            
+
 
 
   
