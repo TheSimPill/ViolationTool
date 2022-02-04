@@ -4,11 +4,15 @@ import tkinter as tk
 from tkinter import NO, ttk
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import src.nhi_functions as nhi
-import src.fine_scraper as scraper
+import nhi_functions as nhi
+import fine_scraper as scraper
 import pickle, threading, os, time
 from os.path import exists
-import src.info as info
+import info as info
+# Windows
+#import src.nhi_functions as nhi
+#import fine_scraper as scraper
+#import info as info
  
 LARGEFONT = ("Verdana", 35)
 savepath = ""
