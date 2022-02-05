@@ -1,4 +1,4 @@
-from asyncio import start_server
+
 import tkinter as tk
 from tkinter import NO, ttk
 from tkinter.filedialog import askdirectory
@@ -366,6 +366,12 @@ class TerritoriesPage(tk.Frame):
     # Function for choosing states in territories
     def choose_terrs(thisframe, territory, states, chosen):
 
+        # Custom checkbox - had to do this to get around problem with creating buttons in a loop
+        class CheckB(ttk.Checkbutton):
+            def __init__(self, parent, text):
+                ttk.Checkbutton.__init__(self, master=parent, text=text, command=lambda:parent.add_state(text, territory, states))
+                self.parent = thisframe
+            
         if chosen >= 3:
             thisframe.roptions()
         else:
@@ -420,24 +426,26 @@ class TerritoriesPage(tk.Frame):
             ct = 0
             second = False
             third = False
+            boxes = []
+            print(states)
             for state in states:
                 if ct <= len(states)/3:
-                    thisframe.b1 = ttk.Checkbutton(thisframe, text = state, command = lambda:thisframe.add_state(state, territory, states))
-                    thisframe.b1.grid(column=1, row=crow)
+                    boxes.append(CheckB(thisframe, state))
+                    boxes[ct].grid(column=1, row=crow)
                 elif ct <= (len(states)/3)*2:
                     # Init second column
                     if not second:
                         second = True
                         crow = 2
-                    thisframe.b1 = ttk.Checkbutton(thisframe, text = state, command = lambda:thisframe.add_state(state, territory, states))
-                    thisframe.b1.grid(column=2, row=crow)
+                    boxes.append(CheckB(thisframe, state))
+                    boxes[ct].grid(column=2, row=crow)
                 else:
                     # Init third column
                     if not third:
                         third = True
                         crow= 2
-                    thisframe.b1 = ttk.Checkbutton(thisframe, text = state, command = lambda:thisframe.add_state(state, territory, states))
-                    thisframe.b1.grid(column=3, row=crow)
+                    boxes.append(CheckB(thisframe, state))
+                    boxes[ct].grid(column=3, row=crow)
 
                 ct += 1
                 crow += 1
@@ -450,35 +458,38 @@ class TerritoriesPage(tk.Frame):
         if state in states:
             if territory == "W":
                 thisframe.west.append(state)
+                thisframe.west = sorted(thisframe.west)
                 states.remove(state)
             elif territory == "E":
                 thisframe.east.append(state)
+                thisframe.east = sorted(thisframe.east)
                 states.remove(state)
-                print("clicked")
-                print(states)
-                print(thisframe.east)
             else:
                 thisframe.central.append(state)
+                thisframe.central = sorted(thisframe.central)
                 states.remove(state)
         # If a state has been clicked and is unclicked
         else:
             if territory == "W":
                 thisframe.west.remove(state)
                 states.append(state)
+                states = sorted(states)
             elif territory == "E":
                 thisframe.east.remove(state)
                 states.append(state)
-                print("unclicked")
-                print(states)
-                print(thisframe.east)
+                states = sorted(states)
             else:
                 thisframe.central.remove(state)
                 states.append(state)
+                states = sorted(states)
+
+    # Used once to go to next territory to assign and reset screen
+    def advance_screen(thisframe, territory, states, chosen):
+        for state in info.all_states:
+            if not state in states:
+                pass
 
 
-            
-        
-        
     # Return to options page after territories have been allocated
     def roptions(thisframe):
         thisframe.controller.show_frame(OptionsPage)
