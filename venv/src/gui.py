@@ -1,14 +1,14 @@
-from cgitb import text
-from optparse import Option
+from asyncio import start_server
 import tkinter as tk
 from tkinter import NO, ttk
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import nhi_functions as nhi
-import fine_scraper as scraper
 import pickle, threading, os, time
 from os.path import exists
+# Macbook
 import info as info
+import nhi_functions as nhi
+import fine_scraper as scraper
 # Windows
 #import src.nhi_functions as nhi
 #import fine_scraper as scraper
@@ -33,7 +33,7 @@ class tkinterApp(tk.Tk):
         # __init__ function for class Tk
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
-        self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
+        self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
         self.resizable(width=False, height=False)
         self.geometry("500x300")
          
@@ -72,17 +72,19 @@ class tkinterApp(tk.Tk):
     def resize(self):
         self.geometry("500x500")
 
+
 # Default page layout
 class PageLayout(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
 
         # Logo
-        logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
+        logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
         logo = ImageTk.PhotoImage(logo)
         logo_label = ttk.Label(self, image=logo)
         logo_label.image = logo
         logo_label.grid(column=1, row=0, columnspan=3)
+
 
 # Startpage
 class StartPage(tk.Frame):
@@ -112,6 +114,7 @@ class StartPage(tk.Frame):
 
         nopath = True
         self.controller.show_frame(NoPathPage)
+
 
 # Download page
 class DownloadPage(tk.Frame):
@@ -158,7 +161,8 @@ class DownloadPage(tk.Frame):
             states_hash = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
-            
+
+
 # Webscraping choice page - shown after downloading raw data if yes is chosen on initial screen
 class WebscrapingChoicePage(tk.Frame):
     def __init__(self, parent, controller):
@@ -204,7 +208,8 @@ class WebscrapingChoicePage(tk.Frame):
             os.mkdir(savepath)
         
         self.controller.show_frame(WebscrapingPage)
-        
+
+
 # Webscraping page - shown if partial data choice is yes
 class WebscrapingPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -259,6 +264,7 @@ class WebscrapingPage(tk.Frame):
         #thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
 
+
 # If no is selected, choose where the hashes are located
 class NoPathPage(tk.Frame):
     def __init__(thisframe, parent, controller):
@@ -279,7 +285,7 @@ class NoPathPage(tk.Frame):
         global savepath
         global states_hash
         self.controller.resize()
-        self.controller.show_frame(TerritoriesPage)
+        self.controller.show_frame(OptionsPage)
         '''
         while True:
             savepath = askdirectory()
@@ -300,6 +306,7 @@ class NoPathPage(tk.Frame):
 
         '''
   
+
 # Shown if user didn't reinitialize data, or if reinitialization is complete
 class OptionsPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -316,11 +323,23 @@ class OptionsPage(tk.Frame):
         self.dl_btn.grid(column=2, row=2, pady=10)
         browse_text.set("Set Territories")
 
+
 # Page where states in each territory is set
 class TerritoriesPage(tk.Frame):
     def __init__(thisframe, parent, controller):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
+
+        # Lists to represent territories
+        thisframe.east = []
+        thisframe.west = []
+        thisframe.central = []
+        # Bools to determine if a territory has been set yet
+        thisframe.eastc = False
+        thisframe.westc = False
+        thisframe.centralc = False
+        # List of all states
+        states = info.all_states
 
         # Instructions
         thisframe.instructions = ttk.Label(thisframe, text="Which territory do you want to set first?", font=("Times", 15))
@@ -328,64 +347,145 @@ class TerritoriesPage(tk.Frame):
 
         # East Button
         browse_text = tk.StringVar()
-        thisframe.eastbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("E"), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.eastbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("E", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.eastbtn.grid(column=2, row=2, pady=20)
         browse_text.set("East")
 
         # Central button
         browse_text = tk.StringVar()
-        thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("C"), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("C", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.cenbtn.grid(column=2, row=3, pady=20)
         browse_text.set("Central")
 
         # West button
         browse_text = tk.StringVar()
-        thisframe.wstbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("W"), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.wstbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("W", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.wstbtn.grid(column=2, row=4, pady=20)
         browse_text.set("West")
 
     # Function for choosing states in territories
-    def choose_terrs(thisframe, territory):
-        # Hide buttons
-        thisframe.eastbtn.grid_forget()
-        thisframe.cenbtn.grid_forget()
-        thisframe.wstbtn.grid_forget()
-        thisframe.controller.update_idletasks()
-        thisframe.controller.geometry("500x1000")
+    def choose_terrs(thisframe, territory, states, chosen):
 
-        if territory == "W":
-            thisframe.instructions.config(text="Choose states in the west territory")
-        elif territory == "E":
-            thisframe.instructions.config(text="Choose states in the east territory")
+        if chosen >= 3:
+            thisframe.roptions()
         else:
-            thisframe.instructions.config(text="Choose states in the central territory")
+            # Hide buttons
+            thisframe.eastbtn.grid_forget()
+            thisframe.cenbtn.grid_forget()
+            thisframe.wstbtn.grid_forget()
+            thisframe.controller.geometry("500x600")
 
-        #thisframe.b1 = ttk.Checkbutton(thisframe, text = "Ark")
-        #thisframe.b1.grid(column=1, row=2)
+            # Instructions
+            if territory == "W":
+                thisframe.instructions.config(text="Choose states in the west territory")
+                thisframe.westc = True
 
-        crow = 2
-        second = False
-        third = False
-        for state in info.all_states:
-            if crow <= 17:
-                thisframe.b1 = ttk.Checkbutton(thisframe, text = state)
-                thisframe.b1.grid(column=1, row=crow)
-            elif crow <= 34 and not second:
-                second = True
-                thisframe.b1 = ttk.Checkbutton(thisframe, text = state)
-                thisframe.b1.grid(column=2, row=crow)
+                # East button
+                browse_text = tk.StringVar()
+                thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("E", states, chosen+1), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+                thisframe.cenbtn.grid(column=2, row=25, pady=20)
+                if chosen == 2:
+                    browse_text.set("Finish")
+                else:
+                    browse_text.set("Set east territory")
+
+            elif territory == "E":
+                thisframe.instructions.config(text="Choose states in the east territory")
+                thisframe.eastc = True
+
+                # Central button
+                browse_text = tk.StringVar()
+                thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("C", states, chosen+1), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+                thisframe.cenbtn.grid(column=2, row=25, pady=20)
+                if chosen == 2:
+                    browse_text.set("Finish")
+                else:
+                    browse_text.set("Set central territory")
+
             else:
-                thisframe.b1 = ttk.Checkbutton(thisframe, text = state)
-                thisframe.b1.grid(column=3, row=crow)
+                thisframe.instructions.config(text="Choose states in the central territory")
+                thisframe.centralc = True
 
-            crow += 1
-        thisframe.update_idletasks()
+                # West button
+                browse_text = tk.StringVar()
+                thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("W", states, chosen+1), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+                thisframe.cenbtn.grid(column=2, row=25, pady=20)
+                if chosen == 2:
+                    browse_text.set("Finish")
+                else:
+                    browse_text.set("Set west territory")     
+
+            # Init checkboxes
+            crow = 2
+            ct = 0
+            second = False
+            third = False
+            for state in states:
+                if ct <= len(states)/3:
+                    thisframe.b1 = ttk.Checkbutton(thisframe, text = state, command = lambda:thisframe.add_state(state, territory, states))
+                    thisframe.b1.grid(column=1, row=crow)
+                elif ct <= (len(states)/3)*2:
+                    # Init second column
+                    if not second:
+                        second = True
+                        crow = 2
+                    thisframe.b1 = ttk.Checkbutton(thisframe, text = state, command = lambda:thisframe.add_state(state, territory, states))
+                    thisframe.b1.grid(column=2, row=crow)
+                else:
+                    # Init third column
+                    if not third:
+                        third = True
+                        crow= 2
+                    thisframe.b1 = ttk.Checkbutton(thisframe, text = state, command = lambda:thisframe.add_state(state, territory, states))
+                    thisframe.b1.grid(column=3, row=crow)
+
+                ct += 1
+                crow += 1
+
+            thisframe.controller.update_idletasks()
+
+    # Called when a checkbox is clicked
+    def add_state(thisframe, state, territory, states):
+        # This handles states that have already been clicked
+        if state in states:
+            if territory == "W":
+                thisframe.west.append(state)
+                states.remove(state)
+            elif territory == "E":
+                thisframe.east.append(state)
+                states.remove(state)
+                print("clicked")
+                print(states)
+                print(thisframe.east)
+            else:
+                thisframe.central.append(state)
+                states.remove(state)
+        # If a state has been clicked and is unclicked
+        else:
+            if territory == "W":
+                thisframe.west.remove(state)
+                states.append(state)
+            elif territory == "E":
+                thisframe.east.remove(state)
+                states.append(state)
+                print("unclicked")
+                print(states)
+                print(thisframe.east)
+            else:
+                thisframe.central.remove(state)
+                states.append(state)
+
 
             
+        
+        
+    # Return to options page after territories have been allocated
+    def roptions(thisframe):
+        thisframe.controller.show_frame(OptionsPage)
 
 
 
-  
+
 # Driver Code
 app = tkinterApp()
 app.mainloop()
