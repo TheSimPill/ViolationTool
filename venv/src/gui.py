@@ -2,9 +2,12 @@
 import tkinter as tk
 from tkinter import NO, ttk
 from tkinter.filedialog import askdirectory
+from unicodedata import east_asian_width
+from weakref import WeakSet
 from PIL import Image, ImageTk
 import pickle, threading, os, time
 from os.path import exists
+import datetime
 # Macbook
 '''
 import info as info
@@ -26,6 +29,9 @@ partial_instructions2 = None
 dl_btn = None
 load_scraper = False
 nopath = False
+east = []
+west  = []
+central = []
   
 class tkinterApp(tk.Tk):
      
@@ -52,7 +58,8 @@ class tkinterApp(tk.Tk):
   
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage, OptionsPage, NoPathPage, TerritoriesPage):
+        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
+                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage):
   
             frame = F(container, self)
   
@@ -161,7 +168,7 @@ class DownloadPage(tk.Frame):
         global states_hash
         global filepath
 
-        with open(filepath + "/hashes/states_hash.pkl", 'rb') as inp:
+        with open(filepath + "/states_hash.pkl", 'rb') as inp:
             states_hash = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
@@ -253,8 +260,8 @@ class WebscrapingPage(tk.Frame):
                 else:
                     self.func(thisframe, True, states_hash, savepath, filepath)
         
-        #thread(scraper.scrape_fines).start()
-        thisframe.advance_page()
+        thread(scraper.scrape_fines).start()
+        #thisframe.advance_page()
 
     # Called after scraper is done and fines have been matched
     def advance_page(thisframe):
@@ -309,7 +316,7 @@ class NoPathPage(tk.Frame):
                 time.sleep(3)
 
         '''
-  
+
 
 # Shown if user didn't reinitialize data, or if reinitialization is complete
 class OptionsPage(tk.Frame):
@@ -326,6 +333,31 @@ class OptionsPage(tk.Frame):
         self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(TerritoriesPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.dl_btn.grid(column=2, row=2, pady=10)
         browse_text.set("Set Territories")
+
+        # Set date range button
+        browse_text = tk.StringVar()
+        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(DateRangePage),textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn.grid(column=2, row=3, pady=10)
+        browse_text.set("Set Date Range")
+
+        # Set emails
+        browse_text = tk.StringVar()
+        self.dl_btn = tk.Button(self, textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn.grid(column=2, row=4, pady=10)
+        browse_text.set("Set Emails For Territories/States")
+
+        # Set additional statistics to include button
+        browse_text = tk.StringVar()
+        self.dl_btn = tk.Button(self, textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn.grid(column=2, row=5, pady=10)
+        browse_text.set("Add Data To Include")
+
+        # Make excel files button
+        browse_text = tk.StringVar()
+        self.dl_btn = tk.Button(self, textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn.grid(column=2, row=6, pady=10)
+        browse_text.set("Make Excel Files and Send Emails ->")
+
 
 
 # Page where states in each territory is set
@@ -383,7 +415,8 @@ class TerritoriesPage(tk.Frame):
             thisframe.eastbtn.grid_forget()
             thisframe.cenbtn.grid_forget()
             thisframe.wstbtn.grid_forget()
-            thisframe.controller.geometry("500x600")
+            thisframe.controller.geometry("570x630")
+            # Mac -> this.frame.controller.geometry("500x600")
 
             # Instructions
             if territory == "W":
@@ -463,40 +496,86 @@ class TerritoriesPage(tk.Frame):
             if territory == "W":
                 thisframe.west.append(state)
                 thisframe.west = sorted(thisframe.west)
-                states.remove(state)
             elif territory == "E":
                 thisframe.east.append(state)
                 thisframe.east = sorted(thisframe.east)
-                states.remove(state)
             else:
                 thisframe.central.append(state)
                 thisframe.central = sorted(thisframe.central)
-                states.remove(state)
         # If a state has been clicked and is unclicked
         else:
             if territory == "W":
                 thisframe.west.remove(state)
-                states.append(state)
-                states = sorted(states)
             elif territory == "E":
                 thisframe.east.remove(state)
-                states.append(state)
-                states = sorted(states)
             else:
                 thisframe.central.remove(state)
-                states.append(state)
-                states = sorted(states)
-
-    # Used once to go to next territory to assign and reset screen
-    def advance_screen(thisframe, territory, states, chosen):
-        for state in info.all_states:
-            if not state in states:
-                pass
-
 
     # Return to options page after territories have been allocated
     def roptions(thisframe):
+        global east 
+        global west 
+        global central
+
+        east = thisframe.east
+        west = thisframe.west
+        central = thisframe.central
+
+        thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
+
+# Page where date range for cases is set
+class DateRangePage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller   
+
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Choose range of dates to include in excel file", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        # Instructions 2
+        thisframe.instructions2 = ttk.Label(thisframe, text="Start date (MM/DD/YYYY)", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
+
+        # Instructions 3
+        thisframe.instructions3 = ttk.Label(thisframe, text="End date (MM/DD/YYYY)", font=("Times", 15))
+        thisframe.instructions3.grid(column=1, row=5, columnspan=3, pady=10)
+
+        # Start date
+        thisframe.start = tk.Text(thisframe, height=2, width=25)
+        thisframe.start.grid(column=2, row=4, pady=10)
+
+        # End date
+        thisframe.end = tk.Text(thisframe, height=2, width=25)
+        thisframe.end.grid(column=2, row=6, pady=10)
+
+        # Finish button
+        browse_text = tk.StringVar()
+        thisframe.finbtn = tk.Button(thisframe, command=lambda:thisframe.check_range(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.finbtn.grid(column=2, row=7, pady=20)
+        browse_text.set("Finish")
+
+    # Checks to see if dates are in correct format and within range -> need to add earliest date
+    def check_range(thisframe):
+        start = thisframe.start
+        end = thisframe.end
+
+        while True:
+            try:
+                stime = datetime.datetime.strptime(start, '%b %d, %Y')
+            except:
+                thisframe.instructions.config(text="Start date is not in correct format")
+
+
+
+
+    # Return to options page after range set
+    def roptions(thisframe):
+        thisframe.controller.resize()
+        thisframe.controller.show_frame(OptionsPage)
+
+
 
 
 
