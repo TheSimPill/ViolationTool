@@ -6,13 +6,15 @@ from PIL import Image, ImageTk
 import pickle, threading, os, time
 from os.path import exists
 # Macbook
+'''
 import info as info
 import nhi_functions as nhi
 import fine_scraper as scraper
+'''
 # Windows
-#import src.nhi_functions as nhi
-#import fine_scraper as scraper
-#import info as info
+import src.nhi_functions as nhi
+import src.fine_scraper as scraper
+import src.info as info
  
 LARGEFONT = ("Verdana", 35)
 savepath = ""
@@ -33,7 +35,8 @@ class tkinterApp(tk.Tk):
         # __init__ function for class Tk
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
-        self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+        self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
+        # Mac -> self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
         self.resizable(width=False, height=False)
         self.geometry("500x300")
          
@@ -79,7 +82,8 @@ class PageLayout(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         # Logo
-        logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+        # Mac -> logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+        logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)
         logo_label = ttk.Label(self, image=logo)
         logo_label.image = logo
