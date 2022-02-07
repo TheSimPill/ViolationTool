@@ -558,14 +558,14 @@ class DateRangePage(tk.Frame):
 
     # Checks to see if dates are in correct format and within range -> need to add earliest date
     def check_range(thisframe):
-        start = thisframe.start
-        end = thisframe.end
-
         while True:
             try:
-                stime = datetime.datetime.strptime(start, '%b %d, %Y')
+                stime = datetime.datetime.strptime(thisframe.start, '%b %d, %Y')
+                etime = datetime.datetime.strptime(thisframe.end, '%b %d, %Y')
+                break
             except:
-                thisframe.instructions.config(text="Start date is not in correct format")
+                thisframe.instructions.config(text="Check date formats and retry")
+
 
 
 
