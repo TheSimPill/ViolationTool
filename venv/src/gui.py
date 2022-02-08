@@ -1,13 +1,16 @@
 
+from glob import glob
 import tkinter as tk
 from tkinter import ttk
+from tkinter import scrolledtext
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import pickle, threading, os, time, platform
+import pickle, threading, os, time
 from os.path import exists
 import datetime
+from platform import system
 
-OS = platform.system()
+OS = system()
 if OS == "Darwin":
     # Macbook
     import info as info
@@ -35,6 +38,10 @@ west  = []
 central = []
 sdate = None
 edate = None
+eemails = []
+wemails = []
+cemails = []
+userecent = False
   
 class tkinterApp(tk.Tk):
      
@@ -65,7 +72,7 @@ class tkinterApp(tk.Tk):
         # iterating through a tuple consisting
         # of the different page layouts
         for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
-                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage):
+                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage):
   
             frame = F(container, self)
   
@@ -338,21 +345,21 @@ class OptionsPage(tk.Frame):
 
         # Set date range button
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(DateRangePage),textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn = tk.Button(self, command=lambda:self.show_daterange(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.dl_btn.grid(column=2, row=3, pady=10)
         browse_text.set("Set Date Range")
 
         # Set emails
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(EmailsPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.dl_btn.grid(column=2, row=4, pady=10)
         browse_text.set("Set Emails For Territories/States")
 
-        # Set additional statistics to include button
+        # Format excel
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(FormatPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.dl_btn.grid(column=2, row=5, pady=10)
-        browse_text.set("Add Data To Include")
+        browse_text.set("Format Excel Data")
 
         # Make excel files button
         browse_text = tk.StringVar()
@@ -360,6 +367,13 @@ class OptionsPage(tk.Frame):
         self.dl_btn.grid(column=2, row=6, pady=10)
         browse_text.set("Make Excel Files and Send Emails ->")
 
+    def show_daterange(thisframe):
+        if OS == "Darwin":
+            thisframe.controller.geometry("500x600")
+        elif OS == "Windows":
+            thisframe.controller.geometry("500x600")
+
+        thisframe.controller.show_frame(DateRangePage)
 
 
 # Page where states in each territory is set
@@ -524,6 +538,7 @@ class TerritoriesPage(tk.Frame):
         thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
 
+
 # Page where date range for cases is set
 class DateRangePage(tk.Frame):
     def __init__(thisframe, parent, controller):
@@ -556,6 +571,20 @@ class DateRangePage(tk.Frame):
         thisframe.finbtn.grid(column=2, row=7, pady=20)
         browse_text.set("Finish")
 
+        # Instructions 4 -> need to save last run
+        thisframe.instructions3 = ttk.Label(thisframe, text=".. or only include new data (Last run XX/XX/XXX)", font=("Times", 15))
+        thisframe.instructions3.grid(column=1, row=8, columnspan=3, pady=10)
+
+        # Use most recent data button
+        browse_text = tk.StringVar()
+        thisframe.finbtn = tk.Button(thisframe, command=lambda:thisframe.use_recent(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.finbtn.grid(column=2, row=9, pady=20)
+        browse_text.set("Use Recent")
+
+    def use_recent(thisframe):
+        global userecent; userecent = True
+        thisframe.controller.show_frame(OptionsPage)
+
     # Checks to see if dates are in correct format and within range -> need to add earliest date
     def check_range(thisframe):
             try:
@@ -577,6 +606,73 @@ class DateRangePage(tk.Frame):
 
             except:
                 thisframe.instructions.config(text="Check date formats and retry")
+
+
+# Page where emails for each territory are set
+class EmailsPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Enter emails (each on their own line) for the east territory", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        # Instructions2
+        thisframe.instructions2 = ttk.Label(thisframe, text="Please make sure the emails are typed correctly and valid", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
+
+        # Instructions3
+        thisframe.instructions3 = ttk.Label(thisframe, text="Ex: justin@aol.com\n      ethan@gmail.com\n      ...", font=("Times", 15))
+        thisframe.instructions3.grid(column=1, row=4, columnspan=3, pady=10)
+
+        # Email box
+        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
+        thisframe.box.grid(column=2, row=5, pady=10)
+
+        # Next territory button
+        thisframe.browse_text = tk.StringVar()
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.advance_screen(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=6, pady=40)
+        thisframe.browse_text.set("Next Territory")
+
+        # To represent what territory is being set
+        thisframe.curter = "E"
+
+    # Advance to next territory
+    def advance_screen(thisframe):
+        global eemails; eemails = thisframe.box.get("1.0","end-1c").splitlines()
+        if thisframe.curter == "E":
+            thisframe.curter = "C"
+            thisframe.instructions.config(text="Enter emails (each on their own line) for the central territory")
+
+            # Reset Email box
+            thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
+            thisframe.box.grid(column=2, row=5, pady=10)
+        else:
+            thisframe.curter = "W"
+            thisframe.instructions.config(text="Enter emails (each on their own line) for the west territory")
+
+            # Change button and command
+            thisframe.browse_text = tk.StringVar()
+            thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.controller.show_frame(OptionsPage), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+            thisframe.nextbtn.grid(column=2, row=6, pady=40)
+            thisframe.browse_text.set("Finish")
+
+
+# Page where emails for each territory are set
+class FormatPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+
+        
+
+        
+        
+
+
+
 
 
 
