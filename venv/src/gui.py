@@ -1,24 +1,25 @@
 
 import tkinter as tk
-from tkinter import NO, ttk
+from tkinter import ttk
 from tkinter.filedialog import askdirectory
-from unicodedata import east_asian_width
-from weakref import WeakSet
 from PIL import Image, ImageTk
-import pickle, threading, os, time
+import pickle, threading, os, time, platform
 from os.path import exists
 import datetime
-# Macbook
-'''
-import info as info
-import nhi_functions as nhi
-import fine_scraper as scraper
-'''
-# Windows
-import src.nhi_functions as nhi
-import src.fine_scraper as scraper
-import src.info as info
- 
+
+OS = platform.system()
+if OS == "Darwin":
+    # Macbook
+    import info as info
+    import nhi_functions as nhi
+    import fine_scraper as scraper
+elif OS == "Windows":
+    # Windows
+    import src.nhi_functions as nhi
+    import src.fine_scraper as scraper
+    import src.info as info
+
+# Global variables
 LARGEFONT = ("Verdana", 35)
 savepath = ""
 filepath = ""
@@ -32,6 +33,8 @@ nopath = False
 east = []
 west  = []
 central = []
+sdate = None
+edate = None
   
 class tkinterApp(tk.Tk):
      
@@ -41,8 +44,11 @@ class tkinterApp(tk.Tk):
         # __init__ function for class Tk
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
-        self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
-        # Mac -> self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+        if OS == "Darwin":
+            self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+        elif OS == "Windows":
+            self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
+        
         self.resizable(width=False, height=False)
         self.geometry("500x300")
          
@@ -89,8 +95,10 @@ class PageLayout(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         # Logo
-        # Mac -> logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
-        logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
+        if OS == "Darwin":
+            logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+        elif OS == "Windows":
+            logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)
         logo_label = ttk.Label(self, image=logo)
         logo_label.image = logo
@@ -121,9 +129,7 @@ class StartPage(tk.Frame):
 
     # When no button is pressed, extend window and show options pags
     def show_options(self):
-        global nopath
-
-        nopath = True
+        global nopath; nopath = True
         self.controller.show_frame(NoPathPage)
 
 
@@ -165,11 +171,10 @@ class DownloadPage(tk.Frame):
         thisframe.advance_page()
 
     def advance_page(thisframe):
-        global states_hash
         global filepath
 
         with open(filepath + "/states_hash.pkl", 'rb') as inp:
-            states_hash = pickle.load(inp)
+            global states_hash; states_hash = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
 
@@ -202,11 +207,9 @@ class WebscrapingChoicePage(tk.Frame):
 
     # If yes is chosen -> Choose location of saved data, scrape will used saved pages when possible
     def open_and_scrape(self):
-        global savepath
-        global load_scraper
-        load_scraper = True
+        global load_scraper; load_scraper = True
+        global savepath; savepath = askdirectory()
 
-        savepath = askdirectory()
         self.controller.show_frame(WebscrapingPage)
     
     # If no is chosen -> means a full scrape will be done
@@ -265,12 +268,11 @@ class WebscrapingPage(tk.Frame):
 
     # Called after scraper is done and fines have been matched
     def advance_page(thisframe):
-        global fines_hash
         global filepath
 
         '''
         with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
-            fines_hash = pickle.load(inp)
+            global fines_hash; fines_hash = pickle.load(inp)
         '''
         #thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
@@ -415,9 +417,11 @@ class TerritoriesPage(tk.Frame):
             thisframe.eastbtn.grid_forget()
             thisframe.cenbtn.grid_forget()
             thisframe.wstbtn.grid_forget()
-            thisframe.controller.geometry("570x630")
-            # Mac -> this.frame.controller.geometry("500x600")
-
+            if OS == "Darwin":
+                thisframe.controller.geometry("500x600")
+            elif OS == "Windows":
+                thisframe.controller.geometry("570x630")
+     
             # Instructions
             if territory == "W":
                 thisframe.instructions.config(text="Choose states in the west territory")
@@ -513,13 +517,9 @@ class TerritoriesPage(tk.Frame):
 
     # Return to options page after territories have been allocated
     def roptions(thisframe):
-        global east 
-        global west 
-        global central
-
-        east = thisframe.east
-        west = thisframe.west
-        central = thisframe.central
+        global east; east = thisframe.east
+        global west; west = thisframe.west
+        global central; central = thisframe.central
 
         thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
@@ -558,11 +558,23 @@ class DateRangePage(tk.Frame):
 
     # Checks to see if dates are in correct format and within range -> need to add earliest date
     def check_range(thisframe):
-        while True:
             try:
-                stime = datetime.datetime.strptime(thisframe.start, '%b %d, %Y')
-                etime = datetime.datetime.strptime(thisframe.end, '%b %d, %Y')
-                break
+                stext = thisframe.start.get("1.0","end-1c")
+                etext = thisframe.end.get("1.0","end-1c")
+                stime = datetime.datetime.strptime(stext, '%m/%d/%Y')
+                etime = datetime.datetime.strptime(etext, '%m/%d/%Y')
+
+                # If user gives start date later than end date
+                if stime > etime:
+                    thisframe.instructions.config(text="Start date must be less than or equal to end date!")
+                else:
+                    global sdate; sdate = stime
+                    global edate; edate = etime
+                    thisframe.instructions.config(text="Dates set")
+                    thisframe.update_idletasks()
+                    time.sleep(2)
+                    thisframe.controller.show_frame(OptionsPage)
+
             except:
                 thisframe.instructions.config(text="Check date formats and retry")
 
