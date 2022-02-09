@@ -72,7 +72,8 @@ class tkinterApp(tk.Tk):
         # iterating through a tuple consisting
         # of the different page layouts
         for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
-                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage):
+                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage,\
+                  FormatPage):
   
             frame = F(container, self)
   
@@ -673,22 +674,20 @@ class FormatPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
-        
+        b1 = tk.Checkbutton(thisframe, text="Total US Fines")
+        b1.grid(column=1, row=2)
 
         
+
+        
         
 
 
 
-
-
-
-
-
-    # Return to options page after range set
-    def roptions(thisframe):
-        thisframe.controller.resize()
-        thisframe.controller.show_frame(OptionsPage)
+# Return to options page after range set
+def roptions(thisframe):
+    thisframe.controller.resize()
+    thisframe.controller.show_frame(OptionsPage)
 
 
 
