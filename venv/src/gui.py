@@ -641,23 +641,30 @@ class EmailsPage(tk.Frame):
 
     # Advance to next territory
     def advance_screen(thisframe):
-        global eemails; eemails = thisframe.box.get("1.0","end-1c").splitlines()
+        
         if thisframe.curter == "E":
+            global eemails; eemails = thisframe.box.get("1.0","end-1c").splitlines()
             thisframe.curter = "C"
             thisframe.instructions.config(text="Enter emails (each on their own line) for the central territory")
 
-            # Reset Email box
-            thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
-            thisframe.box.grid(column=2, row=5, pady=10)
         else:
+            global cemails; cemails = thisframe.box.get("1.0","end-1c").splitlines()
             thisframe.curter = "W"
             thisframe.instructions.config(text="Enter emails (each on their own line) for the west territory")
 
             # Change button and command
             thisframe.browse_text = tk.StringVar()
-            thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.controller.show_frame(OptionsPage), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+            thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
             thisframe.nextbtn.grid(column=2, row=6, pady=40)
             thisframe.browse_text.set("Finish")
+        
+        # Reset Email box
+        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
+        thisframe.box.grid(column=2, row=5, pady=10)
+
+    def finish(thisframe):
+        global wemails; wemails = thisframe.box.get("1.0","end-1c").splitlines()
+        thisframe.controller.show_frame(OptionsPage)
 
 
 # Page where emails for each territory are set
