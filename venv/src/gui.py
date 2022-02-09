@@ -358,7 +358,7 @@ class OptionsPage(tk.Frame):
 
         # Format excel
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(FormatPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn = tk.Button(self, command=lambda:self.show_format(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.dl_btn.grid(column=2, row=5, pady=10)
         browse_text.set("Format Excel Data")
 
@@ -375,6 +375,15 @@ class OptionsPage(tk.Frame):
             thisframe.controller.geometry("500x600")
 
         thisframe.controller.show_frame(DateRangePage)
+
+    def show_format(thisframe):
+        if OS == "Darwin":
+            thisframe.controller.geometry("500x700")
+        elif OS == "Windows":
+            thisframe.controller.geometry("500x700")
+
+        thisframe.controller.show_frame(FormatPage)
+
 
 
 # Page where states in each territory is set
@@ -674,20 +683,61 @@ class FormatPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
-        b1 = tk.Checkbutton(thisframe, text="Total US Fines")
-        b1.grid(column=1, row=2)
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Choose which data to include", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        fm = ttk.Labelframe(thisframe, width=50, border=0)
+        fm.grid(column=2, row=3)
+        
+        # Buttons
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Fines", anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Fines per year", anchor="w")
+        b1.grid()
+        
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Violations", anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Violations per year", anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Top fined organizations per state:", width=35, command=lambda:print("Will link this to a box to input"), anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Most severe organizations per state:", width=35, command=lambda:print("Will link this to a box to input"), anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Sum of fines per state", width=35, anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Sum of fines per state per year", width=35, anchor="w")
+        b1.grid()
+        
+        b1 = tk.Checkbutton(fm, text="Sum of fined violations per state", width=35, anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Sum of fined violations per state per year", width=35, anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Sum of fines per state per year", width=35, anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Most severe incidents per organization", width=35, anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Incidents with highest fines per organization", width=35, anchor="w")
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Create sheet with all territories combined", width=35, anchor="w")
+        b1.grid()
+        
+
+
 
         
 
-        
-        
-
-
-
-# Return to options page after range set
-def roptions(thisframe):
-    thisframe.controller.resize()
-    thisframe.controller.show_frame(OptionsPage)
 
 
 
