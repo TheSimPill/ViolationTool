@@ -577,7 +577,7 @@ def sort_by_date(state_incident_list):
     return sorted(state_incident_list, key=lambda item: item[1], reverse=True)
     
 # Creates excel file with all relevant cases
-def summarize_data(states_hash) -> None:
+def summarize_data(states_hash, thisframe) -> None:
     wb = Workbook()
     ws = wb.active
     ws.title = "NHI Summaries"
@@ -590,6 +590,134 @@ def summarize_data(states_hash) -> None:
     ws["G1"] = "Violation Severity"
     ws["H1"] = "Fine"
     
+
+    # Populates rows
+    counter = 2
+    state_codes = info.get_state_codes(False)
+    for state in states_hash:
+        by_date = sort_by_date(states_hash[state])
+        same_as_last = False
+        same = 1
+        for incident_tuple in by_date:
+            # Populates territory column 
+            cell = "A" + str(counter)
+            if state_codes[state] in info.territories["West"]:
+                ws[cell] = "West"
+            elif state_codes[state] in info.territories["Central"]:
+                ws[cell] = "Central"
+            else:
+                ws[cell] = "East"
+            # Populates State Column
+            cell = "B" + str(counter)
+            ws[cell] = state
+            # Facility
+            cell = "C" + str(counter)
+            ws[cell] = incident_tuple[0]
+            # Date
+            cell = "D" + str(counter)
+
+            ws[cell] = incident_tuple[1].strftime("%m/%d/%Y")
+
+            if counter != 2 and ws["D" + str(counter - 1)].value == ws[cell].value:
+                same += 1
+                same_as_last = True
+            elif same_as_last:
+                ws.merge_cells("H" + str(counter - same) + ":H" + str(counter - 1))
+                ws.cell(row = counter, column = 8).value = incident_tuple[3]
+                same = 1
+                same_as_last = False
+            else: 
+                # Fine
+                cell = "H" + str(counter)
+                ws[cell] = incident_tuple[3]
+            
+            # Violation
+            cell = "E" + str(counter)
+            ws[cell] = incident_tuple[5] + " - " + info.tagdata[incident_tuple[5]]
+            # Violation Links
+            cell = "F" + str(counter)
+            ws[cell] = incident_tuple[-1]
+            # Violation Severity
+            cell = "G" + str(counter)
+            ws[cell] = incident_tuple[4]
+            counter += 1
+            
+    wb.save("BD Data.xlsx")
+    thisframe.instructions("")
+
+# For summarizing data using options chosen by user in the gui
+# Creates excel file with all relevant cases
+def summarize_gui(states_hash, options) -> None:
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "NHI Summaries"
+    ws["A1"] = "Territory"
+    ws["B1"] = "State"
+    ws["C1"] = "Facility"
+    ws["D1"] = "Violation Date"
+    ws["E1"] = "Violations"
+    ws["F1"] = "Violation Link"
+    ws["G1"] = "Violation Severity"
+    ws["H1"] = "Fine"
+
+    # Add options
+    col = 9
+    for option in options.keys():
+
+        if option == "Total US Fines" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Total US Fines per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Total US Violations" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Total US Violations per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Top fined organizations per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+        
+        elif option == "Most severe organizations per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fines per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fines per state per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fined violations per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fined violations per state per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Most severe incidents per organization" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Incidents with highest fines per organization" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Create sheet with all territories combined" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+        
+        
+        
 
     # Populates rows
     counter = 2
