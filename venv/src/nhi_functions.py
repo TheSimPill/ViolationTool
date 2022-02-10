@@ -412,7 +412,7 @@ def get_state_most_fined_organizations(state_incident_list, num_orgs) -> list:
 
     return output
 
-# For a given organization, returns most severe violations
+# For a given organization, returns most fined violations
 def get_organization_most_fined_incidents(state_incident_list, num_vios, org_name) -> list:
     org_vios = []
     dates = []

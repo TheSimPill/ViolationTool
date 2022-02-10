@@ -89,7 +89,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                     facilities.append(incident_tuple[0])
                 
                 # Set label
-                frame.instructions.config(text="Scraping urls from " + state)
+                frame.instructions.config(text="Scraping pages from " + state)
 
                 # Returns a list of urls to fined homes in a state
                 state_home_links = get_state_fine_links(reparse, params, state, dir, facilities)
