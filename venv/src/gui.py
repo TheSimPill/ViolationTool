@@ -42,6 +42,7 @@ eemails = []
 wemails = []
 cemails = []
 userecent = False
+options = None
   
 class tkinterApp(tk.Tk):
      
@@ -72,7 +73,8 @@ class tkinterApp(tk.Tk):
         # iterating through a tuple consisting
         # of the different page layouts
         for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
-                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage):
+                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage,\
+                  FormatPage, ExcelPage, SendEmailsPage):
   
             frame = F(container, self)
   
@@ -94,6 +96,10 @@ class tkinterApp(tk.Tk):
     # Extend the display when we get to options page
     def resize(self):
         self.geometry("500x500")
+
+    # Set back to start size
+    def dresize(self):
+        self.geometry("500x300")
 
 
 # Default page layout
@@ -357,13 +363,13 @@ class OptionsPage(tk.Frame):
 
         # Format excel
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(FormatPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn = tk.Button(self, command=lambda:self.show_format(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.dl_btn.grid(column=2, row=5, pady=10)
         browse_text.set("Format Excel Data")
 
         # Make excel files button
         browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn = tk.Button(self, command=lambda:self.show_excel(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.dl_btn.grid(column=2, row=6, pady=10)
         browse_text.set("Make Excel Files and Send Emails ->")
 
@@ -374,6 +380,19 @@ class OptionsPage(tk.Frame):
             thisframe.controller.geometry("500x600")
 
         thisframe.controller.show_frame(DateRangePage)
+
+    def show_format(thisframe):
+        if OS == "Darwin":
+            thisframe.controller.geometry("500x700")
+        elif OS == "Windows":
+            thisframe.controller.geometry("500x700")
+
+        thisframe.controller.show_frame(FormatPage)
+
+    def show_excel(thisframe):
+        thisframe.controller.dresize()
+        thisframe.controller.show_frame(ExcelPage)
+
 
 
 # Page where states in each territory is set
@@ -641,23 +660,30 @@ class EmailsPage(tk.Frame):
 
     # Advance to next territory
     def advance_screen(thisframe):
-        global eemails; eemails = thisframe.box.get("1.0","end-1c").splitlines()
+        
         if thisframe.curter == "E":
+            global eemails; eemails = thisframe.box.get("1.0","end-1c").splitlines()
             thisframe.curter = "C"
             thisframe.instructions.config(text="Enter emails (each on their own line) for the central territory")
 
-            # Reset Email box
-            thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
-            thisframe.box.grid(column=2, row=5, pady=10)
         else:
+            global cemails; cemails = thisframe.box.get("1.0","end-1c").splitlines()
             thisframe.curter = "W"
             thisframe.instructions.config(text="Enter emails (each on their own line) for the west territory")
 
             # Change button and command
             thisframe.browse_text = tk.StringVar()
-            thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.controller.show_frame(OptionsPage), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+            thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
             thisframe.nextbtn.grid(column=2, row=6, pady=40)
             thisframe.browse_text.set("Finish")
+        
+        # Reset Email box
+        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
+        thisframe.box.grid(column=2, row=5, pady=10)
+
+    def finish(thisframe):
+        global wemails; wemails = thisframe.box.get("1.0","end-1c").splitlines()
+        thisframe.controller.show_frame(OptionsPage)
 
 
 # Page where emails for each territory are set
@@ -666,26 +692,127 @@ class FormatPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Choose which data to include", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        # Holds buttons
+        thisframe.boxes = {"Total US Fines":False, "Total US Fines per year":False, "Total US Violations":False, \
+                           "Total US Violations per year":False, "Top fined organizations per state":False, \
+                            "Most severe organizations per state":False, "Sum of fines per state":False, \
+                            "Sum of fines per state per year":False, "Sum of fined violations per state":False, \
+                            "Sum of fined violations per state per year":False, "Most severe incidents per organization":False, \
+                            "Incidents with highest fines per organization":False, "Create sheet with all territories combined":False}
+
+        fm = ttk.Labelframe(thisframe, width=50, border=0)
+        fm.grid(column=2, row=3)
         
+        # Buttons
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Fines", anchor="w", command=lambda:thisframe.add_option("Total US Fines"))
+        b1.grid()
 
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Fines per year", anchor="w", command=lambda:thisframe.add_option("Total US Fines per year"))
+        b1.grid()
         
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Violations", anchor="w", command=lambda:thisframe.add_option("Total US Violations"))
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, width=35, text="Total US Violations per year", anchor="w", command=lambda:thisframe.add_option("Total US Violations per year"))
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Top fined organizations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Most severe organizations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe organizations per state"))
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Sum of fines per state", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state"))
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Sum of fines per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state per year"))
+        b1.grid()
         
+        b1 = tk.Checkbutton(fm, text="Sum of fined violations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fined violations per state"))
+        b1.grid()
 
+        b1 = tk.Checkbutton(fm, text="Sum of fined violations per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fined violations per state per year"))
+        b1.grid()
 
+        b1 = tk.Checkbutton(fm, text="Most severe incidents per organization", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe incidents per organization"))
+        b1.grid()
 
+        b1 = tk.Checkbutton(fm, text="Incidents with highest fines per organization", width=35, anchor="w", command=lambda:thisframe.add_option("Incidents with highest fines per organization"))
+        b1.grid()
 
+        b1 = tk.Checkbutton(fm, text="Create sheet with all territories combined", width=35, anchor="w", command=lambda:thisframe.add_option("Create sheet with all territories combined"))
+        b1.grid()
 
+        # Finish button
+        thisframe.browse_text = tk.StringVar()
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=4, pady=40)
+        thisframe.browse_text.set("Finish")
 
-
-
-    # Return to options page after range set
-    def roptions(thisframe):
+    def finish(thisframe):
+        global options; options = thisframe.boxes
         thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
 
+    # Add a chosen option to a list
+    def add_option(thisframe, opt):
+        thisframe.boxes[opt] = not thisframe.boxes[opt]
+        
+    
+# Page where excel sheet is made
+class ExcelPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Press button to make excel sheets with chosen options", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        # Start button -- command=lambda:nhi.summarize_data()
+        thisframe.browse_text = tk.StringVar()
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish() , textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=3, pady=40)
+        thisframe.browse_text.set("Make Sheets")
+
+    # Once sheet is made
+    def finish(thisframe):
+        thisframe.instructions.config(text="Making sheets..")
+        thisframe.update_idletasks()
+        time.sleep(2)
+        thisframe.instructions.config(text="Sheets made")
+        thisframe.update_idletasks()
+        time.sleep(2)
+        thisframe.controller.show_frame(SendEmailsPage)
 
 
+# Page where emails are sent
+class SendEmailsPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
 
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Press button to send emails", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        # Send button
+        thisframe.browse_text = tk.StringVar()
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=3, pady=40)
+        thisframe.browse_text.set("Send Emails")
+
+        # After emails are sent
+    def finish(thisframe):
+        thisframe.instructions.config(text="Emails Sent")
+        thisframe.nextbtn.grid_forget()
+        
+
+    
 
 
 # Driver Code
