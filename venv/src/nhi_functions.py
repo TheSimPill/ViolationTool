@@ -717,8 +717,6 @@ def summarize_gui(states_hash, options) -> None:
             col += 1
         
         
-        
-
     # Populates rows
     counter = 2
     state_codes = info.get_state_codes(False)
@@ -771,3 +769,20 @@ def summarize_gui(states_hash, options) -> None:
             counter += 1
             
     wb.save("BD Data.xlsx")
+
+# Sort violations by territories
+def sort_by_territories(states_hash, east, central, west):
+    evios = {}
+    cvios = {}
+    wvios = {}
+    
+
+    for state in states_hash.keys():
+        if state in east:
+
+        elif state in central:
+
+        else:
+
+
+

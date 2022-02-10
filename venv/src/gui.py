@@ -773,11 +773,33 @@ class ExcelPage(tk.Frame):
         thisframe.instructions = ttk.Label(thisframe, text="Press button to make excel sheets with chosen options", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Start button -- command=lambda:nhi.summarize_data()
+        # Start button -- command=lambda:nhi.summarize_data(states_hash, thisframe)
+        # thisframe.finish()
+        global states_hash
         thisframe.browse_text = tk.StringVar()
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish() , textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.nextbtn.grid(column=2, row=3, pady=40)
         thisframe.browse_text.set("Make Sheets")
+
+    # Send territories that we chose to nhi functions to sort the violations
+    def sort_terrs(thisframe):
+        global states_hash; global east; global central; global west
+        nhi.sort_by_territories(states_hash, east, central, west)
+
+    # Uses threads to make excel sheets -> need to first break data up by territory
+    def make_sheets(thisframe):
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                if load_scraper:
+                    self.func(thisframe, False, states_hash, savepath, filepath)
+                else:
+                    self.func(thisframe, True, states_hash, savepath, filepath)
+
+        thread(nhi.summarize_data())
 
     # Once sheet is made
     def finish(thisframe):
@@ -788,6 +810,8 @@ class ExcelPage(tk.Frame):
         thisframe.update_idletasks()
         time.sleep(2)
         thisframe.controller.show_frame(SendEmailsPage)
+
+
 
 
 # Page where emails are sent
@@ -805,6 +829,7 @@ class SendEmailsPage(tk.Frame):
         thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.nextbtn.grid(column=2, row=3, pady=40)
         thisframe.browse_text.set("Send Emails")
+        
 
         # After emails are sent
     def finish(thisframe):
