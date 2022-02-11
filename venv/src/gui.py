@@ -26,7 +26,7 @@ elif OS == "Windows":
 LARGEFONT = ("Verdana", 35)
 savepath = ""
 filepath = ""
-states_hash = {}
+state_df = None
 fines_hash = {}
 partial_instructions = None
 partial_instructions2 = None
@@ -179,15 +179,15 @@ class DownloadPage(tk.Frame):
             def run(self):
                 self.func(thisframe, filepath)
 
-        #thread(nhi.download).start()
+        thread(nhi.download).start()
         # For skipping download
-        thisframe.advance_page()
+        #thisframe.advance_page()
 
     def advance_page(thisframe):
         global filepath
 
-        with open(filepath + "/states_hash.pkl", 'rb') as inp:
-            global states_hash; states_hash = pickle.load(inp)
+        with open(filepath + "/dataframes/state_df.pkl", 'rb') as inp:
+            global state_df; state_df = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
 
@@ -260,7 +260,7 @@ class WebscrapingPage(tk.Frame):
 
     def scrape(thisframe):
         global fines_hash
-        global states_hash
+        global state_df
         global load_scraper
         global savepath
         global filepath
@@ -272,9 +272,9 @@ class WebscrapingPage(tk.Frame):
         
             def run(self):
                 if load_scraper:
-                    self.func(thisframe, False, states_hash, savepath, filepath)
+                    self.func(thisframe, False, state_df, savepath, filepath)
                 else:
-                    self.func(thisframe, True, states_hash, savepath, filepath)
+                    self.func(thisframe, True, state_df, savepath, filepath)
         
         thread(scraper.scrape_fines).start()
         #thisframe.advance_page()
@@ -309,7 +309,7 @@ class NoPathPage(tk.Frame):
 
     def choose_path(self):
         global savepath
-        global states_hash
+        global state_df
         self.controller.resize()
         self.controller.show_frame(OptionsPage)
         '''
@@ -775,7 +775,7 @@ class ExcelPage(tk.Frame):
 
         # Start button -- command=lambda:nhi.summarize_data(states_hash, thisframe)
         # thisframe.finish()
-        global states_hash
+        global state_df
         thisframe.browse_text = tk.StringVar()
         thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.nextbtn.grid(column=2, row=3, pady=40)
@@ -783,8 +783,8 @@ class ExcelPage(tk.Frame):
 
     # Send territories that we chose to nhi functions to sort the violations
     def sort_terrs(thisframe):
-        global states_hash; global east; global central; global west
-        nhi.sort_by_territories(states_hash, east, central, west)
+        global state_df; global east; global central; global west
+        nhi.sort_by_territories(state_df, east, central, west)
 
     # Uses threads to make excel sheets -> need to first break data up by territory
     def make_sheets(thisframe):
@@ -795,9 +795,9 @@ class ExcelPage(tk.Frame):
         
             def run(self):
                 if load_scraper:
-                    self.func(thisframe, False, states_hash, savepath, filepath)
+                    self.func(thisframe, False, state_df, savepath, filepath)
                 else:
-                    self.func(thisframe, True, states_hash, savepath, filepath)
+                    self.func(thisframe, True, state_df, savepath, filepath)
 
         thread(nhi.summarize_data())
 
