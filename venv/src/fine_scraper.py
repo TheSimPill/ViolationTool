@@ -18,7 +18,7 @@ totalhomes = 0
 curframe = None
 
 # Scrape fines for relevant cases for each state using threads
-def scrape_fines(frame, reparse, states, dir, hashpath):
+def scrape_fines(frame, reparse, state_df, dir, hashpath):
     # Allows frame to be updated in different functions without directly passing it in
     global curframe; curframe = frame
 
@@ -84,11 +84,16 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 state = state_url["href"][(length - 2):length]
                 
 
-                # Get names of all facilities from states hash
+                # Get names of all facilities from state df
                 # Used so homes that don't have relevant cases are filtered
                 facilities = []
-                for incident_tuple in states[state]:
-                    facilities.append(incident_tuple[0])
+
+                # Creates subdata frame with rows only of current state and grabs facility names
+                sdf = state_df.loc[(state_df['State'] == state)]
+                fnames = fnames['Organization'].unique()
+
+                for name in fnames:
+                    facilities.append(name)
                 
                 # Set label
                 frame.instructions.config(text="Scraping pages from " + state)
@@ -110,7 +115,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                         "country":"us",
                         "session": random.randint(9000,8000000)
                             }
-                    args_list.append((facility, state, params, states[state], reparse, dir))
+                    args_list.append((facility, state, params, sdf, reparse, dir))
                     facility += 1
 
                 # Progress bar for homes in a state
@@ -208,15 +213,17 @@ def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
     
 # Scrapes a specific facilities page for relevant fines.
 def scrape_facility(args):
-
+    global homes
+    global totalhomes
     global curframe
     retries = 0
 
     while True:
+        # Load the args from the args tuple
         facilitynumber = args[0]
         state = args[1]
         state_params = args[2]
-        state_incident_list = args[3]
+        cstate_df = args[3]
         reparse = args[4]
         dir = args[5]
         
@@ -235,13 +242,14 @@ def scrape_facility(args):
         try:
             # Scrape a specific home's fines
             home_fines = []
+            # Grab the facility name from top of page
             facility = home_soup.find(id="content").find("p", class_="big-name capital").find("b").get_text()
         
             # Iterate through incidents (rows) for a home
             for fine_incident in home_soup.find_all("div", class_="row"):
                 
                 # Want format to be MM/DD/YYYY
-                date = fine_incident.find("span", class_="nd nd-entry nd-30")\
+                date = fine_incident.find("span", class_="nd nd-entry nd-30")
 
                 # This handles rows that aren't actually incident rows
                 if date != None:
@@ -249,37 +257,36 @@ def scrape_facility(args):
                     date = str(datetime.strptime(date, '%b %d, %Y').strftime('%m/%d/%Y'))
 
                     # Check to see if this case is relevant
-                    for i in range(len(state_incident_list)):
-                        state_incident_tup = state_incident_list[i]
-                        # Case is relevant if facility name and date matches on in states hash
-                        if state_incident_tup[0] == facility.upper() and state_incident_tup[1] == date:
-                            
-                            # Grab url for incident report
-                            incident_url = fine_incident.find("a")["href"]
+                    # NEED TO CHANGE THIS
 
-                            # Grabs the fine if there is one
-                            fine = fine_incident.find("span", class_="nd-left nd-entry fine-label")     
-                            lst = fine.get_text().strip().split("\n")
-                            fine = re.search(".+Fine$", lst[0])
-                            if not fine is None:
-                                fine = fine.group()
+                    # This checks to see if a case is relevant by comparing it to cases in our data frame
+                    matches = cstate_df.loc[(cstate_df["Organization"] == facility.upper()) & (cstate_df["Date"] == date)]
+                    if not matches.empty:
+   
+                        # Grab url for incident report
+                        incident_url = fine_incident.find("a")["href"]
 
-                                # Only let user see one fine match for a day if there are multiple
-                                if len(fine) >= 5 and fine[-4:] == "Fine":
-                                    curframe.instructions2.config(text="Matched " + fine + " in " + state + " from " + date + " at\n    " + facility.upper())
+                        # Grabs the fine if there is one
+                        fine = fine_incident.find("span", class_="nd-left nd-entry fine-label")     
+                        lst = fine.get_text().strip().split("\n")
+                        fine = re.search(".+Fine$", lst[0])
+                        if not fine is None:
+                            fine = fine.group()
 
-                                # Now make fine just an int
-                                numeric_filter = filter(str.isdigit, fine)
-                                fine = "".join(numeric_filter)
-                                home_fines.append((state, facility.upper(),date,int(fine), incident_url))
+                            # Only let user see one fine match for a day if there are multiple
+                            if len(fine) >= 5 and fine[-4:] == "Fine":
+                                curframe.instructions2.config(text="Matched " + fine + " in " + state + " from " + date + " at\n    " + facility.upper())
 
-                            else:
-                                home_fines.append((state, facility.upper(),date, "No Fine", incident_url))
+                            # Now make fine just an int
+                            numeric_filter = filter(str.isdigit, fine)
+                            fine = "".join(numeric_filter)
+                            home_fines.append((state, facility.upper(),date,int(fine), incident_url))
+
+                        else:
+                            home_fines.append((state, facility.upper(),date, "No Fine", incident_url))
 
 
             # Update home count label                  
-            global homes
-            global totalhomes
             homes += 1
             curframe.instructions.config(text=str(homes) + " out of " + str(totalhomes) + " homes scraped")
 
@@ -288,5 +295,5 @@ def scrape_facility(args):
         except AttributeError as e:
             print("Caught Exception!" + str(e) + "---------------------------------------")
             print("Session failed: " + str(state_params["session"]))
-            time.sleep(3)
+            time.sleep(1.5)
             retries += 1
