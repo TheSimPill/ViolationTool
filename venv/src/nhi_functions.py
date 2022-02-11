@@ -109,8 +109,6 @@ def parse_data(frame, save_path):
     
     # Fix indicies
     result.reset_index(drop=True, inplace=True)
-    print(result.head())
-    print(result.tail())
 
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
