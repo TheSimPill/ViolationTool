@@ -7,6 +7,7 @@ from pathlib import Path
 import smtplib, time, getpass, random, pickle
 import info
 from tkinter.ttk import Progressbar, Label
+import pandas as pd
 
 
 #from info import get_state_codes
@@ -54,7 +55,6 @@ def download(frame, save_path):
 '''
 def parse_data(frame, save_path):
     files = os.listdir(save_path)
-    states = {}
     start_time = time.time() 
     numtoload = len(files)
     frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
@@ -71,33 +71,36 @@ def parse_data(frame, save_path):
     plabel.grid(column=1, row=4, columnspan=3, pady=10)
 
     counter = 1
-    for file in files:
-        xlsx_file = Path(save_path, file)
-        start = time.time()
-        wb = openpyxl.load_workbook(xlsx_file)
+    dfs = []
 
-        # Search rows for relevant tags
-        for sheet in wb:
-            for tag in info.tagdata.keys():
-                for row in sheet.iter_rows(max_col=14,min_row=14):
-                    for cell in row:
-                        if cell.column == 8 and str(cell.value).find(tag) != -1:
-                            state = str(sheet.cell(column=5, row=cell.row).value)
-                            facility = str(sheet.cell(column=1, row=cell.row).value)
-                            date = str(sheet.cell(column=7, row=cell.row).value)
-                            writeup = "Date of violation: " + date + "\n"
-                            writeup += "Tag: " + str(sheet.cell(column=8, row=cell.row).value) + " - " + info.tagdata[tag] + "\n"
-                            severity = str(sheet.cell(column=9, row=cell.row).value)
-                            writeup += "Severity: " + severity + " - " + info.severities[severity] + "\n"
-                            writeup += "Facility: " + facility + "\n"
-                            writeup += "Address: " + str(sheet.cell(column=3, row=cell.row).value) + "\n"
-                            writeup += "\t\t" + str(sheet.cell(column=4, row=cell.row).value) + ", "
-                            writeup += state + " " + str(sheet.cell(column=6, row=cell.row).value) + "\n"
-                            writeup += "Description: \n" + str(sheet.cell(column=14, row=cell.row).value).replace('<BR/>','  ')
-                            if state in states.keys():
-                                states[state].append((facility, date, writeup, "No Fine", severity, tag, "No url"))
-                            else:
-                                states[state] = [(facility, date, writeup, "No Fine", severity, tag, "No url")]
+    # Used to get rid of irrelevant tags
+    def filter_tags(tag):
+        return tag not in info.tagdata.keys()
+
+    for file in files:
+        start = time.time()
+
+        # Make excel file into a dataframe
+        df = pd.read_excel(save_path+"/"+file, usecols="A,E,G,H,I", names=["Organization", "State", "Date", "Tag", "Severity"])
+        df.insert(5, "Fine", 0)
+        df.insert(6, "Url", 0)
+        df.insert(0, "Territory", 0)
+        
+        # Format columns 
+        col_list = ["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"]
+        df = df.reindex(columns=col_list)
+
+        print(df.head())
+        print(df.tail())
+
+        # Get rid of rows that don't have tags we want
+        tags = df['Tag'].to_list()
+        goodtags = [x for x in tags if str(x) in list(info.tagdata.keys())]
+
+        dfs.append(df)
+
+        print(df.head())
+        print(df.tail())
 
         # Update labels and progress bar
         frame.instructions.config(text="Workbook " + str(counter) + " parsed in " + str(int(time.time() - start)) + " seconds")
@@ -105,19 +108,28 @@ def parse_data(frame, save_path):
         progress["value"] += (1/len(files))*100
         plabel.config(text=str(x) + " out of " + str(len(files)) + " workbooks parsed", font=("Times", 15))
         counter += 1
-    
+
+    # Once all excel files are dataframes
     plabel.grid_forget()
     progress.grid_forget()
+
+    # Merge dataframes and sort by state
+    frame.instructions.config(text="Merging data frames...")
+    result = pd.concat(dfs, ignore_index=True)
+    result = result.sort_values(by=["State"])
+    print(result.head())
+    print(result.tail())
+
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
     # Create a hashes folder in chosen directory and save the states hash
-    if not exists(save_path + "/hashes"):
-        os.mkdir(save_path + "/hashes")
-    with open(save_path + "/hashes/states_hash.pkl", 'wb') as outp:
-            pickle.dump(states, outp, pickle.HIGHEST_PROTOCOL)
+    if not exists(save_path + "/dataframes"):
+        os.mkdir(save_path + "/dataframes")
+    with open(save_path + "/dataframes/state_df.pkl", 'wb') as outp:
+            pickle.dump(result, outp, pickle.HIGHEST_PROTOCOL)
 
-    frame.instructions.config(text="Saved as states_hash.pkl in hashes folder")
+    frame.instructions.config(text="Saved as state_df.pkl in dataframes folder")
     time.sleep(2)
     frame.advance_page()
 
@@ -784,5 +796,4 @@ def sort_by_territories(states_hash, east, central, west):
             pass
         else:
             pass
-
 
