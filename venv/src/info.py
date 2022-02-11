@@ -3,16 +3,6 @@ import pickle
 
 # Tags usually have a zero in front
 tagdata = {
-<<<<<<< HEAD
-    "761" : "Label/Store Drugs & Biologicals",
-    "756" : "Drug Regimen Review, Report Irregular, Act On",
-    "757" : "Drug Regimen is Free From Unnecessary Drugs",
-    "759" : "Free of Medication Error Rate of 5% or More",
-    "758" : "Free from Unnec Psychotropic Meds/PRN Use",
-    "554" : "Resident Self-Admin Meds-Clinically Appropriate",
-    "760" : "Residents Are Free of Significant Med Errors",
-    "605" : "Right to be Free from Chemical Restraints"
-=======
     761 : "Label/Store Drugs & Biologicals",
     756 : "Drug Regimen Review, Report Irregular, Act On",
     757 : "Drug Regimen is Free From Unnecessary Drugs",
@@ -21,7 +11,6 @@ tagdata = {
     554 : "Resident Self-Admin Meds-Clinically Appropriate",
     760 : "Residents Are Free of Significant Med Errors",
     605 : "Right to be Free from Chemical Restraints"
->>>>>>> 78af0dc7508c6e56b1951dabe4f62335d79ddff2
 }
 
 severities = {

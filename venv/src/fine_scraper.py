@@ -7,6 +7,7 @@ from nhi_functions import get_proxy
 from os.path import exists
 from tkinter.ttk import Progressbar, Label
 import nhi_functions as nhi
+import pandas as pd
 # Windows
 # import src.save_load_html as sl
 # from src.nhi_functions import get_proxy
@@ -72,16 +73,16 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
             plabel.grid(column=1, row=4, columnspan=3, pady=10)
             
             # Go through rows, go to state's page using url, scrape all of it's facilities
-            states_fines = {}
+            states_fines = []
             for state_url in rows:
+                
                 params["url"] = "https://projects.propublica.org" + state_url["href"]
                 params["session"] = random.randint(100,100000)
 
                 # Extract the state
                 length = len(state_url["href"])
                 state = state_url["href"][(length - 2):length]
-                if not state in states_fines.keys():
-                    states_fines[state] = []
+                
 
                 # Get names of all facilities from states hash
                 # Used so homes that don't have relevant cases are filtered
@@ -95,11 +96,10 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 # Returns a list of urls to fined homes in a state
                 state_home_links = get_state_fine_links(reparse, params, state, dir, facilities)
                 
-                # Allows for home count to be updated after each one is scraped
-                global totalhomes
-                totalhomes = len(state_home_links)
-                time.sleep(2)
+                # Allows for home count on user's screen to be updated after each one is scraped
+                global totalhomes; totalhomes = len(state_home_links)
 
+                # Have to put arguments for scrape_facility into a tuple so we can use threads
                 args_list = []
                 facility = 1
                 for home_link in state_home_links:
@@ -119,17 +119,19 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
 
                 # Concurrently parse all homes for a certain state
                 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                    # This will be a list of (facility, date, fine) tuple lists
+                    # This will be a list of (state, facility, date, fine, url) tuple lists
                     state_homes_fines = executor.map(scrape_facility, args_list)
 
                 # Set label
                 frame.instructions.config(text="Scraped " + state)
 
                 # Adds all fine incidents for each home in a certain state to hash of all states
+                # So, state_home_fines = [[(state, facility, date, fine, url), (....), ...],[],[],....]
                 for homes_fines_list in state_homes_fines:
+                    # Go through list of tuples for each home
                     for homes_fines in homes_fines_list:
                         # Appending each incident tuple from all homes in a state
-                        states_fines[state].append(homes_fines)
+                        states_fines.append(homes_fines)
                 
                 # Updates progress bar label and value
                 x += 1
@@ -139,26 +141,30 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 # Reset home count for the next state
                 homes = 0
 
+            # Convert fines hash into a data frame once everything is scraped
+            fine_df = pd.DataFrame(states_fines, columns =["State", "Organization", "Date", "Fine", "Url"])
+
             # Check to see if folder exists and if it doesn't, create it
-            if not exists(hashpath + "/hashes"):
-                os.mkdir(hashpath + "/hashes")
-            with open(hashpath + "/hashes/fines_hash.pkl", 'wb') as outp:
-                pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
+            if not exists(hashpath + "/dataframes"):
+                os.mkdir(hashpath + "/dataframes")
+            with open(hashpath + "/dataframes/fine_df.pkl", 'wb') as outp:
+                pickle.dump(fine_df, outp, pickle.HIGHEST_PROTOCOL)
             
             # Once all scraping is finished
-            time.sleep(2)
+            time.sleep(1)
             curframe.instructions2.grid_forget()
             progress.grid_forget()
             plabel.grid_forget()
             curframe.instructions.config(text="Saved fines_hash.pkl in hashes folder")
 
-            time.sleep(2)
+            time.sleep(1)
             curframe.instructions.config(text="Matching fines...")
-            with open(hashpath + "/hashes/fines_hash.pkl", 'rb') as inp:
-                fines_hash = pickle.load(inp)
-            with open(hashpath + "/hashes/states_hash.pkl", 'rb') as inp:
-                states_hash = pickle.load(inp)
-            nhi.match_fines(hashpath, curframe, states_hash, fines_hash)
+
+            with open(hashpath + "/dataframes/fine_df.pkl", 'rb') as inp:
+                fine_df = pickle.load(inp)
+            with open(hashpath + "/dataframes/state_df.pkl", 'rb') as inp:
+                state_df = pickle.load(inp)
+            nhi.match_fines(hashpath, curframe, state_df, fine_df)
             break
             
 
@@ -169,7 +175,6 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
         
 # Gets links from a specific states page for facilities that have fines
 def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
-
     try:
         if (not reparse and not exists(dir + "/" + cur_state + "-html.html")) or reparse:
             response = get_proxy(state_params)
@@ -181,9 +186,9 @@ def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
             state_page = sl.load_obj(dir + "/" + cur_state + "-html.html")
             page_soup = bs(state_page, "lxml")
 
+        home_urls = []
         # Gets list of all homes on a page
         rows = page_soup.find(id="data").find("tbody").find_all("tr")
-        home_urls = []
         for col in rows: 
             # Only grab relevant homes
             name = col.find("a").contents[0].upper()
@@ -193,9 +198,13 @@ def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
 
         return home_urls
     
+    # If parsing a state page fails for some reason
     except AttributeError as e:
         print("Caught Exception at state page!" + str(e) + "---------------------------------------")
-        time.sleep(3)
+    
+        # Generate a new session and reparse
+        state_params["session"] = random.randint(100, 10000000)
+        reparse = True
     
 # Scrapes a specific facilities page for relevant fines.
 def scrape_facility(args):
@@ -262,10 +271,10 @@ def scrape_facility(args):
                                 # Now make fine just an int
                                 numeric_filter = filter(str.isdigit, fine)
                                 fine = "".join(numeric_filter)
-                                home_fines.append((facility.upper(),date,int(fine), incident_url))
+                                home_fines.append((state, facility.upper(),date,int(fine), incident_url))
 
                             else:
-                                home_fines.append((facility.upper(),date, "No Fine", incident_url))
+                                home_fines.append((state, facility.upper(),date, "No Fine", incident_url))
 
 
             # Update home count label                  
