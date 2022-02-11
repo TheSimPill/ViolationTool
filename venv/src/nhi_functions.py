@@ -73,10 +73,6 @@ def parse_data(frame, save_path):
     counter = 1
     dfs = []
 
-    # Used to get rid of irrelevant tags
-    def filter_tags(tag):
-        return tag not in info.tagdata.keys()
-
     for file in files:
         start = time.time()
 
@@ -91,12 +87,9 @@ def parse_data(frame, save_path):
         df = df.reindex(columns=col_list)
 
         # Get rid of rows that don't have tags we want
-        df['Tag'] = pd.to_numeric(df['Tag'])
-        df.drop(df[df['Tag'] not in list(info.tagdata.keys())].index, inplace = True)
-        dfs.append(df)
+        df = df[df['Tag'].isin(list(info.tagdata.keys()))]
 
-        print(df.head())
-        print(df.tail())
+        dfs.append(df)
 
         # Update labels and progress bar
         frame.instructions.config(text="Workbook " + str(counter) + " parsed in " + str(int(time.time() - start)) + " seconds")
@@ -113,8 +106,9 @@ def parse_data(frame, save_path):
     frame.instructions.config(text="Merging data frames...")
     result = pd.concat(dfs, ignore_index=True)
     result = result.sort_values(by=["State"])
-    print(result.head())
-    print(result.tail())
+    
+    # Fix indicies
+    result.reset_index(drop=True, inplace=True)
 
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)

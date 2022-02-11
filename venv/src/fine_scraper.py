@@ -17,11 +17,9 @@ totalhomes = 0
 curframe = None
 
 # Scrape fines for relevant cases for each state using threads
-# Returns hash of form: ST => (facility, date, fine) list
 def scrape_fines(frame, reparse, states, dir, hashpath):
     # Allows frame to be updated in different functions without directly passing it in
-    global curframe
-    curframe = frame
+    global curframe; curframe = frame
 
     # Hide elements from previous screen
     frame.dl_btn.grid_forget()
@@ -32,7 +30,9 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
 
     # Loop will break once all scraping is done
     while True:
+        # Generate a random session number, used for proxies
         session = random.randint(900, 793293)
+        # Parameters to use with the requests module
         params = {
         "api_key":"PHkTKJqWyIcNQ5pA8NnzXf6PLDygeGTT",
         "url":"https://projects.propublica.org/nursing-homes/summary",
@@ -58,8 +58,7 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
                 html = sl.load_obj(dir + "/all_states_fines.html")
                 soup = bs(html, "lxml")
                 
-            # State hash: { "ST" : (facility, date, fine, url) list}
-            states_fines = {}
+            # Grab parts of each row that contains the url to each state's page
             rows = soup.find(id="data").find("tbody").find_all("a")
             
             # Initialize Progress Bar
@@ -72,11 +71,13 @@ def scrape_fines(frame, reparse, states, dir, hashpath):
             plabel = Label(frame, text=str(x) + " out of " + str(len(rows)) + " scraped", font=("Times", 15))
             plabel.grid(column=1, row=4, columnspan=3, pady=10)
             
-            # Gets link for each state from page of all states
+            # Go through rows, go to state's page using url, scrape all of it's facilities
+            states_fines = {}
             for state_url in rows:
                 params["url"] = "https://projects.propublica.org" + state_url["href"]
                 params["session"] = random.randint(100,100000)
 
+                # Extract the state
                 length = len(state_url["href"])
                 state = state_url["href"][(length - 2):length]
                 if not state in states_fines.keys():
