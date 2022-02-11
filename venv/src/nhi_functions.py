@@ -779,10 +779,10 @@ def sort_by_territories(states_hash, east, central, west):
 
     for state in states_hash.keys():
         if state in east:
-
+            pass
         elif state in central:
-
+            pass
         else:
-
+            pass
 
 
