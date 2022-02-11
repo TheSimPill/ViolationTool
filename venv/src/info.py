@@ -2,14 +2,14 @@ import pandas as pd
 import pickle
 
 tagdata = {
-    "0761" : "Label/Store Drugs & Biologicals",
-    "0756" : "Drug Regimen Review, Report Irregular, Act On",
-    "0757" : "Drug Regimen is Free From Unnecessary Drugs",
-    "0759" : "Free of Medication Error Rate of 5% or More",
-    "0758" : "Free from Unnec Psychotropic Meds/PRN Use",
-    "0554" : "Resident Self-Admin Meds-Clinically Appropriate",
-    "0760" : "Residents Are Free of Significant Med Errors",
-    "0605" : "Right to be Free from Chemical Restraints"
+    "761" : "Label/Store Drugs & Biologicals",
+    "756" : "Drug Regimen Review, Report Irregular, Act On",
+    "757" : "Drug Regimen is Free From Unnecessary Drugs",
+    "759" : "Free of Medication Error Rate of 5% or More",
+    "758" : "Free from Unnec Psychotropic Meds/PRN Use",
+    "554" : "Resident Self-Admin Meds-Clinically Appropriate",
+    "760" : "Residents Are Free of Significant Med Errors",
+    "605" : "Right to be Free from Chemical Restraints"
 }
 
 severities = {

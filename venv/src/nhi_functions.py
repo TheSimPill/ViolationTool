@@ -90,13 +90,9 @@ def parse_data(frame, save_path):
         col_list = ["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"]
         df = df.reindex(columns=col_list)
 
-        print(df.head())
-        print(df.tail())
-
         # Get rid of rows that don't have tags we want
-        tags = df['Tag'].to_list()
-        goodtags = [x for x in tags if str(x) in list(info.tagdata.keys())]
-
+        df['Tag'] = pd.to_numeric(df['Tag'])
+        df.drop(df[df['Tag'] not in list(info.tagdata.keys())].index, inplace = True)
         dfs.append(df)
 
         print(df.head())
