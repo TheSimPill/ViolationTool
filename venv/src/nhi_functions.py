@@ -94,8 +94,7 @@ def parse_data(frame, save_path):
         print(df.tail())
 
         # Get rid of rows that don't have tags we want
-        tags = df['Tag'].to_list()
-        goodtags = [x for x in tags if str(x) in list(info.tagdata.keys())]
+        df = df[df['Tag'].isin(list(info.tagdata.keys()))]
 
         dfs.append(df)
 
