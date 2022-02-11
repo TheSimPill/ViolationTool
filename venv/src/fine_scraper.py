@@ -18,7 +18,7 @@ totalhomes = 0
 curframe = None
 
 # Scrape fines for relevant cases for each state using threads
-def scrape_fines(frame, reparse, state_df, dir, hashpath):
+def scrape_fines(frame, reparse, state_df, dir, dfpath):
     # Allows frame to be updated in different functions without directly passing it in
     global curframe; curframe = frame
 
@@ -90,7 +90,7 @@ def scrape_fines(frame, reparse, state_df, dir, hashpath):
 
                 # Creates subdata frame with rows only of current state and grabs facility names
                 sdf = state_df.loc[(state_df['State'] == state)]
-                fnames = fnames['Organization'].unique()
+                fnames = sdf['Organization'].unique()
 
                 for name in fnames:
                     facilities.append(name)
@@ -137,6 +137,9 @@ def scrape_fines(frame, reparse, state_df, dir, hashpath):
                     for homes_fines in homes_fines_list:
                         # Appending each incident tuple from all homes in a state
                         states_fines.append(homes_fines)
+
+                with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\states_fines.pkl", 'wb') as outp:
+                    pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
                 
                 # Updates progress bar label and value
                 x += 1
@@ -150,9 +153,11 @@ def scrape_fines(frame, reparse, state_df, dir, hashpath):
             fine_df = pd.DataFrame(states_fines, columns =["State", "Organization", "Date", "Fine", "Url"])
 
             # Check to see if folder exists and if it doesn't, create it
-            if not exists(hashpath + "/dataframes"):
-                os.mkdir(hashpath + "/dataframes")
-            with open(hashpath + "/dataframes/fine_df.pkl", 'wb') as outp:
+            # Removed for testing
+            #if not exists(dfpath + "/dataframes"):
+                #os.mkdir(dfpath + "/dataframes")
+                #dfpath + "/dataframes/fine_df.pkl"
+            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl", 'wb') as outp:
                 pickle.dump(fine_df, outp, pickle.HIGHEST_PROTOCOL)
             
             # Once all scraping is finished
@@ -165,18 +170,25 @@ def scrape_fines(frame, reparse, state_df, dir, hashpath):
             time.sleep(1)
             curframe.instructions.config(text="Matching fines...")
 
-            with open(hashpath + "/dataframes/fine_df.pkl", 'rb') as inp:
+            # Changed for testing
+            # dfpath + "/dataframes/fine_df.pkl"
+            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl", 'rb') as inp:
                 fine_df = pickle.load(inp)
-            with open(hashpath + "/dataframes/state_df.pkl", 'rb') as inp:
+            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
                 state_df = pickle.load(inp)
-            nhi.match_fines(hashpath, curframe, state_df, fine_df)
+            #nhi.match_fines(dfpath, curframe, state_df, fine_df)
+            print("done")
             break
             
-
+        # If parsing main page fails for some reason
         except AttributeError as e:
             print("Caught Exception at NHI page!" + str(e) + "---------------------------------------")
             print("Session failed: " + str(params["session"]))
-            time.sleep(3)
+
+            # Generate a new session and reparse
+            params["session"] = random.randint(100, 10000000)
+            reparse = True
+            time.sleep(1.5)
         
 # Gets links from a specific states page for facilities that have fines
 def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):

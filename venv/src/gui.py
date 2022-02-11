@@ -83,7 +83,7 @@ class tkinterApp(tk.Tk):
   
             frame.grid(row = 0, column = 0, sticky ="nsew")
   
-        self.show_frame(StartPage)
+        self.show_frame(WebscrapingChoicePage)
   
     # to display the current frame passed as
     # parameter
@@ -262,6 +262,10 @@ class WebscrapingPage(tk.Frame):
         global load_scraper
         global savepath
         global filepath
+
+        # For testing:
+        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+            state_df = pickle.load(inp)
 
         class thread(threading.Thread):
             def __init__(self, func):
