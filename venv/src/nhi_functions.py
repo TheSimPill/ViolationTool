@@ -8,6 +8,7 @@ import smtplib, time, getpass, random, pickle
 import info
 from tkinter.ttk import Progressbar, Label
 import pandas as pd
+from numpy import int64
 
 
 #from info import get_state_codes
@@ -128,6 +129,12 @@ def parse_data(frame, save_path):
 # fine_df -> "State", "Organization", "Date", "Fine", "Url"
 def match_fines(dfpath, frame, state_df, fine_df):
     
+    # Turn "No Fine" into 0 as int64 type
+    fine_df.loc[fine_df["Fine"] == "No Fine", "Fine"] = int(0)
+    fine_df["Fine"] = fine_df["Fine"].astype(int64) 
+
+    # Makes a series out of a row
+    #for row in f.iterrows():
     
     if not exists(hashpath + "/hashes"):
         os.mkdir(hashpath + "/hashes")

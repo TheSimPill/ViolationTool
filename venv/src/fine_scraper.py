@@ -295,7 +295,7 @@ def scrape_facility(args):
                             home_fines.append((state, facility.upper(),date,int(fine), incident_url))
 
                         else:
-                            home_fines.append((state, facility.upper(),date, "No Fine", incident_url))
+                            home_fines.append((state, facility.upper(),date, 0, incident_url))
 
 
             # Update home count label                  
