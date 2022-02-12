@@ -227,10 +227,13 @@ class WebscrapingChoicePage(tk.Frame):
     def fresh_scrape(self):
         global filepath
         global savepath
-
+        
+        savepath = "//Users//Freddie//Impruvon//guiwebscraperproject//venv//src//pages"
+        ''' Doesnt work on mac rn
         savepath = filepath + "/pages"
         if not exists(savepath):
-            os.mkdir(savepath)
+            os.mkdir(savepath)'''
+        
         
         self.controller.show_frame(WebscrapingPage)
 
@@ -264,7 +267,7 @@ class WebscrapingPage(tk.Frame):
         global filepath
 
         # For testing:
-        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+        with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
             state_df = pickle.load(inp)
 
         class thread(threading.Thread):

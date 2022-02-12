@@ -124,39 +124,6 @@ def parse_data(frame, save_path):
     time.sleep(2)
     frame.advance_page()
 
-# Match up incidents with corresponding fines
-# state_df -> "Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"
-# fine_df -> "State", "Organization", "Date", "Fine", "Url"
-def match_fines(dfpath, frame, state_df, fine_df):
-    
-    # Turn "No Fine" into 0 as int64 type
-    fine_df.loc[fine_df["Fine"] == "No Fine", "Fine"] = int(0)
-    fine_df["Fine"] = fine_df["Fine"].astype(int64) 
-
-    # Makes a series out of a row
-    #for row in f.iterrows():
-    
-    if not exists(hashpath + "/hashes"):
-        os.mkdir(hashpath + "/hashes")
-    with open(hashpath + "/hashes/states_hash.pkl", 'wb') as outp:
-            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
-
-    frame.instructions.config(text="Finished matching")
-    time.sleep(2)
-    frame.advance_page()
-        
-# Matches url hash returned from url_scraper with states_hash
-def match_urls(states_hash, url_hash):
-    for state in states_hash.keys():
-        for i in range(len(states_hash[state])):
-            if state in url_hash.keys():
-                for truple in url_hash[state]:
-                    incident_tuple = states_hash[state][i]
-                    if incident_tuple[0] == truple[0] and incident_tuple[1] == truple[1]:
-                        temp = list(incident_tuple)
-                        temp[-1] = truple[-1]
-                        states_hash[state][i] = tuple(temp)
-
 # Trys connecting to a website with proxy, refreshes proxy if needed
 # Used to try and minimize number of proxies used and therefore API calls
 def get_proxy(params):
@@ -170,6 +137,30 @@ def get_proxy(params):
         else:
             return (page, params)
 
+# Match up incidents with corresponding fines
+# state_df -> "Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"
+# fine_df -> "State", "Organization", "Date", "Fine", "Url"
+def match_violations(dfpath, frame, state_df, fine_df):
+    
+    # Turn "No Fine" into 0 as int64 type
+    fine_df.loc[fine_df["Fine"] == "No Fine", "Fine"] = int(0)
+    fine_df["Fine"] = fine_df["Fine"].astype(int64) 
+
+    # Makes a series out of a row
+    for row in fine_df.iterrows():
+        # If state, org, and date are same then it's the same incident
+        state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Organization"] == row[1]["Organization"]) & (state_df["Date"] == row[1]["Date"]), "Fine"] = row[1]["Fine"]
+        state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Organization"] == row[1]["Organization"]) & (state_df["Date"] == row[1]["Date"]), "Url"] = row[1]["Url"]
+    
+    if not exists(hashpath + "/hashes"):
+        os.mkdir(hashpath + "/hashes")
+    with open(hashpath + "/hashes/states_hash.pkl", 'wb') as outp:
+            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
+
+    frame.instructions.config(text="Finished matching")
+    time.sleep(2)
+    frame.advance_page()
+        
 # Sums up fines for a state
 def sum_fines_state(state_incidents_list) -> int:
     sum = 0
