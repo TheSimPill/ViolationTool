@@ -1,0 +1,14 @@
+# Notes
+
+Trying to figure good way to merge tables
+Tables are of uneven length, can extend columns if needed though
+
+Current Idea:
+    - Concat tables and then merge rows where state, date, and organization are the same
+    
+New Idea:
+    - Convert dfs back to hashes and merge that way, then swtich back to df
+
+
+Currently:
+    Combing to dict lists, combining, then combining rows where only tag differs

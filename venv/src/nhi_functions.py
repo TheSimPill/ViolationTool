@@ -81,7 +81,7 @@ def parse_data(frame, save_path):
         # Make excel file into a dataframe
         df = pd.read_excel(save_path+"/"+file, usecols="A,E,G,H,I", names=["Organization", "State", "Date", "Tag", "Severity"])
         df.insert(5, "Fine", 0)
-        df.insert(6, "Url", 0)
+        df.insert(6, "Url", "")
         df.insert(0, "Territory", 0)
         
         # Format columns 
@@ -141,20 +141,41 @@ def get_proxy(params):
 # Match up incidents with corresponding fines
 # state_df -> "Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"
 # fine_df -> "State", "Organization", "Date", "Fine", "Url"
-def match_violations(dfpath, frame, state_df, fine_df):
+def merge_violations(dfpath, frame, state_df, fine_df):
     
-    # Turn "No Fine" into 0 as int64 type
-    fine_df.loc[fine_df["Fine"] == "No Fine", "Fine"] = int(0)
-    fine_df["Fine"] = fine_df["Fine"].astype(int64) 
+    # Convert dfs to dictionary lists
+    finelst = fine_df.to_dict("record")
+    statelst = state_df.to_dict("record")
+    
+    for fvio in finelst:
+        for svio in statelst:
+            if fvio["State"] == svio["State"] and fvio["Date"] == svio["Date"] and \
+            fvio["Organization"] == svio["Organization"]:
+                svio["Fine"] = fvio["Fine"]
+                svio["Url"] = fvio["Url"]
 
-    # Makes a series out of a row
-    # Considering doing it to dicts for this part
-    for row in fine_df.iterrows():
-        # If state, org, and date are same then it's the same incident
-        match = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Organization"] == row[1]["Organization"]) & (state_df["Date"] == row[1]["Date"])]
-        for m in match:
-            m["Fine"] = row[1]["Fine"]
-        print(row[0])
+    # Convert back to dataframe
+    state_df = pd.DataFrame(statelst)
+
+    # Combine rows where violations are the same but with different tags
+    new_df = pd.DataFrame()
+    for row in state_df.iterrows():
+        matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
+        if len(matches.index) > 1:
+                c = matches["Tag"].tolist()
+                r = matches.iloc[[0]]
+                r["Tag"] = str(c)
+                new_df.append(r)
+
+    
+    
+
+
+
+
+
+        
+    
    
     if not exists(dfpath + "/dataframes"):
         os.mkdir(dfpath + "/dataframes")
