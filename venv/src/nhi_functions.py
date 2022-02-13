@@ -1,4 +1,3 @@
-from ast import MatchClass
 from os.path import exists
 from openpyxl.descriptors.base import String
 import openpyxl.workbook
@@ -158,7 +157,7 @@ def merge_violations(dfpath, frame, state_df, fine_df):
     state_df = pd.DataFrame(statelst)
 
     # Combine rows where violations are the same but with different tags
-    new_df = pd.DataFrame()
+    new_df = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
     for row in state_df.iterrows():
         matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
         if len(matches.index) > 1:
@@ -166,16 +165,11 @@ def merge_violations(dfpath, frame, state_df, fine_df):
                 r = matches.iloc[[0]]
                 r["Tag"] = str(c)
                 new_df.append(r)
+                print("Ye")
 
-    
-    
-
-
-
-
+    state_df = new_df
 
         
-    
    
     if not exists(dfpath + "/dataframes"):
         os.mkdir(dfpath + "/dataframes")
