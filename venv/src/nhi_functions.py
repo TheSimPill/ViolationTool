@@ -1,3 +1,4 @@
+from ast import MatchClass
 from os.path import exists
 from openpyxl.descriptors.base import String
 import openpyxl.workbook
@@ -147,15 +148,18 @@ def match_violations(dfpath, frame, state_df, fine_df):
     fine_df["Fine"] = fine_df["Fine"].astype(int64) 
 
     # Makes a series out of a row
+    # Considering doing it to dicts for this part
     for row in fine_df.iterrows():
         # If state, org, and date are same then it's the same incident
-        state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Organization"] == row[1]["Organization"]) & (state_df["Date"] == row[1]["Date"]), "Fine"] = row[1]["Fine"]
-        state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Organization"] == row[1]["Organization"]) & (state_df["Date"] == row[1]["Date"]), "Url"] = row[1]["Url"]
-    
-    if not exists(hashpath + "/hashes"):
-        os.mkdir(hashpath + "/hashes")
-    with open(hashpath + "/hashes/states_hash.pkl", 'wb') as outp:
-            pickle.dump(states_hash, outp, pickle.HIGHEST_PROTOCOL)
+        match = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Organization"] == row[1]["Organization"]) & (state_df["Date"] == row[1]["Date"])]
+        for m in match:
+            m["Fine"] = row[1]["Fine"]
+        print(row[0])
+   
+    if not exists(dfpath + "/dataframes"):
+        os.mkdir(dfpath + "/dataframes")
+    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
+            pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
 
     frame.instructions.config(text="Finished matching")
     time.sleep(2)
