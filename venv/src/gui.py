@@ -83,7 +83,7 @@ class tkinterApp(tk.Tk):
   
             frame.grid(row = 0, column = 0, sticky ="nsew")
   
-        self.show_frame(WebscrapingChoicePage)
+        self.show_frame(StartPage)
   
     # to display the current frame passed as
     # parameter

@@ -140,7 +140,7 @@ def get_proxy(params):
 # Match up incidents with corresponding fines
 # state_df -> "Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"
 # fine_df -> "State", "Organization", "Date", "Fine", "Url"
-def merge_violations(dfpath, frame, state_df, fine_df):
+def match_violations(dfpath, frame, state_df, fine_df):
     
     # Convert dfs to dictionary lists
     finelst = fine_df.to_dict("record")
@@ -156,21 +156,6 @@ def merge_violations(dfpath, frame, state_df, fine_df):
     # Convert back to dataframe
     state_df = pd.DataFrame(statelst)
 
-    # Combine rows where violations are the same but with different tags
-    new_df = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
-    for row in state_df.iterrows():
-        matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
-        if len(matches.index) > 1:
-                c = matches["Tag"].tolist()
-                r = matches.iloc[[0]]
-                r["Tag"] = str(c)
-                new_df.append(r)
-                print("Ye")
-
-    state_df = new_df
-
-        
-   
     if not exists(dfpath + "/dataframes"):
         os.mkdir(dfpath + "/dataframes")
     with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
@@ -179,6 +164,30 @@ def merge_violations(dfpath, frame, state_df, fine_df):
     frame.instructions.config(text="Finished matching")
     time.sleep(2)
     frame.advance_page()
+
+# Merge violations with same state, date and organization into one row with all tags
+def merge_violations(dfpath, state_df, fine_df):
+    
+    # Combine rows where violations are the same but with different tags
+    new_df = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
+    for row in state_df.iterrows():
+        matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
+        if len(matches.index) > 1:
+                c = matches["Tag"].tolist()
+                #r = matches.iloc[[0]]
+                #print("matches ", r)
+                matches.at[0, "Tag"] = str(c)
+                r = matches.iloc
+                #print(r)
+                new_df.append(r)
+                #print("Ye")
+                #print(new_df)
+                break
+
+    state_df = new_df
+
+    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
+        pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
         
 # Sums up fines for a state
 def sum_fines_state(state_incidents_list) -> int:

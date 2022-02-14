@@ -12,3 +12,8 @@ New Idea:
 
 Currently:
     Combing to dict lists, combining, then combining rows where only tag differs
+
+Just made new statedf and made backups
+
+
+Now need to properly match urls to state_df and then figure out how to merge similar rows
