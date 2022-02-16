@@ -161,33 +161,41 @@ def match_violations(dfpath, frame, state_df, fine_df):
     with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
             pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
 
-    frame.instructions.config(text="Finished matching")
-    time.sleep(2)
-    frame.advance_page()
+    #frame.instructions.config(text="Finished matching")
+    time.sleep(1)
+    print("Finished matching")
+    merge_violations(dfpath, frame, state_df)
 
-# Merge violations with same state, date and organization into one row with all tags
-def merge_violations(dfpath, state_df, fine_df):
+# Merge rows that represent the same violation but with a different tag into on row
+def merge_violations(dfpath, frame, state_df):
     
-    # Combine rows where violations are the same but with different tags
-    new_df = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
+    #frame.instructions.config(text="Condensing data...")
+    print("Before matching: ", len(state_df.index))
+    new = pd.DataFrame()
     for row in state_df.iterrows():
-        matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
-        if len(matches.index) > 1:
-                c = matches["Tag"].tolist()
-                #r = matches.iloc[[0]]
-                #print("matches ", r)
-                matches.at[0, "Tag"] = str(c)
-                r = matches.iloc
-                #print(r)
-                new_df.append(r)
-                #print("Ye")
-                #print(new_df)
-                break
+            # Grab rows where state, date, and organization are the same
+            matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
+            if len(matches.index) > 1:
+                    # Get all tags into a list     
+                    c = matches["Tag"].tolist()
+                    # Combine all rows into 
+                    r = matches.groupby(matches["State"]).aggregate({"Territory":"first", "State":"first", \
+                            "Organization":"first", "Date":"first", "Tag":"first", \
+                            "Severity":"first", "Fine":"first", "Url":"first"})
+                    
+                    # Make the tag columns a string of the list of tags
+                    r["Tag"] = str(c)
+                    new.append(r)
+                    new = pd.concat([new, r])
 
-    state_df = new_df
-
+    # Save newly condensed state df
+    state_df = new
     with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
         pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
+
+    frame.instructions.config(text="Finished condensing")
+    time.sleep(1)
+    frame.advance_page()
         
 # Sums up fines for a state
 def sum_fines_state(state_incidents_list) -> int:

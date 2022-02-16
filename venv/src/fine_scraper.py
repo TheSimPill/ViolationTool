@@ -178,7 +178,7 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath):
                 fine_df = pickle.load(inp)
             with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
                 state_df = pickle.load(inp)
-            #nhi.match_violations(dfpath, curframe, state_df, fine_df)
+            nhi.match_violations(dfpath, curframe, state_df, fine_df)
             
         # If parsing main page fails for some reason
         except AttributeError as e:

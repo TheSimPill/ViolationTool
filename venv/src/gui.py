@@ -448,6 +448,7 @@ class TerritoriesPage(tk.Frame):
                 ttk.Checkbutton.__init__(self, master=parent, text=text, command=lambda:parent.add_state(text, territory, states))
                 self.parent = thisframe
             
+        # When we've chosen all 3 territories
         if chosen >= 3:
             thisframe.roptions()
         else:
