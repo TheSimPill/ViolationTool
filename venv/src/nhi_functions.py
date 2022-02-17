@@ -173,8 +173,7 @@ def merge_violations(dfpath, frame, state_df):
     # Convert tags row into str
     state_df["Tag"] = state_df["Tag"].astype(str)
 
-    #frame.instructions.config(text="Condensing data...")
-    print("Before matching: ", len(state_df.index))
+    frame.instructions.config(text="Condensing data...")
     new = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
     for row in state_df.iterrows():
             # Grab rows where state, date, and organization are the same
@@ -199,8 +198,7 @@ def merge_violations(dfpath, frame, state_df):
                 state_df = state_df[state_df['_merge'] == 'left_only']
                 state_df = state_df.drop("_merge", axis=1)
 
-                print(len(state_df.index))
-
+                
     # Save newly condensed state df
     state_df = new
     with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:

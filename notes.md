@@ -28,3 +28,5 @@ Maybe check if a row we find is in the new df before we process
 Decided to do a check if row has already been added to the new df
 
 Need to figure out why dupes arent working
+
+Finished merging process
