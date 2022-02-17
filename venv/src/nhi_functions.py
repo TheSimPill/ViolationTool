@@ -170,39 +170,36 @@ def match_violations(dfpath, frame, state_df, fine_df):
 # Takes about 5 min 
 def merge_violations(dfpath, frame, state_df):
     
+    # Convert tags row into str
+    state_df["Tag"] = state_df["Tag"].astype(str)
+
     #frame.instructions.config(text="Condensing data...")
     print("Before matching: ", len(state_df.index))
-    new = pd.DataFrame()
-    count = 1
+    new = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
     for row in state_df.iterrows():
             # Grab rows where state, date, and organization are the same
             matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
             # So that only rows that have the unique columns we're checking for aren't processed
             if len(matches.index) > 1:
+                
+                # Get all tags into a list     
+                c = matches["Tag"].tolist()
+                # Combine all rows into 
+                r = matches.groupby(matches["State"]).aggregate({"Territory":"first", "State":"first", \
+                        "Organization":"first", "Date":"first", "Tag":"first", \
+                        "Severity":"first", "Fine":"first", "Url":"first"})
+                
+                # Make the tag columns a string of the list of tags
+                r["Tag"] = str(c)
+                new.append(r)
+                new = pd.concat([new, r])
 
-                # Grab first row of matches and check to see if has already been processed
-                newrow = matches.iloc[[0]]
-                dupes = matches.loc[(matches["State"] == newrow["State"].values[0]) & (matches["Date"] == newrow["Date"].values[0]) & (matches["Organization"] == newrow["Organization"].values[0])]
-                if dupes.empty:
-                    print("Non dupe ", str(count))
-                    count += 1
+                # Remove rows that were merged so we don't proccess them again later down the line
+                state_df = state_df.merge(matches, how='left', indicator=True)
+                state_df = state_df[state_df['_merge'] == 'left_only']
+                state_df = state_df.drop("_merge", axis=1)
 
-                    # Get all tags into a list     
-                    c = matches["Tag"].tolist()
-                    # Combine all rows into 
-                    r = matches.groupby(matches["State"]).aggregate({"Territory":"first", "State":"first", \
-                            "Organization":"first", "Date":"first", "Tag":"first", \
-                            "Severity":"first", "Fine":"first", "Url":"first"})
-                    
-                    # Make the tag columns a string of the list of tags
-                    r["Tag"] = str(c)
-                    new.append(r)
-                    new = pd.concat([new, r])
-                    print(new)
-
-                    # Remove rows that were merged so we don't proccess them again later down the line
-                   # state_df = df.merge(df_subset, how='left', indicator=True)
-                   # df_new = df_new[df_new['_merge'] == 'left_only']
+                print(len(state_df.index))
 
     # Save newly condensed state df
     state_df = new
