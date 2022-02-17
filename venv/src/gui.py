@@ -72,7 +72,7 @@ class tkinterApp(tk.Tk):
         # of the different page layouts
         for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
                   OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage,\
-                  FormatPage, ExcelPage, SendEmailsPage):
+                  FormatPage, ExcelPage, SendEmailsPage, TestPage):
   
             frame = F(container, self)
   
@@ -841,6 +841,24 @@ class SendEmailsPage(tk.Frame):
     def finish(thisframe):
         thisframe.instructions.config(text="Emails Sent")
         thisframe.nextbtn.grid_forget()
+
+class TestPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Press button to send emails", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        b1 = tk.Checkbutton(thisframe, text="Most severe incidents", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe incidents per organization"))
+        b1.grid(column=1, row=3, sticky="w")
+        b1 = tk.Checkbutton(thisframe, text="Most severe incidents", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe incidents per organization"))
+        b1.grid(column=2, row=3, sticky="w")
+
+        #fm = ttk.Labelframe(thisframe, width=50, border=0)
+        #fm.grid(column=1, row=3)
+        
         
 
     
