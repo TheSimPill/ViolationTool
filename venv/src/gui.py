@@ -507,7 +507,6 @@ class TerritoriesPage(tk.Frame):
             second = False
             third = False
             boxes = []
-            print(states)
             for state in states:
                 if ct <= len(states)/3:
                     boxes.append(CheckB(thisframe, state))
@@ -783,7 +782,7 @@ class ExcelPage(tk.Frame):
         # thisframe.finish()
         global state_df
         thisframe.browse_text = tk.StringVar()
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.make_sheets(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.nextbtn.grid(column=2, row=3, pady=40)
         thisframe.browse_text.set("Make Sheets")
 
@@ -805,19 +804,18 @@ class ExcelPage(tk.Frame):
                 else:
                     self.func(thisframe, True, state_df, savepath, filepath)
 
-        thread(nhi.summarize_data())
+        '''
+        For testing:
+        '''
+        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+            state_df = pickle.load(inp)
+
+        thread(nhi.make_sheets(thisframe, "", state_df))
 
     # Once sheet is made
     def finish(thisframe):
-        thisframe.instructions.config(text="Making sheets..")
-        thisframe.update_idletasks()
-        time.sleep(2)
-        thisframe.instructions.config(text="Sheets made")
-        thisframe.update_idletasks()
-        time.sleep(2)
+        time.sleep(1.5)
         thisframe.controller.show_frame(SendEmailsPage)
-
-
 
 
 # Page where emails are sent

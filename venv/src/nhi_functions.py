@@ -173,7 +173,7 @@ def merge_violations(dfpath, frame, state_df):
     # Convert tags row into str
     state_df["Tag"] = state_df["Tag"].astype(str)
 
-    frame.instructions.config(text="Condensing data...")
+    #frame.instructions.config(text="Condensing data...")
     new = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
     for row in state_df.iterrows():
             # Grab rows where state, date, and organization are the same
@@ -198,7 +198,9 @@ def merge_violations(dfpath, frame, state_df):
                 state_df = state_df[state_df['_merge'] == 'left_only']
                 state_df = state_df.drop("_merge", axis=1)
 
-                
+    # Reset indicies to be numbers
+    new = new.reset_index()
+    new = new.drop("index", axis=1)
     # Save newly condensed state df
     state_df = new
     with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
@@ -812,4 +814,84 @@ def sort_by_territories(states_hash, east, central, west):
             pass
         else:
             pass
+
+# Makes the excel sheets based on options chosen by the user 
+def make_sheets(frame, savepath, options, state_df, startdate, enddate):
+    choices = 0
+    us = pd.DataFrame(columns=["Total", "2021", "2020", "2019"])
+    # Sort through options
+    for option in options.keys():
+        if option == "Total US Fines" and options[option]:
+            choices += 1
+            # Total US sum
+            state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
+            sum = state_df["Fine"].sum()
+
+            # Conversion to date time objects for comparison
+            oldcol = state_df["Date"]
+            state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
+            startdate = datetime.datetime.strptime('12/31/2018', '%m/%d/%Y')
+            enddate = datetime.datetime.strptime('12/31/2021', '%m/%d/%Y')
+
+            # Sum dates in range and change columns type back
+            state_df.loc[(state_df["Date"] > startdate) & (state_df["Date"] <= enddate), ["Fine"]].sum()
+            state_df['Date'] = oldcol
+            
+            
+            
+
+
+
+        elif option == "Total US Fines per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Total US Violations" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Total US Violations per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Top fined organizations per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+        
+        elif option == "Most severe organizations per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fines per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fines per state per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fined violations per state" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Sum of fined violations per state per year" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Most severe incidents per organization" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Incidents with highest fines per organization" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+
+        elif option == "Create sheet with all territories combined" and options[option]:
+            ws.cell(row=1, column=col).value = option
+            col += 1
+    state_df.to_excel("summary.xlsx", sheet_name="Summary", index=False)
+    frame.finish()
+     
+
+
 

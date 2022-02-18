@@ -30,3 +30,9 @@ Decided to do a check if row has already been added to the new df
 Need to figure out why dupes arent working
 
 Finished merging process
+
+Next as of 2/18: 
+    Want to work on adding the excel sheet
+
+Now: 
+    Working on excel sheet option 1
