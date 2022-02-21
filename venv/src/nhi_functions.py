@@ -818,78 +818,85 @@ def sort_by_territories(states_hash, east, central, west):
 # Makes the excel sheets based on options chosen by the user 
 def make_sheets(frame, savepath, options, state_df, startdate, enddate):
     choices = 0
-    us = pd.DataFrame(columns=["Total", "2021", "2020", "2019"])
+    chosen = {}
+
+    # Get years in range that user chose
+    years = range(startdate.year, enddate.year+1)
+
+    # Dict that will hold new dataframes
+    dfs = {}
+    dfs["US"] = pd.DataFrame()
+
     # Sort through options
     for option in options.keys():
+
+        # Option 1
         if option == "Total US Fines" and options[option]:
             choices += 1
-            # Total US sum
+        
+            # Turn all values in fine column to numbers
             state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
-            sum = state_df["Fine"].sum()
+            oldcol = state_df["Date"]
 
             # Conversion to date time objects for comparison
-            oldcol = state_df["Date"]
             state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
-            startdate = datetime.datetime.strptime('12/31/2018', '%m/%d/%Y')
-            enddate = datetime.datetime.strptime('12/31/2021', '%m/%d/%Y')
 
             # Sum dates in range and change columns type back
-            state_df.loc[(state_df["Date"] > startdate) & (state_df["Date"] <= enddate), ["Fine"]].sum()
+            sum = state_df.loc[(state_df["Date"] >= startdate) & (state_df["Date"] <= enddate), ["Fine"]].sum()[0]
             state_df['Date'] = oldcol
             
+            # Add data to hash
+            dfs["US"].insert(0, "Total", [sum, 0])
+            dfs["US"] = dfs["US"].rename(index={0:"Fines", 1:"Violations"})
+            print(dfs["US"])
             
             
-
-
 
         elif option == "Total US Fines per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+
+            for year in years:
+                pass
 
         elif option == "Total US Violations" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Total US Violations per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Top fined organizations per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
         
         elif option == "Most severe organizations per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Sum of fines per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Sum of fines per state per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Sum of fined violations per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Sum of fined violations per state per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Most severe incidents per organization" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Incidents with highest fines per organization" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
+            pass
 
         elif option == "Create sheet with all territories combined" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-    state_df.to_excel("summary.xlsx", sheet_name="Summary", index=False)
+            pass
+
+    # Write to an excel
+    start_row = 1
+    with pd.ExcelWriter('output.xlsx') as writer:
+        for dfname in dfs.keys():
+            dfs[dfname].to_excel(writer, sheet_name=dfname)
+            start_row += len(dfs[dfname])
+        writer.save()
     frame.finish()
      
 

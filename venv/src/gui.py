@@ -793,24 +793,26 @@ class ExcelPage(tk.Frame):
 
     # Uses threads to make excel sheets -> need to first break data up by territory
     def make_sheets(thisframe):
+
+        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+            state_df = pickle.load(inp)
+
         class thread(threading.Thread):
             def __init__(self, func):
                 threading.Thread.__init__(self)
                 self.func = func
         
             def run(self):
-                if load_scraper:
-                    self.func(thisframe, False, state_df, savepath, filepath)
-                else:
-                    self.func(thisframe, True, state_df, savepath, filepath)
+                global options; global sdate; global edate
+                print(options)
+                self.func(thisframe, "", options, state_df, sdate, edate)
 
         '''
         For testing:
         '''
-        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
-            state_df = pickle.load(inp)
+        
 
-        thread(nhi.make_sheets(thisframe, "", state_df))
+        thread(nhi.make_sheets).start()
 
     # Once sheet is made
     def finish(thisframe):
