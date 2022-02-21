@@ -821,19 +821,23 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate):
     chosen = {}
 
     # Get years in range that user chose
-    years = range(startdate.year, enddate.year+1)
+    years = list(range(startdate.year, enddate.year+1))
 
     # Dict that will hold new dataframes
     dfs = {}
-    dfs["US"] = pd.DataFrame()
+    dfs["US"] = pd.DataFrame(columns=years)
 
     # Sort through options
     for option in options.keys():
 
         # Option 1
-        if option == "Total US Fines" and options[option]:
+        if option == "US Fines" and options[option]:
             choices += 1
-        
+
+            # Rename indicies
+            dfs["US"].loc["Fines"] = [0] * len(years)
+            dfs["US"].loc["Violations"] = [0] * len(years)
+
             # Turn all values in fine column to numbers
             state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
             oldcol = state_df["Date"]
@@ -841,22 +845,32 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate):
             # Conversion to date time objects for comparison
             state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
 
-            # Sum dates in range and change columns type back
+            # Total sum for dates in range
             sum = state_df.loc[(state_df["Date"] >= startdate) & (state_df["Date"] <= enddate), ["Fine"]].sum()[0]
+            # Sum for each year
+            for year in years:
+                # The branches make sure we are within the users date range
+                if year == years[0]:
+                    yearstart = startdate
+                    yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                elif year == years[-1]:
+                    yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                    yearend = enddate
+                else:
+                    yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                    yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+
+                # Get the year's sum
+                dfs["US"].at["Fines", year] = state_df.loc[(state_df["Date"] >= yearstart) & (state_df["Date"] <= yearend), ["Fine"]].sum()[0] 
+
+            # Change columns type back
             state_df['Date'] = oldcol
             
             # Add data to hash
             dfs["US"].insert(0, "Total", [sum, 0])
-            dfs["US"] = dfs["US"].rename(index={0:"Fines", 1:"Violations"})
-            print(dfs["US"])
+                 
             
             
-
-        elif option == "Total US Fines per year" and options[option]:
-
-            for year in years:
-                pass
-
         elif option == "Total US Violations" and options[option]:
             pass
 

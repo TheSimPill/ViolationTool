@@ -702,7 +702,7 @@ class FormatPage(tk.Frame):
         thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Holds buttons
-        thisframe.boxes = {"Total US Fines":False, "Total US Fines per year":False, "Total US Violations":False, \
+        thisframe.boxes = {"US Fines":False, "Total US Violations":False, \
                            "Total US Violations per year":False, "Top fined organizations per state":False, \
                             "Most severe organizations per state":False, "Sum of fines per state":False, \
                             "Sum of fines per state per year":False, "Sum of fined violations per state":False, \
@@ -713,10 +713,7 @@ class FormatPage(tk.Frame):
         fm.grid(column=2, row=3)
         
         # Buttons
-        b1 = tk.Checkbutton(fm, width=35, text="Total US Fines", anchor="w", command=lambda:thisframe.add_option("Total US Fines"))
-        b1.grid()
-
-        b1 = tk.Checkbutton(fm, width=35, text="Total US Fines per year", anchor="w", command=lambda:thisframe.add_option("Total US Fines per year"))
+        b1 = tk.Checkbutton(fm, width=35, text="US Fines (Total and by year for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Fines"))
         b1.grid()
         
         b1 = tk.Checkbutton(fm, width=35, text="Total US Violations", anchor="w", command=lambda:thisframe.add_option("Total US Violations"))
@@ -803,8 +800,10 @@ class ExcelPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                global options; global sdate; global edate
-                print(options)
+                global options
+                #; global sdate; global edate
+                sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
+                edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
                 self.func(thisframe, "", options, state_df, sdate, edate)
 
         '''
