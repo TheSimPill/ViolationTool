@@ -36,3 +36,5 @@ Next as of 2/18:
 
 Now: 
     Working on excel sheet option 1
+
+    Working on territory sheets for make_excel

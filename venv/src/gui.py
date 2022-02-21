@@ -702,8 +702,8 @@ class FormatPage(tk.Frame):
         thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
 
         # Holds buttons
-        thisframe.boxes = {"US Fines":False, "Total US Violations":False, \
-                           "Total US Violations per year":False, "Top fined organizations per state":False, \
+        thisframe.boxes = {"US Fines":False, "US Violations":False, \
+                            "Top fined organizations per state":False, \
                             "Most severe organizations per state":False, "Sum of fines per state":False, \
                             "Sum of fines per state per year":False, "Sum of fined violations per state":False, \
                             "Sum of fined violations per state per year":False, "Most severe incidents per organization":False, \
@@ -716,10 +716,7 @@ class FormatPage(tk.Frame):
         b1 = tk.Checkbutton(fm, width=35, text="US Fines (Total and by year for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Fines"))
         b1.grid()
         
-        b1 = tk.Checkbutton(fm, width=35, text="Total US Violations", anchor="w", command=lambda:thisframe.add_option("Total US Violations"))
-        b1.grid()
-
-        b1 = tk.Checkbutton(fm, width=35, text="Total US Violations per year", anchor="w", command=lambda:thisframe.add_option("Total US Violations per year"))
+        b1 = tk.Checkbutton(fm, width=35, text="US Violations (Total and by year for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Violations"))
         b1.grid()
 
         b1 = tk.Checkbutton(fm, text="Top fined organizations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
@@ -785,12 +782,15 @@ class ExcelPage(tk.Frame):
 
     # Send territories that we chose to nhi functions to sort the violations
     def sort_terrs(thisframe):
-        global state_df; global east; global central; global west
+        global state_df, east, central, west
         nhi.sort_by_territories(state_df, east, central, west)
 
     # Uses threads to make excel sheets -> need to first break data up by territory
     def make_sheets(thisframe):
 
+        '''
+        For testing:
+        '''
         with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
             state_df = pickle.load(inp)
 
@@ -801,15 +801,11 @@ class ExcelPage(tk.Frame):
         
             def run(self):
                 global options
-                #; global sdate; global edate
+                ts = [{"east": ["Maryland", "Virginia"], "west": ["Texas", "Alabama"]}]
+                #; global sdate, edate, east, west, east
                 sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
                 edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
-                self.func(thisframe, "", options, state_df, sdate, edate)
-
-        '''
-        For testing:
-        '''
-        
+                self.func(thisframe, "", options, state_df, sdate, edate, ts)
 
         thread(nhi.make_sheets).start()
 

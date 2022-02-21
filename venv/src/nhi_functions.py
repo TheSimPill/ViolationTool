@@ -816,15 +816,31 @@ def sort_by_territories(states_hash, east, central, west):
             pass
 
 # Makes the excel sheets based on options chosen by the user 
-def make_sheets(frame, savepath, options, state_df, startdate, enddate):
+def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories):
     choices = 0
-    chosen = {}
 
     # Get years in range that user chose
     years = list(range(startdate.year, enddate.year+1))
 
     # Dict that will hold new dataframes
     dfs = {}
+    
+    # Initialize a dataframe per territory
+    codes = info.get_state_codes(True)
+    keys = list(codes.keys())
+    vals = list(codes.values())
+    for territory in territories:
+        # Convert actual state name to it's two letter code
+        states = []
+        for state in list(territory.values())[0]:
+            code = vals.index(state)
+            code = keys[code]
+            states.append(code)
+        
+        territories[territory] = states
+    print(territories)
+
+
     dfs["US"] = pd.DataFrame(columns=years)
 
     # Sort through options
@@ -834,7 +850,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate):
         if option == "US Fines" and options[option]:
             choices += 1
 
-            # Rename indicies
+            # Initialize indicies
             dfs["US"].loc["Fines"] = [0] * len(years)
             dfs["US"].loc["Violations"] = [0] * len(years)
 
@@ -863,19 +879,13 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate):
                 # Get the year's sum
                 dfs["US"].at["Fines", year] = state_df.loc[(state_df["Date"] >= yearstart) & (state_df["Date"] <= yearend), ["Fine"]].sum()[0] 
 
-            # Change columns type back
+            # Change columns type back, add data to hash
             state_df['Date'] = oldcol
-            
-            # Add data to hash
             dfs["US"].insert(0, "Total", [sum, 0])
                  
-            
-            
-        elif option == "Total US Violations" and options[option]:
-            pass
-
-        elif option == "Total US Violations per year" and options[option]:
-            pass
+                       
+        elif option == "US Violations" and options[option]:
+            choices += 1
 
         elif option == "Top fined organizations per state" and options[option]:
             pass
