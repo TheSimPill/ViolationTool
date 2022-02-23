@@ -618,7 +618,10 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     
     # Convert states to their two letter code
     territories = convert_states(territories)
+    # Make a dataframe for each territory
+    t_dfs = sort_by_territories(state_df, territories)
 
+    # Optional sheets
     dfs["US"] = pd.DataFrame(columns=years)
 
     # Sort through options
@@ -696,9 +699,14 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # Write to an excel
     start_row = 1
     with pd.ExcelWriter('output.xlsx') as writer:
+        # Excel sheet for each territory
+        for terr in t_dfs.keys():
+            t_dfs[terr].to_excel(writer, sheet_name=terr)
+        # Excel sheet for each set of options
         for dfname in dfs.keys():
-            dfs[dfname].to_excel(writer, sheet_name=dfname)
-            start_row += len(dfs[dfname])
+            if not dfs[dfname].empty:
+                dfs[dfname].to_excel(writer, sheet_name=dfname)
+                start_row += len(dfs[dfname])
         writer.save()
     frame.finish()
     
@@ -726,7 +734,6 @@ def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List
 # Sort violations by territories for when we make an excel sheet
 # Also want to update territory values as we go through the dataframe
 def sort_by_territories(state_df, territories):
-    
     tdict = {}
     territorynames = list(territories.keys())
     # Create a hash where key is territory name and value is dataframe of related rows
