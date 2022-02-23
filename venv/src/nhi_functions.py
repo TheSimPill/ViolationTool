@@ -59,6 +59,7 @@ def parse_data(frame, save_path):
     files = os.listdir(save_path)
     start_time = time.time() 
     numtoload = len(files)
+    '''
     frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
     frame.dl_btn.grid_forget()
 
@@ -71,7 +72,7 @@ def parse_data(frame, save_path):
     x = 0
     plabel = Label(frame, text=str(x) + " out of " + str(len(files)) + " workbooks parsed", font=("Times", 15))
     plabel.grid(column=1, row=4, columnspan=3, pady=10)
-
+    '''
     counter = 1
     dfs = []
 
@@ -94,25 +95,27 @@ def parse_data(frame, save_path):
         dfs.append(df)
 
         # Update labels and progress bar
+        '''
         frame.instructions.config(text="Workbook " + str(counter) + " parsed in " + str(int(time.time() - start)) + " seconds")
         x += 1
         progress["value"] += (1/len(files))*100
         plabel.config(text=str(x) + " out of " + str(len(files)) + " workbooks parsed", font=("Times", 15))
+        '''
         counter += 1
 
     # Once all excel files are dataframes
-    plabel.grid_forget()
-    progress.grid_forget()
+    #plabel.grid_forget()
+    #progress.grid_forget()
 
     # Merge dataframes and sort by state
-    frame.instructions.config(text="Merging data frames...")
+    #frame.instructions.config(text="Merging data frames...")
     result = pd.concat(dfs, ignore_index=True)
     result = result.sort_values(by=["State"])
     
     # Fix indicies
     result.reset_index(drop=True, inplace=True)
 
-    frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
+    #frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
     # Create a hashes folder in chosen directory and save the states hash
@@ -525,9 +528,13 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     territories = convert_states(territories)
     # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
     t_dfs = sort_by_territories(state_df, territories)
-    if startdate != None and enddate != None:
+    if not None in {startdate, enddate}:
         for terr in t_dfs.keys():
             t_dfs[terr] = get_inrange(t_dfs[terr], startdate, enddate)
+
+    # Get dates in range for state df
+    if not None in {startdate, enddate}:
+        state_df = get_inrange(state_df, startdate, enddate)
 
     # Optional sheets
     dfs["US"] = pd.DataFrame(columns=years)
@@ -576,7 +583,31 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                         
             elif option == "US Violations" and options[option]:
                 choices += 1
+
+                 # Initialize indicies
                 dfs["US"].loc["Violations"] = [0] * len(years)
+
+                # Get total number of US violations within date range
+                sum = count_violations(state_df)
+            
+                # Sum for each year
+                for year in years:
+                    # The branches make sure we are within the users date range
+                    if year == years[0]:
+                        yearstart = startdate
+                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                    elif year == years[-1]:
+                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                        yearend = enddate
+                    else:
+                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+
+                    # Get the year's sum
+                    dfs["US"].at["Violations", year] = count_violations(get_inrange(state_df, yearstart, yearend)) 
+
+                # Add data to hash of dfs
+                dfs["US"].at["Violations", "Total"] = sum
 
             elif option == "Top fined organizations per state" and options[option]:
                 pass
@@ -668,4 +699,15 @@ def get_inrange(df, start, end):
     df["Date"] = oldcol
 
     return new 
+
+# Counts the number of violations in a dataframe by checking number of tags
+def count_violations(df):
+    # Turn the tag column into a pandas series of lists
+    vios = 0
+    col = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(", ")) 
+    for lst in col:
+        vios += len(lst)
+
+    return vios
+        
 

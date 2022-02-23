@@ -38,3 +38,5 @@ Now:
     Working on excel sheet option 1
 
     Working on territory sheets for make_excel
+
+    Working on detecting if a date can have multiple of the same tag so I can count violations

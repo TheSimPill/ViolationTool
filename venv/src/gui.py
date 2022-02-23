@@ -801,7 +801,8 @@ class ExcelPage(tk.Frame):
         
             def run(self):
                 global options
-                ts = {"east": ["Maryland", "Virginia"], "west": ["Texas", "Alabama"]}
+                #ts = {"east": ["Maryland", "Virginia"], "west": ["Texas", "Alabama"]}
+                ts = {"All": list(info.get_state_codes(True).values())}
                 global sdate, edate
                 #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
                 #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
