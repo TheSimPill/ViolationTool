@@ -286,105 +286,6 @@ def state_violations(state_incident_list) -> int:
 
     return total
 
-# Gets summary of information and writes to an excel sheet
-'''
-    Specifically, gets:
-        Total violations in US, for each year starting in 2019
-        Total violations per state, for each year starting in 2019
-        Total dollar amount of fines in US
-        Total dollar amount of fines per state, for each year starting in 2019
-
-    * All of these numbers are based on relevant cases, which are the ones in the
-    state hash, of course. 
-'''
-def summarize_totals(states_hash) -> None:
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "NHI Summaries"
-    ws["A1"] = "State"
-    ws["C1"] = "Total Violations"
-    ws["D1"] = "2021 Violations"
-    ws["E1"] = "2020 Violations"
-    ws["F1"] = "2019 Violations"
-    ws["H1"] = "Total Fined Violations"
-    ws["I1"] = "Total Fines"
-    fine_total = 0
-    ws["J1"] = "2021 Fines"
-    fine_total_21 = 0
-    ws["K1"] = "2020 Fines"
-    fine_total_20 = 0
-    ws["L1"] = "2019 Fines"
-    fine_total_19 = 0
-
-    # Populates rows
-    counter = 2
-    state_codes = info.get_state_codes(False)
-    sorted_states = sorted(list(states_hash.keys()))
-    for state in sorted_states:
-        # Populates state column 
-        cell = "A" + str(counter)
-        ws[cell] = state_codes[state]
-        # Populates Total Violations column
-        cell = "C" + str(counter)
-        ws[cell] = state_violations(states_hash[state])
-        violations_tuple = state_violations_by_year(states_hash[state])
-        # 2021 Violations
-        cell = "D" + str(counter)
-        ws[cell] = violations_tuple[2]
-        # 2020 Violations
-        cell = "E" + str(counter)
-        ws[cell] = violations_tuple[1]
-        # 2019 Violations
-        cell = "F" + str(counter)
-        ws[cell] = violations_tuple[0]
-        # Total Fined Violations
-        cell = "H" + str(counter)
-        ws[cell] = state_fine_incidents(states_hash[state])
-        # Total Fines
-        cell = "I" + str(counter)
-        total = sum_fines_state(states_hash[state])
-        fine_total += total
-        ws[cell] = "${:,.2f}".format(total)
-        fines_tuple = state_fines_by_year(states_hash[state])
-        # 2021 Fines
-        cell = "J" + str(counter)
-        fine_total_21 += fines_tuple[2]
-        ws[cell] = "${:,.2f}".format(fines_tuple[2])
-        # 2020 Fines
-        cell = "K" + str(counter)
-        fine_total_20 += fines_tuple[1]
-        ws[cell] = "${:,.2f}".format(fines_tuple[1])
-        # 2019 Fines
-        cell = "L" + str(counter)
-        fine_total_19 += fines_tuple[0]
-        ws[cell] = "${:,.2f}".format(fines_tuple[0])
-        counter += 1
-
-    cell = "A" + str(counter)
-    ws[cell] = "All of US"
-    cell = "I" + str(counter)
-    ws[cell] = fine_total
-    cell = "J" + str(counter)
-    ws[cell] = fine_total_21
-    cell = "K" + str(counter)
-    ws[cell] = fine_total_20
-    cell = "L" + str(counter)
-    ws[cell] = fine_total_19
-
-    wb.save("BD Summary.xlsx")
-      
-# Gets a list of violations within certain date range, takes date in format MM/DD/YYYY
-def get_state_date_range(state_incident_list, start, end) -> list:
-    output = []
-    start = datetime.strptime(start, '%m/%d/%Y')
-    end = datetime.strptime(end, '%m/%d/%Y')
-    for incident_tuple in state_incident_list:
-        cur = datetime.strptime(incident_tuple[1], '%m/%d/%Y')
-        if cur >= start and cur <= end:
-            output.append(incident_tuple)
-
-    return output
-
 # For a given state, returns top organizations based on severity
 def get_state_most_severe_organizations(state_incident_list, num_orgs) -> list:
     organizations = {}
@@ -612,14 +513,21 @@ def sort_by_date(state_incident_list):
 def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories):
 
     # Get years in range that user chose
+    if None in {startdate, enddate}:
+       startdate = datetime.strptime("12/31/2000", '%m/%d/%Y')
+       enddate = datetime.strptime("12/31/2100", '%m/%d/%Y')
+
     years = list(range(startdate.year, enddate.year+1))
     dfs = {}
     choices = 0
     
     # Convert states to their two letter code
     territories = convert_states(territories)
-    # Make a dataframe for each territory
+    # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
     t_dfs = sort_by_territories(state_df, territories)
+    if startdate != None and enddate != None:
+        for terr in t_dfs.keys():
+            t_dfs[terr] = get_inrange(t_dfs[terr], startdate, enddate)
 
     # Optional sheets
     dfs["US"] = pd.DataFrame(columns=years)
@@ -634,7 +542,6 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
                 # Initialize indicies
                 dfs["US"].loc["Fines"] = [0] * len(years)
-                dfs["US"].loc["Violations"] = [0] * len(years)
 
                 # Turn all values in fine column to numbers
                 state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
@@ -644,7 +551,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
 
                 # Total sum for dates in range
-                sum = state_df.loc[(state_df["Date"] >= startdate) & (state_df["Date"] <= enddate), ["Fine"]].sum()[0]
+                sum = get_inrange(state_df, startdate, enddate)["Fine"].sum()
+            
                 # Sum for each year
                 for year in years:
                     # The branches make sure we are within the users date range
@@ -663,11 +571,12 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
                 # Change columns type back, add data to hash
                 state_df['Date'] = oldcol
-                dfs["US"].insert(0, "Total", [sum, 0])
+                dfs["US"].insert(0, "Total", sum)
                     
                         
             elif option == "US Violations" and options[option]:
                 choices += 1
+                dfs["US"].loc["Violations"] = [0] * len(years)
 
             elif option == "Top fined organizations per state" and options[option]:
                 pass
@@ -747,6 +656,16 @@ def sort_by_territories(state_df, territories):
 
     return tdict
 
+# Gets a subframe where only violations with dates in a certain range are included
+def get_inrange(df, start, end):
+    # Conversion to date time objects for comparison
+    oldcol = df["Date"]
+    df["Date"] =  pd.to_datetime(df["Date"], format='%m/%d/%Y')
+    new = df.loc[(df["Date"] >= start) & (df["Date"] <= end)]
 
+    # Then revert columns back to strings
+    new["Date"] = new["Date"].dt.strftime('%m/%d/%Y')
+    df["Date"] = oldcol
 
+    return new 
 

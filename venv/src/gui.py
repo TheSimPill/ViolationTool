@@ -802,9 +802,9 @@ class ExcelPage(tk.Frame):
             def run(self):
                 global options
                 ts = {"east": ["Maryland", "Virginia"], "west": ["Texas", "Alabama"]}
-                #; global sdate, edate, east, west, east
-                sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
-                edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
+                global sdate, edate
+                #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
+                #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
                 self.func(thisframe, "", options, state_df, sdate, edate, ts)
 
         thread(nhi.make_sheets).start()
