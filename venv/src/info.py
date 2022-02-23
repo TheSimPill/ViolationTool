@@ -62,7 +62,7 @@ all_states = ["California", "Oregon", "Washington", "Nevada", "Idaho", "Utah", "
                 "Guam"]
 all_states = sorted(all_states)
 
-# Creates hash map where key is two later state code and value is full state
+# Creates hash map where key is two letter state code and value is full state
 def get_state_codes(load) -> dict:
     state_codes = {}
     if load:    

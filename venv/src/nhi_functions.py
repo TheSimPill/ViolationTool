@@ -1,4 +1,5 @@
 from os.path import exists
+from typing import Dict, List
 from openpyxl.descriptors.base import String
 import openpyxl.workbook
 from openpyxl.workbook.workbook import Workbook
@@ -606,313 +607,91 @@ def sort_by_date(state_incident_list):
 
     return sorted(state_incident_list, key=lambda item: item[1], reverse=True)
     
-# Creates excel file with all relevant cases
-def summarize_data(states_hash, thisframe) -> None:
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "NHI Summaries"
-    ws["A1"] = "Territory"
-    ws["B1"] = "State"
-    ws["C1"] = "Facility"
-    ws["D1"] = "Violation Date"
-    ws["E1"] = "Violations"
-    ws["F1"] = "Violation Link"
-    ws["G1"] = "Violation Severity"
-    ws["H1"] = "Fine"
-    
-
-    # Populates rows
-    counter = 2
-    state_codes = info.get_state_codes(False)
-    for state in states_hash:
-        by_date = sort_by_date(states_hash[state])
-        same_as_last = False
-        same = 1
-        for incident_tuple in by_date:
-            # Populates territory column 
-            cell = "A" + str(counter)
-            if state_codes[state] in info.territories["West"]:
-                ws[cell] = "West"
-            elif state_codes[state] in info.territories["Central"]:
-                ws[cell] = "Central"
-            else:
-                ws[cell] = "East"
-            # Populates State Column
-            cell = "B" + str(counter)
-            ws[cell] = state
-            # Facility
-            cell = "C" + str(counter)
-            ws[cell] = incident_tuple[0]
-            # Date
-            cell = "D" + str(counter)
-
-            ws[cell] = incident_tuple[1].strftime("%m/%d/%Y")
-
-            if counter != 2 and ws["D" + str(counter - 1)].value == ws[cell].value:
-                same += 1
-                same_as_last = True
-            elif same_as_last:
-                ws.merge_cells("H" + str(counter - same) + ":H" + str(counter - 1))
-                ws.cell(row = counter, column = 8).value = incident_tuple[3]
-                same = 1
-                same_as_last = False
-            else: 
-                # Fine
-                cell = "H" + str(counter)
-                ws[cell] = incident_tuple[3]
-            
-            # Violation
-            cell = "E" + str(counter)
-            ws[cell] = incident_tuple[5] + " - " + info.tagdata[incident_tuple[5]]
-            # Violation Links
-            cell = "F" + str(counter)
-            ws[cell] = incident_tuple[-1]
-            # Violation Severity
-            cell = "G" + str(counter)
-            ws[cell] = incident_tuple[4]
-            counter += 1
-            
-    wb.save("BD Data.xlsx")
-    thisframe.instructions("")
-
-# For summarizing data using options chosen by user in the gui
-# Creates excel file with all relevant cases
-def summarize_gui(states_hash, options) -> None:
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "NHI Summaries"
-    ws["A1"] = "Territory"
-    ws["B1"] = "State"
-    ws["C1"] = "Facility"
-    ws["D1"] = "Violation Date"
-    ws["E1"] = "Violations"
-    ws["F1"] = "Violation Link"
-    ws["G1"] = "Violation Severity"
-    ws["H1"] = "Fine"
-
-    # Add options
-    col = 9
-    for option in options.keys():
-
-        if option == "Total US Fines" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Total US Fines per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Total US Violations" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Total US Violations per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Top fined organizations per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-        
-        elif option == "Most severe organizations per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Sum of fines per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Sum of fines per state per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Sum of fined violations per state" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Sum of fined violations per state per year" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Most severe incidents per organization" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Incidents with highest fines per organization" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-
-        elif option == "Create sheet with all territories combined" and options[option]:
-            ws.cell(row=1, column=col).value = option
-            col += 1
-        
-        
-    # Populates rows
-    counter = 2
-    state_codes = info.get_state_codes(False)
-    for state in states_hash:
-        by_date = sort_by_date(states_hash[state])
-        same_as_last = False
-        same = 1
-        for incident_tuple in by_date:
-            # Populates territory column 
-            cell = "A" + str(counter)
-            if state_codes[state] in info.territories["West"]:
-                ws[cell] = "West"
-            elif state_codes[state] in info.territories["Central"]:
-                ws[cell] = "Central"
-            else:
-                ws[cell] = "East"
-            # Populates State Column
-            cell = "B" + str(counter)
-            ws[cell] = state
-            # Facility
-            cell = "C" + str(counter)
-            ws[cell] = incident_tuple[0]
-            # Date
-            cell = "D" + str(counter)
-
-            ws[cell] = incident_tuple[1].strftime("%m/%d/%Y")
-
-            if counter != 2 and ws["D" + str(counter - 1)].value == ws[cell].value:
-                same += 1
-                same_as_last = True
-            elif same_as_last:
-                ws.merge_cells("H" + str(counter - same) + ":H" + str(counter - 1))
-                ws.cell(row = counter, column = 8).value = incident_tuple[3]
-                same = 1
-                same_as_last = False
-            else: 
-                # Fine
-                cell = "H" + str(counter)
-                ws[cell] = incident_tuple[3]
-            
-            # Violation
-            cell = "E" + str(counter)
-            ws[cell] = incident_tuple[5] + " - " + info.tagdata[incident_tuple[5]]
-            # Violation Links
-            cell = "F" + str(counter)
-            ws[cell] = incident_tuple[-1]
-            # Violation Severity
-            cell = "G" + str(counter)
-            ws[cell] = incident_tuple[4]
-            counter += 1
-            
-    wb.save("BD Data.xlsx")
-
-# Sort violations by territories
-def sort_by_territories(states_hash, east, central, west):
-    evios = {}
-    cvios = {}
-    wvios = {}
-    
-
-    for state in states_hash.keys():
-        if state in east:
-            pass
-        elif state in central:
-            pass
-        else:
-            pass
 
 # Makes the excel sheets based on options chosen by the user 
 def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories):
-    choices = 0
 
     # Get years in range that user chose
     years = list(range(startdate.year, enddate.year+1))
-
-    # Dict that will hold new dataframes
     dfs = {}
+    choices = 0
     
-    # Initialize a dataframe per territory
-    codes = info.get_state_codes(True)
-    keys = list(codes.keys())
-    vals = list(codes.values())
-    for territory in territories:
-        # Convert actual state name to it's two letter code
-        states = []
-        for state in list(territory.values())[0]:
-            code = vals.index(state)
-            code = keys[code]
-            states.append(code)
-        
-        territories[territory] = states
-    print(territories)
-
+    # Convert states to their two letter code
+    territories = convert_states(territories)
 
     dfs["US"] = pd.DataFrame(columns=years)
 
     # Sort through options
-    for option in options.keys():
+    if options != None:
+        for option in options.keys():
 
-        # Option 1
-        if option == "US Fines" and options[option]:
-            choices += 1
+            # Option 1
+            if option == "US Fines" and options[option]:
+                choices += 1
 
-            # Initialize indicies
-            dfs["US"].loc["Fines"] = [0] * len(years)
-            dfs["US"].loc["Violations"] = [0] * len(years)
+                # Initialize indicies
+                dfs["US"].loc["Fines"] = [0] * len(years)
+                dfs["US"].loc["Violations"] = [0] * len(years)
 
-            # Turn all values in fine column to numbers
-            state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
-            oldcol = state_df["Date"]
+                # Turn all values in fine column to numbers
+                state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
+                oldcol = state_df["Date"]
 
-            # Conversion to date time objects for comparison
-            state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
+                # Conversion to date time objects for comparison
+                state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
 
-            # Total sum for dates in range
-            sum = state_df.loc[(state_df["Date"] >= startdate) & (state_df["Date"] <= enddate), ["Fine"]].sum()[0]
-            # Sum for each year
-            for year in years:
-                # The branches make sure we are within the users date range
-                if year == years[0]:
-                    yearstart = startdate
-                    yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
-                elif year == years[-1]:
-                    yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                    yearend = enddate
-                else:
-                    yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                    yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                # Total sum for dates in range
+                sum = state_df.loc[(state_df["Date"] >= startdate) & (state_df["Date"] <= enddate), ["Fine"]].sum()[0]
+                # Sum for each year
+                for year in years:
+                    # The branches make sure we are within the users date range
+                    if year == years[0]:
+                        yearstart = startdate
+                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                    elif year == years[-1]:
+                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                        yearend = enddate
+                    else:
+                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
 
-                # Get the year's sum
-                dfs["US"].at["Fines", year] = state_df.loc[(state_df["Date"] >= yearstart) & (state_df["Date"] <= yearend), ["Fine"]].sum()[0] 
+                    # Get the year's sum
+                    dfs["US"].at["Fines", year] = state_df.loc[(state_df["Date"] >= yearstart) & (state_df["Date"] <= yearend), ["Fine"]].sum()[0] 
 
-            # Change columns type back, add data to hash
-            state_df['Date'] = oldcol
-            dfs["US"].insert(0, "Total", [sum, 0])
-                 
-                       
-        elif option == "US Violations" and options[option]:
-            choices += 1
+                # Change columns type back, add data to hash
+                state_df['Date'] = oldcol
+                dfs["US"].insert(0, "Total", [sum, 0])
+                    
+                        
+            elif option == "US Violations" and options[option]:
+                choices += 1
 
-        elif option == "Top fined organizations per state" and options[option]:
-            pass
-        
-        elif option == "Most severe organizations per state" and options[option]:
-            pass
+            elif option == "Top fined organizations per state" and options[option]:
+                pass
+            
+            elif option == "Most severe organizations per state" and options[option]:
+                pass
 
-        elif option == "Sum of fines per state" and options[option]:
-            pass
+            elif option == "Sum of fines per state" and options[option]:
+                pass
 
-        elif option == "Sum of fines per state per year" and options[option]:
-            pass
+            elif option == "Sum of fines per state per year" and options[option]:
+                pass
 
-        elif option == "Sum of fined violations per state" and options[option]:
-            pass
+            elif option == "Sum of fined violations per state" and options[option]:
+                pass
 
-        elif option == "Sum of fined violations per state per year" and options[option]:
-            pass
+            elif option == "Sum of fined violations per state per year" and options[option]:
+                pass
 
-        elif option == "Most severe incidents per organization" and options[option]:
-            pass
+            elif option == "Most severe incidents per organization" and options[option]:
+                pass
 
-        elif option == "Incidents with highest fines per organization" and options[option]:
-            pass
+            elif option == "Incidents with highest fines per organization" and options[option]:
+                pass
 
-        elif option == "Create sheet with all territories combined" and options[option]:
-            pass
+            elif option == "Create sheet with all territories combined" and options[option]:
+                pass
 
     # Write to an excel
     start_row = 1
@@ -922,7 +701,45 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             start_row += len(dfs[dfname])
         writer.save()
     frame.finish()
-     
+    
+# Converts states from full name into their two letter code
+def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
+    
+    # Get two letter state code hash
+    codes = info.get_state_codes(True)
+    keys = list(codes.keys())
+    vals = list(codes.values())
+    for territory in territories.keys():
+
+        # Convert actual state name to it's two letter code
+        states = []
+        for state in territories[territory]:
+            index = vals.index(state)
+            code = keys[index]
+            states.append(code)
+
+        # Replace territory in original hash with the newly translated list of states
+        territories[territory] = states
+    
+    return territories
+
+# Sort violations by territories for when we make an excel sheet
+# Also want to update territory values as we go through the dataframe
+def sort_by_territories(state_df, territories):
+    
+    tdict = {}
+    territorynames = list(territories.keys())
+    # Create a hash where key is territory name and value is dataframe of related rows
+    for name in territorynames:
+        # Get subframe and reset indicies
+        tdict[name] = state_df[state_df["State"].isin(territories[name])]
+        tdict[name] = tdict[name].reset_index(drop=True)
+
+        # Set territory column
+        tdict[name] = tdict[name].replace({"Territory": 0}, name)
+
+    return tdict
+
 
 
 
