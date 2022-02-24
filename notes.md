@@ -44,12 +44,15 @@ Now:
     Working to top fined organizations per state:
         Going to just do all states
         Plan:
+            Iter through all years in range
+            Get in range for those dates
             Iter through all of the states in a list
             Get unique of the organizations row
             Make a subdf of each and sum the fine column
             Add their sum to list of tuples with name and then sum
             Sort and grab the top x organizations
 
+        Currently:
         For excel:
             Figure out hierarchical so like:
 
@@ -57,3 +60,12 @@ Now:
                 State -> Org1 -> Fine   Org1 -> Fine
                          Org2 -> Fine   Org2 -> Fine 
                          .... -> .....  .... -> .....
+
+
+            and the hashmaps are:
+                {year -> {state -> [organizations]}}
+            
+            so make the columns: y1, y2, ....
+            and then the rows: state org1 fines
+
+            check history to see how to do multiple columns one header

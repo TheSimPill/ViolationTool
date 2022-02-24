@@ -538,8 +538,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
         state_df = get_inrange(state_df, startdate, enddate)
 
     # Optional sheets
-    columns = ["Total"] + years
-    dfs["US"] = pd.DataFrame(columns=columns)
+    dfs["US"] = pd.DataFrame(columns=(["Total"] + years))
+    dfs["Most Fined"] = pd.DataFrame(columns=(["Overall"] + years))
 
     # Sort through options
     if options != None:
@@ -614,22 +614,40 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             elif option == "Top fined organizations per state" and options[option]:
                 choices += 1
 
-                # Get two letter codes for all states (including Guam, DC, Puerto Rico)
-                state_orgs = {}
+                state_orgs: Dict[String, Dict[String, List]] = {}
+                num = 10
+                # For each state get the most fined overall
+                state_orgs["Overall"] = {}
                 for state in info.states_codes:
                     # Get subdf of a given state
                     subdf = state_df.loc[state_df["State"] == state]
+                    # Get a list of the most fined organizations across entire period
+                    state_orgs["Overall"][state] = get_most_fined(subdf, num)
                     
-                    sums = []
-                    # Get the facility names
-                    facilities = subdf["Organization"].unique()
-                    for name in facilities:
-                        subdf["Fine"] = pd.to_numeric(subdf["Fine"], errors="coerce")
-                        sums.append((name, subdf.loc[subdf["Organization"] == name, "Fine"].sum()))
+                # Go through each year in range
+                for year in years:
+                    state_orgs[year] = {}
+                    # The branches make sure we are within the users date range
+                    if year == years[0]:
+                        yearstart = startdate
+                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                    elif year == years[-1]:
+                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                        yearend = enddate
+                    else:
+                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
 
-                    state_orgs[state] = sums
+                    # Get top fined for each year
+                    for state in info.states_codes:
+                        # Get subdf of a given state
+                        subdf = state_df.loc[state_df["State"] == state]
+                        subdf = get_inrange(subdf, yearstart, yearend)
+                        # Get a list of the most fined organizations across a year
+                        state_orgs[year][state] = get_most_fined(subdf, num)
 
                 print(state_orgs)
+                #m = s.set_index(["Territory", "State", "Organization", "Date"]) 
 
             
             elif option == "Most severe organizations per state" and options[option]:
@@ -729,5 +747,19 @@ def count_violations(df):
         vios += len(lst)
 
     return vios
-        
 
+# Returns a sorted list of tuples where each tuple contains an organization and total fines for a period    
+def get_most_fined(df, num):
+    sums = []
+    # Get the facility names
+    facilities = df["Organization"].unique()
+    for name in facilities:
+        # Convert fine column to a number so we can sum
+        df["Fine"] = pd.to_numeric(df["Fine"], errors="coerce")
+        sums.append((name, df.loc[df["Organization"] == name, "Fine"].sum()))
+
+    # Sort the list of tuples by fine
+    sums = sorted(sums, key=lambda item: item[1], reverse=True)
+    return sums[:num]
+
+    
