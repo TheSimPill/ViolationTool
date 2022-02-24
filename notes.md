@@ -40,3 +40,20 @@ Now:
     Working on territory sheets for make_excel
 
     Working on detecting if a date can have multiple of the same tag so I can count violations
+
+    Working to top fined organizations per state:
+        Going to just do all states
+        Plan:
+            Iter through all of the states in a list
+            Get unique of the organizations row
+            Make a subdf of each and sum the fine column
+            Add their sum to list of tuples with name and then sum
+            Sort and grab the top x organizations
+
+        For excel:
+            Figure out hierarchical so like:
+
+                         Year1          Year2
+                State -> Org1 -> Fine   Org1 -> Fine
+                         Org2 -> Fine   Org2 -> Fine 
+                         .... -> .....  .... -> .....

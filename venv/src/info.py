@@ -62,6 +62,12 @@ all_states = ["California", "Oregon", "Washington", "Nevada", "Idaho", "Utah", "
                 "Guam"]
 all_states = sorted(all_states)
 
+states_codes = [ 'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA',
+           'GU', 'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME',
+           'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM',
+           'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX',
+           'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY']
+
 # Creates hash map where key is two letter state code and value is full state
 def get_state_codes(load) -> dict:
     state_codes = {}

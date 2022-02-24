@@ -545,7 +545,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     if options != None:
         for option in options.keys():
 
-            # Option 1
+    
             if option == "US Fines" and options[option]:
                 choices += 1
 
@@ -559,8 +559,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 # Conversion to date time objects for comparison
                 state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
 
-                # Total sum for dates in range
-                sum = get_inrange(state_df, startdate, enddate)["Fine"].sum()
+                # Total sum
+                sum = state_df["Fine"].sum()
             
                 # Sum for each year
                 for year in years:
@@ -576,12 +576,11 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                         yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
 
                     # Get the year's sum
-                    dfs["US"].at["Fines", year] = state_df.loc[(state_df["Date"] >= yearstart) & (state_df["Date"] <= yearend), ["Fine"]].sum()[0] 
+                    dfs["US"].at["Fines", year] = get_inrange(state_df, yearstart, yearend)["Fine"].sum()
 
                 # Change columns type back, add data to hash
                 state_df['Date'] = oldcol
                 dfs["US"].at["Fines", "Total"] = sum
-                print(dfs["US"])
                     
                         
             elif option == "US Violations" and options[option]:
@@ -611,10 +610,27 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
                 # Add data to hash of dfs
                 dfs["US"].at["Violations", "Total"] = sum
-                print(dfs["US"])
 
             elif option == "Top fined organizations per state" and options[option]:
-                pass
+                choices += 1
+
+                # Get two letter codes for all states (including Guam, DC, Puerto Rico)
+                state_orgs = {}
+                for state in info.states_codes:
+                    # Get subdf of a given state
+                    subdf = state_df.loc[state_df["State"] == state]
+                    
+                    sums = []
+                    # Get the facility names
+                    facilities = subdf["Organization"].unique()
+                    for name in facilities:
+                        subdf["Fine"] = pd.to_numeric(subdf["Fine"], errors="coerce")
+                        sums.append((name, subdf.loc[subdf["Organization"] == name, "Fine"].sum()))
+
+                    state_orgs[state] = sums
+
+                print(state_orgs)
+
             
             elif option == "Most severe organizations per state" and options[option]:
                 pass

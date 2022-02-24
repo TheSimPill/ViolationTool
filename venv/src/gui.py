@@ -718,10 +718,10 @@ class FormatPage(tk.Frame):
         b1 = tk.Checkbutton(fm, width=35, text="US Violations (Total, yearly for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Violations"))
         b1.grid()
 
-        b1 = tk.Checkbutton(fm, text="Top fined organizations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
+        b1 = tk.Checkbutton(fm, text="Top fined organizations per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
         b1.grid()
 
-        b1 = tk.Checkbutton(fm, text="Most severe organizations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe organizations per state"))
+        b1 = tk.Checkbutton(fm, text="Most severe organizations per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe organizations per state"))
         b1.grid()
 
         b1 = tk.Checkbutton(fm, text="Sum of fines per state", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state"))
