@@ -539,7 +539,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
     # Optional sheets
     dfs["US"] = pd.DataFrame(columns=(["Total"] + years))
-    dfs["Most Fined"] = pd.DataFrame(columns=(["Overall"] + years))
+    dfs["Most Fined"] = None
 
     # Sort through options
     if options != None:
@@ -646,9 +646,28 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                         # Get a list of the most fined organizations across a year
                         state_orgs[year][state] = get_most_fined(subdf, num)
 
-                print(state_orgs)
-                #m = s.set_index(["Territory", "State", "Organization", "Date"]) 
+                # Make the multi-index columns
+                cols = [(["Overall"] + years), ["Organization", "Fines"]]
+                cols = pd.MultiIndex.from_product(cols, names=["Year", "Value"])
+                dfs["Most Fined"] = pd.DataFrame(columns=cols)
+                dfs["Most Fined"] = dfs["Most Fined"].insert(0, "State", "Not Set")
 
+                # Populate the new df
+                for state in info.states_codes:
+                    row = []
+                    for i in range(num):
+                        for year in state_orgs.keys():
+                            # Turn tuple with org and fine into list and add state to front
+                            tups = state_orgs[year][state]
+
+                            if len(tups) != 0:
+                                row += [state] + list(tups[i])
+
+                        # Add row to dataframe
+                        dfs["Most Fined"].loc[len(dfs["Most Fined"])] = row
+
+                # Finally, make the state the vertical index
+                dfs["Most Fined"] = dfs["Most Fined"].set_index
             
             elif option == "Most severe organizations per state" and options[option]:
                 pass
@@ -679,10 +698,12 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     with pd.ExcelWriter('output.xlsx') as writer:
         # Excel sheet for each territory
         for terr in t_dfs.keys():
+            # Makes the sheets more organized
+            t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
             t_dfs[terr].to_excel(writer, sheet_name=terr)
         # Excel sheet for each set of options
         for dfname in dfs.keys():
-            if not dfs[dfname].empty:
+            if not dfs[dfname] == None and not dfs[dfname].empty:
                 dfs[dfname].to_excel(writer, sheet_name=dfname)
                 start_row += len(dfs[dfname])
         writer.save()

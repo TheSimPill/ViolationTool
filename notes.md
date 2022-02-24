@@ -69,3 +69,6 @@ Now:
             and then the rows: state org1 fines
 
             check history to see how to do multiple columns one header
+
+            Current problem:
+                Line 653 Getting no loc for NoneType
