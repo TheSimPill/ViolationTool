@@ -13,7 +13,7 @@ from numpy import int64
 
 
 #from info import get_state_codes
-from datetime import datetime
+from datetime import datetime, date
 from email.message import EmailMessage
 
 # Download raw data if user says yes, returns ->
@@ -515,10 +515,11 @@ def sort_by_date(state_incident_list):
 # Makes the excel sheets based on options chosen by the user 
 def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories):
 
-    # Get years in range that user chose
+    # Get years in range that user chose, or set a default range
     if None in {startdate, enddate}:
-       startdate = datetime.strptime("12/31/2000", '%m/%d/%Y')
-       enddate = datetime.strptime("12/31/2100", '%m/%d/%Y')
+       startdate = datetime.strptime("01/01/2017", '%m/%d/%Y')
+       enddate = datetime.strftime(date.today(), '%m/%d/%Y')
+       enddate = datetime.strptime(enddate, '%m/%d/%Y')
 
     years = list(range(startdate.year, enddate.year+1))
     dfs = {}
@@ -537,7 +538,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
         state_df = get_inrange(state_df, startdate, enddate)
 
     # Optional sheets
-    dfs["US"] = pd.DataFrame(columns=years)
+    columns = ["Total"] + years
+    dfs["US"] = pd.DataFrame(columns=columns)
 
     # Sort through options
     if options != None:
@@ -548,7 +550,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 choices += 1
 
                 # Initialize indicies
-                dfs["US"].loc["Fines"] = [0] * len(years)
+                dfs["US"].loc["Fines"] = [0] * (len(dfs["US"].columns))
 
                 # Turn all values in fine column to numbers
                 state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
@@ -578,14 +580,15 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
                 # Change columns type back, add data to hash
                 state_df['Date'] = oldcol
-                dfs["US"].insert(0, "Total", sum)
+                dfs["US"].at["Fines", "Total"] = sum
+                print(dfs["US"])
                     
                         
             elif option == "US Violations" and options[option]:
                 choices += 1
 
                  # Initialize indicies
-                dfs["US"].loc["Violations"] = [0] * len(years)
+                dfs["US"].loc["Violations"] = [0] * (len(dfs["US"].columns))
 
                 # Get total number of US violations within date range
                 sum = count_violations(state_df)
@@ -608,6 +611,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
                 # Add data to hash of dfs
                 dfs["US"].at["Violations", "Total"] = sum
+                print(dfs["US"])
 
             elif option == "Top fined organizations per state" and options[option]:
                 pass

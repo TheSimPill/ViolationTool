@@ -399,7 +399,6 @@ class OptionsPage(tk.Frame):
         thisframe.controller.show_frame(ExcelPage)
 
 
-
 # Page where states in each territory is set
 class TerritoriesPage(tk.Frame):
     def __init__(thisframe, parent, controller):
@@ -691,7 +690,7 @@ class EmailsPage(tk.Frame):
         thisframe.controller.show_frame(OptionsPage)
 
 
-# Page where emails for each territory are set
+# Format excel sheets
 class FormatPage(tk.Frame):
     def __init__(thisframe, parent, controller):
         PageLayout.__init__(thisframe, parent)
@@ -713,10 +712,10 @@ class FormatPage(tk.Frame):
         fm.grid(column=2, row=3)
         
         # Buttons
-        b1 = tk.Checkbutton(fm, width=35, text="US Fines (Total and by year for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Fines"))
+        b1 = tk.Checkbutton(fm, width=35, text="US Fines (Total, yearly for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Fines"))
         b1.grid()
         
-        b1 = tk.Checkbutton(fm, width=35, text="US Violations (Total and by year for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Violations"))
+        b1 = tk.Checkbutton(fm, width=35, text="US Violations (Total, yearly for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Violations"))
         b1.grid()
 
         b1 = tk.Checkbutton(fm, text="Top fined organizations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
