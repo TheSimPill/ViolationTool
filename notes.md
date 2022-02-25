@@ -72,3 +72,5 @@ Now:
 
             Current problem:
                 Line 653 Getting no loc for NoneType
+
+            Finished option 3 I think 

@@ -518,8 +518,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # Get years in range that user chose, or set a default range
     if None in {startdate, enddate}:
        startdate = datetime.strptime("01/01/2017", '%m/%d/%Y')
-       enddate = datetime.strftime(date.today(), '%m/%d/%Y')
-       enddate = datetime.strptime(enddate, '%m/%d/%Y')
+       #enddate = datetime.strftime(date.today(), '%m/%d/%Y')
+       enddate = datetime.strptime("12/31/2021", '%m/%d/%Y')
 
     years = list(range(startdate.year, enddate.year+1))
     dfs = {}
@@ -539,7 +539,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
     # Optional sheets
     dfs["US"] = pd.DataFrame(columns=(["Total"] + years))
-    dfs["Most Fined"] = None
+    dfs["Most Fined"] = pd.DataFrame()
 
     # Sort through options
     if options != None:
@@ -615,7 +615,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 choices += 1
 
                 state_orgs: Dict[String, Dict[String, List]] = {}
-                num = 10
+                num = 3
                 # For each state get the most fined overall
                 state_orgs["Overall"] = {}
                 for state in info.states_codes:
@@ -650,24 +650,22 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 cols = [(["Overall"] + years), ["Organization", "Fines"]]
                 cols = pd.MultiIndex.from_product(cols, names=["Year", "Value"])
                 dfs["Most Fined"] = pd.DataFrame(columns=cols)
-                dfs["Most Fined"] = dfs["Most Fined"].insert(0, "State", "Not Set")
+                dfs["Most Fined"].insert(0, "State", "Not Set")
 
                 # Populate the new df
                 for state in info.states_codes:
-                    row = []
                     for i in range(num):
+                        row = [(state + str(i+1))]
                         for year in state_orgs.keys():
                             # Turn tuple with org and fine into list and add state to front
                             tups = state_orgs[year][state]
-
-                            if len(tups) != 0:
-                                row += [state] + list(tups[i])
+                            row += list(tups[i])
 
                         # Add row to dataframe
                         dfs["Most Fined"].loc[len(dfs["Most Fined"])] = row
 
-                # Finally, make the state the vertical index
-                dfs["Most Fined"] = dfs["Most Fined"].set_index
+                # Finally, make the state the vertical index and make fines currency
+                dfs["Most Fined"] = dfs["Most Fined"].set_index(["State"])
             
             elif option == "Most severe organizations per state" and options[option]:
                 pass
@@ -703,7 +701,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             t_dfs[terr].to_excel(writer, sheet_name=terr)
         # Excel sheet for each set of options
         for dfname in dfs.keys():
-            if not dfs[dfname] == None and not dfs[dfname].empty:
+            if not dfs[dfname].empty:
                 dfs[dfname].to_excel(writer, sheet_name=dfname)
                 start_row += len(dfs[dfname])
         writer.save()
@@ -777,10 +775,16 @@ def get_most_fined(df, num):
     for name in facilities:
         # Convert fine column to a number so we can sum
         df["Fine"] = pd.to_numeric(df["Fine"], errors="coerce")
-        sums.append((name, df.loc[df["Organization"] == name, "Fine"].sum()))
+        sum = df.loc[df["Organization"] == name, "Fine"].sum()
+        if sum != 0:
+            sums.append((name, '${:,.2f}'.format(sum)))
 
     # Sort the list of tuples by fine
     sums = sorted(sums, key=lambda item: item[1], reverse=True)
+    # Add place holders if not enough data
+    if len(sums) < num:
+        sums += [("NA", "$0")] * (num - len(sums))
+
     return sums[:num]
 
     
