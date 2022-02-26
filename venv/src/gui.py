@@ -698,42 +698,37 @@ class FormatPage(tk.Frame):
 
         # Instructions
         thisframe.instructions = ttk.Label(thisframe, text="Choose which data to include", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)\
+        
+        thisframe.instructions2 = ttk.Label(thisframe, text="Will include dates in range or default if none selected", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
 
         # Holds buttons
         thisframe.boxes = {"US Fines":False, "US Violations":False, \
-                            "Top fined organizations per state":False, \
-                            "Most severe organizations per state":False, "Sum of fines per state":False, \
-                            "Sum of fines per state per year":False, "Sum of fined violations per state":False, \
-                            "Sum of fined violations per state per year":False, "Most severe incidents per organization":False, \
+                            "Top fined organizations per state":False, "Most severe organizations per state":False, \
+                            "Sum of fines per state per year":False, "Sum of violations per state per year":False, "Most severe incidents per organization":False, \
                             "Incidents with highest fines per organization":False, "Create sheet with all territories combined":False}
 
         fm = ttk.Labelframe(thisframe, width=50, border=0)
-        fm.grid(column=2, row=3)
+        fm.grid(column=2, row=4)
         
         # Buttons
-        b1 = tk.Checkbutton(fm, width=35, text="US Fines (Total, yearly for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Fines"))
+        b1 = tk.Checkbutton(fm, width=35, text="US Fines (Total, yearly)", anchor="w", command=lambda:thisframe.add_option("US Fines"))
         b1.grid()
         
-        b1 = tk.Checkbutton(fm, width=35, text="US Violations (Total, yearly for dates in range)", anchor="w", command=lambda:thisframe.add_option("US Violations"))
+        b1 = tk.Checkbutton(fm, width=35, text="US Violations (Total, yearly)", anchor="w", command=lambda:thisframe.add_option("US Violations"))
         b1.grid()
 
-        b1 = tk.Checkbutton(fm, text="Top fined organizations per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
+        b1 = tk.Checkbutton(fm, text="Top fined organizations (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
         b1.grid()
 
-        b1 = tk.Checkbutton(fm, text="Most severe organizations per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe organizations per state"))
+        b1 = tk.Checkbutton(fm, text="Most severe organizations (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe organizations per state"))
         b1.grid()
 
-        b1 = tk.Checkbutton(fm, text="Sum of fines per state", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state"))
+        b1 = tk.Checkbutton(fm, text="Sum of fines per state (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state per year"))
         b1.grid()
 
-        b1 = tk.Checkbutton(fm, text="Sum of fines per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state per year"))
-        b1.grid()
-        
-        b1 = tk.Checkbutton(fm, text="Sum of fined violations per state", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fined violations per state"))
-        b1.grid()
-
-        b1 = tk.Checkbutton(fm, text="Sum of fined violations per state per year", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fined violations per state per year"))
+        b1 = tk.Checkbutton(fm, text="Sum of violations per state (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of violations per state per year"))
         b1.grid()
 
         b1 = tk.Checkbutton(fm, text="Most severe incidents per organization", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe incidents per organization"))
@@ -748,7 +743,7 @@ class FormatPage(tk.Frame):
         # Finish button
         thisframe.browse_text = tk.StringVar()
         thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=4, pady=40)
+        thisframe.nextbtn.grid(column=2, row=5, pady=40)
         thisframe.browse_text.set("Finish")
 
     def finish(thisframe):

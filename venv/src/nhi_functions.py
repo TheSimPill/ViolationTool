@@ -694,8 +694,10 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 # Finally, make the state the vertical index and make fines currency
                 dfs["Most Severe"] = dfs["Most Severe"].set_index(["State"])
 
+
             elif option == "Sum of fines per state" and options[option]:
                 pass
+
 
             elif option == "Sum of fines per state per year" and options[option]:
                 pass
