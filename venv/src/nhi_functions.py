@@ -540,6 +540,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # Optional sheets
     dfs["US"] = pd.DataFrame(columns=(["Total"] + years))
     dfs["Most Fined"] = pd.DataFrame()
+    dfs["Most Severe"] = pd.DataFrame()
 
     # Sort through options
     if options != None:
@@ -564,23 +565,15 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             
                 # Sum for each year
                 for year in years:
-                    # The branches make sure we are within the users date range
-                    if year == years[0]:
-                        yearstart = startdate
-                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
-                    elif year == years[-1]:
-                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                        yearend = enddate
-                    else:
-                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                    # Make sure we are within the users date range  
+                    yearstart, yearend = get_year_range(year, years, startdate, enddate)
 
-                    # Get the year's sum
-                    dfs["US"].at["Fines", year] = get_inrange(state_df, yearstart, yearend)["Fine"].sum()
+                    # Get the year's sum and format it as currency
+                    dfs["US"].at["Fines", year] = '${:,.2f}'.format(get_inrange(state_df, yearstart, yearend)["Fine"].sum())
 
                 # Change columns type back, add data to hash
                 state_df['Date'] = oldcol
-                dfs["US"].at["Fines", "Total"] = sum
+                dfs["US"].at["Fines", "Total"] = '${:,.2f}'.format(sum)
                     
                         
             elif option == "US Violations" and options[option]:
@@ -590,26 +583,19 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 dfs["US"].loc["Violations"] = [0] * (len(dfs["US"].columns))
 
                 # Get total number of US violations within date range
-                sum = count_violations(state_df)
+                sum = count_violations_df(state_df)
             
                 # Sum for each year
                 for year in years:
-                    # The branches make sure we are within the users date range
-                    if year == years[0]:
-                        yearstart = startdate
-                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
-                    elif year == years[-1]:
-                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                        yearend = enddate
-                    else:
-                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                    # Make sure we are within the users date range  
+                    yearstart, yearend = get_year_range(year, years, startdate, enddate)
 
                     # Get the year's sum
-                    dfs["US"].at["Violations", year] = count_violations(get_inrange(state_df, yearstart, yearend)) 
+                    dfs["US"].at["Violations", year] = count_violations_df(get_inrange(state_df, yearstart, yearend)) 
 
                 # Add data to hash of dfs
                 dfs["US"].at["Violations", "Total"] = sum
+
 
             elif option == "Top fined organizations per state" and options[option]:
                 choices += 1
@@ -627,16 +613,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 # Go through each year in range
                 for year in years:
                     state_orgs[year] = {}
-                    # The branches make sure we are within the users date range
-                    if year == years[0]:
-                        yearstart = startdate
-                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
-                    elif year == years[-1]:
-                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                        yearend = enddate
-                    else:
-                        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
-                        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+                    # Make sure we are within the users date range  
+                    yearstart, yearend = get_year_range(year, years, startdate, enddate)
 
                     # Get top fined for each year
                     for state in info.states_codes:
@@ -667,8 +645,54 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 # Finally, make the state the vertical index and make fines currency
                 dfs["Most Fined"] = dfs["Most Fined"].set_index(["State"])
             
+
             elif option == "Most severe organizations per state" and options[option]:
-                pass
+                choices += 1
+
+                state_orgs: Dict[String, Dict[String, List]] = {}
+                num = 3
+                # For each state get the most severe overall
+                state_orgs["Overall"] = {}
+                for state in info.states_codes:
+                    # Get subdf of a given state
+                    subdf = state_df.loc[state_df["State"] == state]
+                    # Get a list of the most severe organizations across entire period
+                    state_orgs["Overall"][state] = get_most_severe(subdf, num)
+                    
+                # Go through each year in range
+                for year in years:
+                    state_orgs[year] = {}
+                    # Make sure we are within the users date range  
+                    yearstart, yearend = get_year_range(year, years, startdate, enddate)
+
+                    # Get most severe for each year
+                    for state in info.states_codes:
+                        # Get subdf of a given state
+                        subdf = state_df.loc[state_df["State"] == state]
+                        subdf = get_inrange(subdf, yearstart, yearend)
+                        # Get a list of the most severe organizations across a year
+                        state_orgs[year][state] = get_most_severe(subdf, num)
+
+                # Make the multi-index columns
+                cols = [(["Overall"] + years), ["Organization", "Severity Score"]]
+                cols = pd.MultiIndex.from_product(cols, names=["Year", "Value"])
+                dfs["Most Severe"] = pd.DataFrame(columns=cols)
+                dfs["Most Severe"].insert(0, "State", "Not Set")
+
+                # Populate the new df
+                for state in info.states_codes:
+                    for i in range(num):
+                        row = [(state + str(i+1))]
+                        for year in state_orgs.keys():
+                            # Turn tuple with org and severity into list and add state to front
+                            tups = state_orgs[year][state]
+                            row += list(tups[i])
+
+                        # Add row to dataframe
+                        dfs["Most Severe"].loc[len(dfs["Most Severe"])] = row
+
+                # Finally, make the state the vertical index and make fines currency
+                dfs["Most Severe"] = dfs["Most Severe"].set_index(["State"])
 
             elif option == "Sum of fines per state" and options[option]:
                 pass
@@ -758,7 +782,7 @@ def get_inrange(df, start, end):
     return new 
 
 # Counts the number of violations in a dataframe by checking number of tags
-def count_violations(df):
+def count_violations_df(df):
     # Turn the tag column into a pandas series of lists
     vios = 0
     col = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(", ")) 
@@ -787,4 +811,36 @@ def get_most_fined(df, num):
 
     return sums[:num]
 
-    
+# Returns a sorted list of tuples where each tuple contains an organization and total violations for a period    
+def get_most_severe(df, num):
+    sums = []
+    # Get the facility names
+    facilities = df["Organization"].unique()
+    for name in facilities:
+        curdf = df.loc[df["Organization"] == name]
+        # Convert the severity column to numeric and sum it
+        sum = curdf["Severity"].apply(lambda x: info.severity_ranks[x]).sum()
+        if sum != 0:
+            sums.append((name, sum))
+
+    # Sort the list of tuples by violations
+    sums = sorted(sums, key=lambda item: item[1], reverse=True)
+    # Add place holders if not enough data
+    if len(sums) < num:
+        sums += [("NA", 0)] * (num - len(sums))
+
+    return sums[:num]
+
+# Get proper bounds for a date range
+def get_year_range(year, years, startdate, enddate):
+    if year == years[0]:
+        yearstart = startdate
+        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+    elif year == years[-1]:
+        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+        yearend = enddate
+    else:
+        yearstart = datetime.strptime("01/01/"+str(year), "%m/%d/%Y")
+        yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
+
+    return (yearstart, yearend)
