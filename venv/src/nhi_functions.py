@@ -541,6 +541,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     dfs["US"] = pd.DataFrame(columns=(["Total"] + years))
     dfs["Most Fined"] = pd.DataFrame()
     dfs["Most Severe"] = pd.DataFrame()
+    dfs["State Fines"] = pd.DataFrame(columns=(["Total"] + years))
 
     # Sort through options
     if options != None:
@@ -695,24 +696,32 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 dfs["Most Severe"] = dfs["Most Severe"].set_index(["State"])
 
 
-            elif option == "Sum of fines per state" and options[option]:
-                pass
-
-
             elif option == "Sum of fines per state per year" and options[option]:
+                choices += 1
+
+                # Initialize indicies
+                for state in info.states_codes:
+                    
+                    # Get row for each state, add total for a state first
+                    row = [state_df.loc[state_df["State"] == state, "Fine"].sum()]
+                    for year in years:
+                        yearstart, yearend = get_year_range(year, years, startdate, enddate)
+                        df = get_inrange(state_df, yearstart, yearend)
+                        row += ['${:,.2f}'.format(df["Fine"].sum())]
+
+                    dfs["State Fines"].loc[state] = row
+                
+            elif option == "Sum of violations per state per year" and options[option]:
                 pass
 
-            elif option == "Sum of fined violations per state" and options[option]:
-                pass
-
-            elif option == "Sum of fined violations per state per year" and options[option]:
-                pass
 
             elif option == "Most severe incidents per organization" and options[option]:
                 pass
 
+
             elif option == "Incidents with highest fines per organization" and options[option]:
                 pass
+
 
             elif option == "Create sheet with all territories combined" and options[option]:
                 pass
