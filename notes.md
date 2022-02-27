@@ -74,3 +74,8 @@ Now:
                 Line 653 Getting no loc for NoneType
 
             Finished option 3 I think 
+
+            Option 7 - Most severe incidents per org
+        State Total Year1 Year 2
+              Org Date Tags Seve
+

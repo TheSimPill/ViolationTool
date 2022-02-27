@@ -185,17 +185,20 @@ def merge_violations(dfpath, frame, state_df):
             # So that only rows that have the unique columns we're checking for aren't processed
             if len(matches.index) > 1:
                 
-                # Get all tags into a list     
-                c = matches["Tag"].tolist()
+                # Get all tags and severities into a list     
+                taglist = matches["Tag"].tolist()
+                sevlist = matches["Severity"].tolist()
+                
                 # Combine all rows into 
-                r = matches.groupby(matches["State"]).aggregate({"Territory":"first", "State":"first", \
+                combined = matches.groupby(matches["State"]).aggregate({"Territory":"first", "State":"first", \
                         "Organization":"first", "Date":"first", "Tag":"first", \
                         "Severity":"first", "Fine":"first", "Url":"first"})
                 
-                # Make the tag columns a string of the list of tags
-                r["Tag"] = str(c)
-                new.append(r)
-                new = pd.concat([new, r])
+                # Make the tag and severities columns a string of the list of tags
+                combined["Tag"] = str(taglist)
+                combined["Severity"] = str(sevlist)
+                new.append(combined)
+                new = pd.concat([new, combined])
 
                 # Remove rows that were merged so we don't proccess them again later down the line
                 state_df = state_df.merge(matches, how='left', indicator=True)
@@ -715,6 +718,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                     
                     dfs["State Fines"].loc[state] = row
                 
+
             elif option == "Sum of violations per state per year" and options[option]:
                 choices += 1
 
@@ -732,7 +736,52 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
 
             elif option == "Most severe incidents per organization" and options[option]:
-                pass
+                choices += 1
+
+                state_orgs: Dict[String, Dict[String, List]] = {}
+                num = 3
+                # For each state get the most fined overall
+                state_orgs["Overall"] = {}
+                for state in info.states_codes:
+                    # Get subdf of a given state
+                    subdf = state_df.loc[state_df["State"] == state]
+                    # Get a list of the most fined organizations across entire period
+                    state_orgs["Overall"][state] = get_most_fined(subdf, num)
+                    
+                # Go through each year in range
+                for year in years:
+                    state_orgs[year] = {}
+                    # Make sure we are within the users date range  
+                    yearstart, yearend = get_year_range(year, years, startdate, enddate)
+
+                    # Get top fined for each year
+                    for state in info.states_codes:
+                        # Get subdf of a given state
+                        subdf = state_df.loc[state_df["State"] == state]
+                        subdf = get_inrange(subdf, yearstart, yearend)
+                        # Get a list of the most fined organizations across a year
+                        state_orgs[year][state] = get_most_fined(subdf, num)
+
+                # Make the multi-index columns
+                cols = [(["Overall"] + years), ["Organization", "Fines"]]
+                cols = pd.MultiIndex.from_product(cols, names=["Year", "Value"])
+                dfs["Most Fined"] = pd.DataFrame(columns=cols)
+                dfs["Most Fined"].insert(0, "State", "Not Set")
+
+                # Populate the new df
+                for state in info.states_codes:
+                    for i in range(num):
+                        row = [(state + str(i+1))]
+                        for year in state_orgs.keys():
+                            # Turn tuple with org and fine into list and add state to front
+                            tups = state_orgs[year][state]
+                            row += list(tups[i])
+
+                        # Add row to dataframe
+                        dfs["Most Fined"].loc[len(dfs["Most Fined"])] = row
+
+                # Finally, make the state the vertical index and make fines currency
+                dfs["Most Fined"] = dfs["Most Fined"].set_index(["State"])
 
 
             elif option == "Incidents with highest fines per organization" and options[option]:
@@ -846,7 +895,15 @@ def get_most_severe(df, num):
     for name in facilities:
         curdf = df.loc[df["Organization"] == name]
         # Convert the severity column to numeric and sum it
-        sum = curdf["Severity"].apply(lambda x: info.severity_ranks[x]).sum()
+        def convert(x):
+            sum = 0
+            lst = x.strip('][').replace("'", "").split(", ") 
+            for severity in lst:
+                sum += info.severity_ranks[severity]
+
+            return sum
+
+        sum = curdf["Severity"].apply(lambda x: convert(x)).sum()
         if sum != 0:
             sums.append((name, sum))
 
