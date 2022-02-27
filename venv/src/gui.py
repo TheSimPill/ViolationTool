@@ -707,7 +707,7 @@ class FormatPage(tk.Frame):
         thisframe.boxes = {"US Fines":False, "US Violations":False, \
                             "Top fined organizations per state":False, "Most severe organizations per state":False, \
                             "Sum of fines per state per year":False, "Sum of violations per state per year":False,\
-                            "Create sheet with all territories combined":False}
+                            "Create sheet with all territories combined":False, "All Violations":False}
 
         fm = ttk.Labelframe(thisframe, width=50, border=0)
         fm.grid(column=2, row=4)
@@ -732,6 +732,9 @@ class FormatPage(tk.Frame):
         b1.grid()
 
         b1 = tk.Checkbutton(fm, text="Create sheet with all territories combined", width=35, anchor="w", command=lambda:thisframe.add_option("Create sheet with all territories combined"))
+        b1.grid()
+
+        b1 = tk.Checkbutton(fm, text="Create sheet for all violations without territories", width=35, anchor="w", command=lambda:thisframe.add_option("All Violations"))
         b1.grid()
 
         # Finish button
@@ -789,8 +792,9 @@ class ExcelPage(tk.Frame):
         
             def run(self):
                 global options
-                #ts = {"east": ["Maryland", "Virginia"], "west": ["Texas", "Alabama"]}
-                ts = {"All": list(info.get_state_codes(True).values())}
+                #ts = "All": list(info.get_state_codes(True).values())
+                #{"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
+                ts = {"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
                 global sdate, edate
                 #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
                 #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')

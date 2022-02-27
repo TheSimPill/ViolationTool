@@ -546,6 +546,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     dfs["Most Severe"] = pd.DataFrame()
     dfs["State Fines"] = pd.DataFrame(columns=(["Total"] + years))
     dfs["State Violations"] = pd.DataFrame(columns=(["Total"] + years))
+    dfs["Master"] = pd.DataFrame()
+    dfs["All"] = pd.DataFrame()
 
     # Sort through options
     if options != None:
@@ -736,7 +738,20 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
 
             elif option == "Create sheet with all territories combined" and options[option]:
-                pass
+                # Get a hash of dfs by territory
+                tdfs = sort_by_territories(state_df, territories)
+                combined = pd.DataFrame()
+                for terr in tdfs.keys():
+                    dfs["Master"] = pd.concat([combined, tdfs[terr]]).reset_index()
+
+                # Set indicies properly
+                dfs["Master"] = dfs["Master"].drop(["index"], axis=1)
+                dfs["Master"] = dfs["Master"].set_index(["Territory", "State", "Organization", "Date"]) 
+
+
+            elif option == "All Violations" and options[option]:
+                dfs["All"] = state_df.drop(["Territory"], axis=1).set_index(["State", "Organization", "Date"])
+
 
     # Write to an excel
     start_row = 1
