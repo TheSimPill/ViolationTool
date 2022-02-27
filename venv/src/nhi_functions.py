@@ -735,59 +735,6 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                     dfs["State Violations"].loc[state] = row
 
 
-            elif option == "Most severe incidents per organization" and options[option]:
-                choices += 1
-
-                state_orgs: Dict[String, Dict[String, List]] = {}
-                num = 3
-                # For each state get the most fined overall
-                state_orgs["Overall"] = {}
-                for state in info.states_codes:
-                    # Get subdf of a given state
-                    subdf = state_df.loc[state_df["State"] == state]
-                    # Get a list of the most fined organizations across entire period
-                    state_orgs["Overall"][state] = get_most_fined(subdf, num)
-                    
-                # Go through each year in range
-                for year in years:
-                    state_orgs[year] = {}
-                    # Make sure we are within the users date range  
-                    yearstart, yearend = get_year_range(year, years, startdate, enddate)
-
-                    # Get top fined for each year
-                    for state in info.states_codes:
-                        # Get subdf of a given state
-                        subdf = state_df.loc[state_df["State"] == state]
-                        subdf = get_inrange(subdf, yearstart, yearend)
-                        # Get a list of the most fined organizations across a year
-                        state_orgs[year][state] = get_most_fined(subdf, num)
-
-                # Make the multi-index columns
-                cols = [(["Overall"] + years), ["Organization", "Fines"]]
-                cols = pd.MultiIndex.from_product(cols, names=["Year", "Value"])
-                dfs["Most Fined"] = pd.DataFrame(columns=cols)
-                dfs["Most Fined"].insert(0, "State", "Not Set")
-
-                # Populate the new df
-                for state in info.states_codes:
-                    for i in range(num):
-                        row = [(state + str(i+1))]
-                        for year in state_orgs.keys():
-                            # Turn tuple with org and fine into list and add state to front
-                            tups = state_orgs[year][state]
-                            row += list(tups[i])
-
-                        # Add row to dataframe
-                        dfs["Most Fined"].loc[len(dfs["Most Fined"])] = row
-
-                # Finally, make the state the vertical index and make fines currency
-                dfs["Most Fined"] = dfs["Most Fined"].set_index(["State"])
-
-
-            elif option == "Incidents with highest fines per organization" and options[option]:
-                pass
-
-
             elif option == "Create sheet with all territories combined" and options[option]:
                 pass
 

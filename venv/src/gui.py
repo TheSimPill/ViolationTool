@@ -706,8 +706,8 @@ class FormatPage(tk.Frame):
         # Holds buttons
         thisframe.boxes = {"US Fines":False, "US Violations":False, \
                             "Top fined organizations per state":False, "Most severe organizations per state":False, \
-                            "Sum of fines per state per year":False, "Sum of violations per state per year":False, "Most severe incidents per organization":False, \
-                            "Incidents with highest fines per organization":False, "Create sheet with all territories combined":False}
+                            "Sum of fines per state per year":False, "Sum of violations per state per year":False,\
+                            "Create sheet with all territories combined":False}
 
         fm = ttk.Labelframe(thisframe, width=50, border=0)
         fm.grid(column=2, row=4)
@@ -729,12 +729,6 @@ class FormatPage(tk.Frame):
         b1.grid()
 
         b1 = tk.Checkbutton(fm, text="Sum of violations per state (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of violations per state per year"))
-        b1.grid()
-
-        b1 = tk.Checkbutton(fm, text="Most severe incidents per organization", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe incidents per organization"))
-        b1.grid()
-
-        b1 = tk.Checkbutton(fm, text="Incidents with highest fines per organization", width=35, anchor="w", command=lambda:thisframe.add_option("Incidents with highest fines per organization"))
         b1.grid()
 
         b1 = tk.Checkbutton(fm, text="Create sheet with all territories combined", width=35, anchor="w", command=lambda:thisframe.add_option("Create sheet with all territories combined"))
