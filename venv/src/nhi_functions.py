@@ -535,6 +535,10 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     if not None in {startdate, enddate}:
         for terr in t_dfs.keys():
             t_dfs[terr] = get_inrange(t_dfs[terr], startdate, enddate)
+            # Convert fine column to currency
+            t_dfs[terr]["Fine"] = t_dfs[terr]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
+            t_dfs[terr]["Fine"] = pd.to_numeric(t_dfs[terr]["Fine"], errors="coerce")
+            t_dfs[terr]["Fine"] =  t_dfs[terr]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
     # Get dates in range for state df
     if not None in {startdate, enddate}:
@@ -746,11 +750,21 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
                 # Set indicies properly
                 dfs["Master"] = dfs["Master"].drop(["index"], axis=1)
-                dfs["Master"] = dfs["Master"].set_index(["Territory", "State", "Organization", "Date"]) 
+                dfs["Master"] = dfs["Master"].set_index(["Territory", "State", "Organization", "Date"])
+
+                # Set fine column as currency
+                dfs["Master"]["Fine"] = dfs["Master"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
+                dfs["Master"]["Fine"] = pd.to_numeric(dfs["Master"]["Fine"], errors="coerce")
+                dfs["Master"]["Fine"] =  dfs["Master"]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
 
             elif option == "All Violations" and options[option]:
                 dfs["All"] = state_df.drop(["Territory"], axis=1).set_index(["State", "Organization", "Date"])
+
+                # Set fine column as currency
+                dfs["All"]["Fine"] = dfs["All"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
+                dfs["All"]["Fine"] = pd.to_numeric(dfs["All"]["Fine"], errors="coerce")
+                dfs["All"]["Fine"] =   dfs["All"]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
 
     # Write to an excel
@@ -766,8 +780,16 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             if not dfs[dfname].empty:
                 dfs[dfname].to_excel(writer, sheet_name=dfname)
                 start_row += len(dfs[dfname])
+        # Excel sheet for description of tags and severities
+        items1 = list(info.tagdata.items())
+        items2 = list(info.severities.items())
+        df1 = pd.DataFrame(items1, columns=["Tag", "Description"])
+        df2 = pd.DataFrame(items2, columns=["Rank", "Description"])        
+        df1.to_excel(writer, sheet_name="Descriptions", startrow=1, startcol=0)
+        df2.to_excel(writer, sheet_name="Descriptions", startrow=len(df1.index)+5, startcol=0)
+
         writer.save()
-    frame.finish()
+        frame.finish()
     
 # Converts states from full name into their two letter code
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
