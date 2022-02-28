@@ -553,6 +553,10 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     dfs["Master"] = pd.DataFrame()
     dfs["All"] = pd.DataFrame()
 
+    # Convert fine column to numeric
+    state_df["Fine"] = state_df["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
+    state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
+
     # Sort through options
     if options != None:
         for option in options.keys():
@@ -565,7 +569,6 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 dfs["US"].loc["Fines"] = [0] * (len(dfs["US"].columns))
 
                 # Turn all values in fine column to numbers
-                state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
                 oldcol = state_df["Date"]
 
                 # Conversion to date time objects for comparison
@@ -709,9 +712,6 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             elif option == "Sum of fines per state per year" and options[option]:
                 choices += 1
 
-                # Turn all values in fine column to numbers
-                state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
-
                 # Initialize indicies
                 for state in info.states_codes:
                     # Get row for each state, add total for a state first
@@ -762,8 +762,10 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 dfs["All"] = state_df.drop(["Territory"], axis=1).set_index(["State", "Organization", "Date"])
 
                 # Set fine column as currency
+                print(dfs["All"]["Fine"], dfs["All"].dtypes)
                 dfs["All"]["Fine"] = dfs["All"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
-                dfs["All"]["Fine"] = pd.to_numeric(dfs["All"]["Fine"], errors="coerce")
+                #print(dfs["All"]["Fine"])
+                #dfs["All"]["Fine"] = pd.to_numeric(dfs["All"]["Fine"], errors="coerce")
                 dfs["All"]["Fine"] =   dfs["All"]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
 
