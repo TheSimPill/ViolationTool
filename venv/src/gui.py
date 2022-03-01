@@ -31,16 +31,11 @@ partial_instructions2 = None
 dl_btn = None
 load_scraper = False
 nopath = False
-east = []
-west  = []
-central = []
 sdate = None
 edate = None
-eemails = []
-wemails = []
-cemails = []
 userecent = False
 options = None
+territories = {}
   
 class tkinterApp(tk.Tk):
      
@@ -417,26 +412,55 @@ class TerritoriesPage(tk.Frame):
         states = info.all_states
 
         # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Which territory do you want to set first?", font=("Times", 15))
+        thisframe.instructions = ttk.Label(thisframe, text="Enter territory names, each on their own line", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # East Button
-        browse_text = tk.StringVar()
-        thisframe.eastbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("E", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.eastbtn.grid(column=2, row=2, pady=20)
-        browse_text.set("East")
+        # Territory box
+        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
+        thisframe.box.grid(column=2, row=2, pady=10)
 
-        # Central button
-        browse_text = tk.StringVar()
-        thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("C", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.cenbtn.grid(column=2, row=3, pady=20)
-        browse_text.set("Central")
+        # Next button
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_terr(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=3, pady=30)
 
-        # West button
-        browse_text = tk.StringVar()
-        thisframe.wstbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("W", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.wstbtn.grid(column=2, row=4, pady=20)
-        browse_text.set("West")
+        # Used for populating territories
+        thisframe.count = 0 
+
+    # Lets the user add territories
+    def set_terr(thisframe):
+        lines = thisframe.box.get("1.0","end-1c").splitlines()
+        lines = [x for x in lines if x != '']
+        if len(lines) != 0:
+            # Makes dict to hold territories and their states
+            global territories; territories = {key: [] for key in lines}
+            thisframe.tlist = lines
+
+            # Update screen and button function 
+            thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(lines[0]))
+            thisframe.box.delete("1.0", "end")
+            thisframe.nextbtn.config(command=lambda:thisframe.add_states())
+            thisframe.count += 1
+        else:
+            thisframe.instructions.config(text="Please enter at least one territory")
+
+    # Lets the user add states
+    def add_states(thisframe):
+
+        terr = thisframe.tlist[thisframe.count]
+        thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
+        thisframe.box.delete("1.0", "end")
+        if thisframe.count != len(thisframe.tlist) - 1:
+            
+
+            # Updates count so we can set next territory
+            thisframe.count += 1
+        # We've reached last territory
+        else:
+    
+
+
+
+
 
     # Function for choosing states in territories
     def choose_terrs(thisframe, territory, states, chosen):
