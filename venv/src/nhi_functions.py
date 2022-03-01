@@ -521,8 +521,9 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # Get years in range that user chose, or set a default range
     if None in {startdate, enddate}:
        startdate = datetime.strptime("01/01/2017", '%m/%d/%Y')
-       #enddate = datetime.strftime(date.today(), '%m/%d/%Y')
-       enddate = datetime.strptime("12/31/2021", '%m/%d/%Y')
+       enddate = datetime.strftime(date.today(), '%m/%d/%Y')
+       enddate = datetime.strptime(enddate, '%m/%d/%Y')
+       #enddate = datetime.strptime("12/31/2021", '%m/%d/%Y')
 
     years = list(range(startdate.year, enddate.year+1))
     dfs = {}
@@ -742,11 +743,12 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
 
             elif option == "Create sheet with all territories combined" and options[option]:
-                # Get a hash of dfs by territory
+                # Get a dict of dfs by territory
                 tdfs = sort_by_territories(state_df, territories)
                 combined = pd.DataFrame()
                 for terr in tdfs.keys():
-                    dfs["Master"] = pd.concat([combined, tdfs[terr]]).reset_index()
+                    combined = pd.concat([combined, tdfs[terr]])
+                dfs["Master"] = combined.reset_index()
 
                 # Set indicies properly
                 dfs["Master"] = dfs["Master"].drop(["index"], axis=1)
@@ -762,7 +764,6 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 dfs["All"] = state_df.drop(["Territory"], axis=1).set_index(["State", "Organization", "Date"])
 
                 # Set fine column as currency
-                print(dfs["All"]["Fine"], dfs["All"].dtypes)
                 dfs["All"]["Fine"] = dfs["All"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
                 #print(dfs["All"]["Fine"])
                 #dfs["All"]["Fine"] = pd.to_numeric(dfs["All"]["Fine"], errors="coerce")

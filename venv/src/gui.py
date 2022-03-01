@@ -622,9 +622,6 @@ class DateRangePage(tk.Frame):
                 else:
                     global sdate; sdate = stime
                     global edate; edate = etime
-                    thisframe.instructions.config(text="Dates set")
-                    thisframe.update_idletasks()
-                    time.sleep(2)
                     thisframe.controller.show_frame(OptionsPage)
 
             except:
@@ -759,6 +756,7 @@ class FormatPage(tk.Frame):
         thisframe.nextbtn.grid(column=2, row=6, pady=5)
         thisframe.browse_text.set("Finish")
 
+    # Once user is done selecting options
     def finish(thisframe):
         global options; options = thisframe.options
         thisframe.controller.resize()
