@@ -388,9 +388,9 @@ class OptionsPage(tk.Frame):
 
     def show_format(thisframe):
         if OS == "Darwin":
-            thisframe.controller.geometry("500x700")
+            thisframe.controller.geometry("500x600")
         elif OS == "Windows":
-            thisframe.controller.geometry("500x700")
+            thisframe.controller.geometry("500x600")
 
         thisframe.controller.show_frame(FormatPage)
 
@@ -704,54 +704,85 @@ class FormatPage(tk.Frame):
         thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
 
         # Holds buttons
-        thisframe.boxes = {"US Fines":False, "US Violations":False, \
+        thisframe.options = {"US Fines":False, "US Violations":False, \
                             "Top fined organizations per state":False, "Most severe organizations per state":False, \
                             "Sum of fines per state per year":False, "Sum of violations per state per year":False,\
                             "Create sheet with all territories combined":False, "All Violations":False}
 
+        # Frame to hold the buttons and list to access them directly
         fm = ttk.Labelframe(thisframe, width=50, border=0)
         fm.grid(column=2, row=4)
+        thisframe.boxes = []
+        i = 0
         
         # Buttons
-        b1 = tk.Checkbutton(fm, width=35, text="US Fines (Total, yearly)", anchor="w", command=lambda:thisframe.add_option("US Fines"))
-        b1.grid()
-        
-        b1 = tk.Checkbutton(fm, width=35, text="US Violations (Total, yearly)", anchor="w", command=lambda:thisframe.add_option("US Violations"))
-        b1.grid()
+        thisframe.boxes.append(tk.Checkbutton(fm, width=35, text="US Fines (Total, yearly)", anchor="w", command=lambda:thisframe.add_option("US Fines")))
+        thisframe.boxes[i].grid()
+        i += 1
 
-        b1 = tk.Checkbutton(fm, text="Top fined organizations (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state"))
-        b1.grid()
+        thisframe.boxes.append(tk.Checkbutton(fm, width=35, text="US Violations (Total, yearly)", anchor="w", command=lambda:thisframe.add_option("US Violations")))
+        thisframe.boxes[i].grid()
+        i += 1
 
-        b1 = tk.Checkbutton(fm, text="Most severe organizations (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe organizations per state"))
-        b1.grid()
+        thisframe.boxes.append(tk.Checkbutton(fm, text="Top fined organizations (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Top fined organizations per state")))
+        thisframe.boxes[i].grid()
+        i += 1
 
-        b1 = tk.Checkbutton(fm, text="Sum of fines per state (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state per year"))
-        b1.grid()
+        thisframe.boxes.append(tk.Checkbutton(fm, text="Most severe organizations (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe organizations per state")))
+        thisframe.boxes[i].grid()
+        i += 1
 
-        b1 = tk.Checkbutton(fm, text="Sum of violations per state (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of violations per state per year"))
-        b1.grid()
+        thisframe.boxes.append(tk.Checkbutton(fm, text="Sum of fines per state (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of fines per state per year")))
+        thisframe.boxes[i].grid()
+        i += 1
 
-        b1 = tk.Checkbutton(fm, text="Create sheet with all territories combined", width=35, anchor="w", command=lambda:thisframe.add_option("Create sheet with all territories combined"))
-        b1.grid()
+        thisframe.boxes.append(tk.Checkbutton(fm, text="Sum of violations per state (Total, yearly)", width=35, anchor="w", command=lambda:thisframe.add_option("Sum of violations per state per year")))
+        thisframe.boxes[i].grid()
+        i += 1
 
-        b1 = tk.Checkbutton(fm, text="Create sheet for all violations without territories", width=35, anchor="w", command=lambda:thisframe.add_option("All Violations"))
-        b1.grid()
+        thisframe.boxes.append(tk.Checkbutton(fm, text="Create sheet with all territories combined", width=35, anchor="w", command=lambda:thisframe.add_option("Create sheet with all territories combined")))
+        thisframe.boxes[i].grid()
+        i += 1
+
+        thisframe.boxes.append(tk.Checkbutton(fm, text="Create sheet for all violations without territories", width=35, anchor="w", command=lambda:thisframe.add_option("All Violations")))
+        thisframe.boxes[i].grid()
+        i += 1
+
+        # Select all button
+        thisframe.allbtn = tk.Button(thisframe, command=lambda:thisframe.select_all(), text="Select All", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.allbtn.grid(column=2, row=5, pady=15)
+        thisframe.all = False
 
         # Finish button
         thisframe.browse_text = tk.StringVar()
         thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=5, pady=40)
+        thisframe.nextbtn.grid(column=2, row=6, pady=5)
         thisframe.browse_text.set("Finish")
 
     def finish(thisframe):
-        global options; options = thisframe.boxes
+        global options; options = thisframe.options
         thisframe.controller.resize()
         thisframe.controller.show_frame(OptionsPage)
 
     # Add a chosen option to a list
     def add_option(thisframe, opt):
-        thisframe.boxes[opt] = not thisframe.boxes[opt]
-        
+        thisframe.options[opt] = not thisframe.options[opt]
+
+    # Select all button functionality
+    def select_all(thisframe):
+        if thisframe.all:    
+            thisframe.options = {k: False for k, _ in thisframe.options.items()}
+            for box in thisframe.boxes:
+                box.deselect()   
+            thisframe.all = False
+            thisframe.allbtn.config(text="Select All")   
+        else:         
+            thisframe.options = {k: True for k, _ in thisframe.options.items()}
+            for box in thisframe.boxes:
+                box.select()
+            thisframe.all = True
+            thisframe.allbtn.config(text="Unselect All")   
+
     
 # Page where excel sheet is made
 class ExcelPage(tk.Frame):
