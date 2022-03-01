@@ -79,3 +79,5 @@ Now:
         State Total Year1 Year 2
               Org Date Tags Seve
 
+
+Next task: Allow users to create however many territitories and set which states are in each
