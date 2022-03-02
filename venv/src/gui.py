@@ -435,28 +435,59 @@ class TerritoriesPage(tk.Frame):
             global territories; territories = {key: [] for key in lines}
             thisframe.tlist = lines
 
-            # Update screen and button function 
-            thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(lines[0]))
-            thisframe.box.delete("1.0", "end")
-            thisframe.nextbtn.config(command=lambda:thisframe.add_states())
-            thisframe.count += 1
+            # Update screen
+            thisframe.add_states()
+    
         else:
             thisframe.instructions.config(text="Please enter at least one territory")
 
     # Lets the user add states
     def add_states(thisframe):
-
-        terr = thisframe.tlist[thisframe.count]
-        thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
-        thisframe.box.delete("1.0", "end")
-        if thisframe.count != len(thisframe.tlist) - 1:
-            
-
-            # Updates count so we can set next territory
-            thisframe.count += 1
-        # We've reached last territory
+        global territories
+        # If we're on last
+        if thisframe.count == len(thisframe.tlist):
+            # Grab states from box
+            states = thisframe.box.get("1.0","end-1c").splitlines()
+            states = [x.strip() for x in states if x != '']
+            # Update territory hash
+            territories[terr] = states
+            thisframe.controller.show_frame(OptionsPage)
+        
         else:
-    
+            # Get the states from text box
+            terr = thisframe.tlist[thisframe.count]
+            thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
+            if thisframe.count != 0:
+                # Grab states from box
+                states = thisframe.box.get("1.0","end-1c").splitlines()
+                states = [x.strip() for x in states if x != '']
+                # Update territory hash
+                territories[terr] = states
+                thisframe.count += 1
+            
+            # Last call
+            elif thisframe.count == len(list(territories.keys())) - 1:
+                thisframe.nextbtn.config(text="Finish")
+            else:
+                thisframe.count += 1
+
+        
+        
+        
+
+        if thisframe.count != len(thisframe.tlist) - 1:
+            nextterr = thisframe.tlist[thisframe.count+1]
+            
+            thisframe.box.delete("1.0", "end")
+        # Last territory
+        else:
+            thisframe.nextbtn.config(text="Finish")
+            thisframe.nextbtn.config(command=lambda:print(territories))
+            #thisframe.controller.show_frame(OptionsPage)
+           
+        # Updates count so we can set next territory
+        thisframe.count += 1
+
 
 
 
