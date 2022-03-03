@@ -37,6 +37,7 @@ edate = None
 userecent = False
 options = None
 territories = {}
+tags = []
   
 class tkinterApp(tk.Tk):
      
@@ -68,7 +69,7 @@ class tkinterApp(tk.Tk):
         # of the different page layouts
         for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
                   OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage,\
-                  FormatPage, ExcelPage, SendEmailsPage, TestPage):
+                  FormatPage, TagsPage, ExcelPage, SendEmailsPage, TestPage):
   
             frame = F(container, self)
   
@@ -368,10 +369,16 @@ class OptionsPage(tk.Frame):
         self.dl_btn.grid(column=2, row=5, pady=10)
         browse_text.set("Format Excel Data")
 
+        # Choose tags
+        browse_text = tk.StringVar()
+        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(TagsPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.dl_btn.grid(column=2, row=6, pady=10)
+        browse_text.set("Choose Tags to Include")
+
         # Make excel files button
         browse_text = tk.StringVar()
         self.dl_btn = tk.Button(self, command=lambda:self.show_excel(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.dl_btn.grid(column=2, row=6, pady=10)
+        self.dl_btn.grid(column=2, row=7, pady=10)
         browse_text.set("Make Excel Files and Send Emails ->")
 
     def show_daterange(thisframe):
@@ -685,7 +692,44 @@ class FormatPage(tk.Frame):
             thisframe.all = True
             thisframe.allbtn.config(text="Unselect All")   
 
+
+# Choose which tags to include
+class TagsPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+
+        # Instructions
+        thisframe.instructions = ttk.Label(thisframe, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        # Instructions2
+        thisframe.instructions2 = ttk.Label(thisframe, text="Only include last 3 numbers (ex: F757 -> 757)", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        # Tags box
+        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
+        thisframe.box.grid(column=2, row=3, pady=10)
+
+        # Finish button
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=4, pady=30)
+
+
+    # Lets the user add the tags
+    def set_tags(thisframe):
+        lines = thisframe.box.get("1.0","end-1c").splitlines()
+        lines = [x for x in lines if x != '']
+        if len(lines) != 0:
+            # Makes dict to hold territories and their states
+            global tags; tags = lines
     
+        else:
+            thisframe.instructions.config(text="Please enter at least one tag or press again for all tags")
+            thisframe.instructions2.grid_forget()
+            thisframe.nextbtn.config(command=lambda:thisframe.controller.show_frame(OptionsPage))
+    
+
 # Page where excel sheet is made
 class ExcelPage(tk.Frame):
     def __init__(thisframe, parent, controller):
@@ -764,6 +808,7 @@ class SendEmailsPage(tk.Frame):
     def finish(thisframe):
         thisframe.instructions.config(text="Emails Sent")
         thisframe.nextbtn.grid_forget()
+
 
 class TestPage(tk.Frame):
     def __init__(thisframe, parent, controller):

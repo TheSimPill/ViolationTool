@@ -514,7 +514,6 @@ def sort_by_date(state_incident_list):
 
     return sorted(state_incident_list, key=lambda item: item[1], reverse=True)
     
-
 # Makes the excel sheets based on options chosen by the user 
 def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories):
 

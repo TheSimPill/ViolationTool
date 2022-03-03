@@ -85,3 +85,7 @@ Next task: Allow users to create however many territitories and set which states
 Adding terrs on new branch
 
 finished dynamic territories
+
+Add tags to include in sheets next
+
+Need to check tag length enetered and make page update once user is done
