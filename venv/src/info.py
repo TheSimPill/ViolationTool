@@ -76,7 +76,7 @@ def get_state_codes(load) -> dict:
         with open("state_codes_table.pkl", 'wb') as outp:
                 pickle.dump(table, outp, pickle.HIGHEST_PROTOCOL)
     else:
-        with open("state_codes_table.pkl", 'rb') as inp:
+        with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_codes_table.pkl", 'rb') as inp:
             table = pickle.load(inp)
                
     rows = table.values.tolist()

@@ -83,3 +83,5 @@ Now:
 Next task: Allow users to create however many territitories and set which states are in each
 
 Adding terrs on new branch
+
+finished dynamic territories

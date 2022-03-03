@@ -530,7 +530,10 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     choices = 0
     
     # Convert states to their two letter code
+    if len(territories) == 0:
+        territories = info.territories
     territories = convert_states(territories)
+
     # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
     t_dfs = sort_by_territories(state_df, territories)
     if not None in {startdate, enddate}:
@@ -798,7 +801,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
     
     # Get two letter state code hash
-    codes = info.get_state_codes(True)
+    codes = info.get_state_codes(False)
     keys = list(codes.keys())
     vals = list(codes.values())
     for territory in territories.keys():
