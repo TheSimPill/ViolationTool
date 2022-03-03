@@ -1,3 +1,4 @@
+from re import T
 import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
@@ -31,16 +32,11 @@ partial_instructions2 = None
 dl_btn = None
 load_scraper = False
 nopath = False
-east = []
-west  = []
-central = []
 sdate = None
 edate = None
-eemails = []
-wemails = []
-cemails = []
 userecent = False
 options = None
+territories = {}
   
 class tkinterApp(tk.Tk):
      
@@ -405,161 +401,69 @@ class TerritoriesPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
-        # Lists to represent territories
-        thisframe.east = []
-        thisframe.west = []
-        thisframe.central = []
-        # Bools to determine if a territory has been set yet
-        thisframe.eastc = False
-        thisframe.westc = False
-        thisframe.centralc = False
-        # List of all states
-        states = info.all_states
-
         # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Which territory do you want to set first?", font=("Times", 15))
+        thisframe.instructions = ttk.Label(thisframe, text="Enter territory names, each on their own line", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # East Button
-        browse_text = tk.StringVar()
-        thisframe.eastbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("E", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.eastbtn.grid(column=2, row=2, pady=20)
-        browse_text.set("East")
+        # Instructions2
+        thisframe.instructions2 = ttk.Label(thisframe, text="", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Central button
-        browse_text = tk.StringVar()
-        thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("C", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.cenbtn.grid(column=2, row=3, pady=20)
-        browse_text.set("Central")
+        # Territory box
+        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
+        thisframe.box.grid(column=2, row=3, pady=10)
 
-        # West button
-        browse_text = tk.StringVar()
-        thisframe.wstbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("W", states, 0), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.wstbtn.grid(column=2, row=4, pady=20)
-        browse_text.set("West")
+        # Next button
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_terr(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=4, pady=30)
 
-    # Function for choosing states in territories
-    def choose_terrs(thisframe, territory, states, chosen):
+        # Used for populating territories
+        thisframe.count = 0 
 
-        # Custom checkbox - had to do this to get around problem with creating buttons in a loop
-        class CheckB(ttk.Checkbutton):
-            def __init__(self, parent, text):
-                ttk.Checkbutton.__init__(self, master=parent, text=text, command=lambda:parent.add_state(text, territory, states))
-                self.parent = thisframe
-            
-        # When we've chosen all 3 territories
-        if chosen >= 3:
-            thisframe.roptions()
+    # Lets the user add territories
+    def set_terr(thisframe):
+        lines = thisframe.box.get("1.0","end-1c").splitlines()
+        lines = [x for x in lines if x != '']
+        if len(lines) != 0:
+            # Makes dict to hold territories and their states
+            global territories; territories = {key: [] for key in lines}
+            thisframe.tlist = lines
+
+            # Update screen
+            thisframe.add_states()
+    
         else:
-            # Hide buttons
-            thisframe.eastbtn.grid_forget()
-            thisframe.cenbtn.grid_forget()
-            thisframe.wstbtn.grid_forget()
-            if OS == "Darwin":
-                thisframe.controller.geometry("500x600")
-            elif OS == "Windows":
-                thisframe.controller.geometry("570x630")
-     
-            # Instructions
-            if territory == "W":
-                thisframe.instructions.config(text="Choose states in the west territory")
-                thisframe.westc = True
+            thisframe.instructions.config(text="Please enter at least one territory")
 
-                # East button
-                browse_text = tk.StringVar()
-                thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("E", states, chosen+1), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-                thisframe.cenbtn.grid(column=2, row=25, pady=20)
-                if chosen == 2:
-                    browse_text.set("Finish")
-                else:
-                    browse_text.set("Set east territory")
+    # Lets the user add states
+    def add_states(thisframe):
+        global territories
+        thisframe.instructions2.config(text="Use full state names, with first letter capitalized".format(thisframe.tlist[0]))
+        # First territory
+        if thisframe.count == 0:
+            thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(thisframe.tlist[0]))
+            thisframe.nextbtn.config(command=lambda:thisframe.add_states())
+        elif thisframe.count > 0:
+            # Grab states from box
+            states = thisframe.box.get("1.0","end-1c").splitlines()
+            states = [x.strip() for x in states if x != '']
+            # Update territory hash
+            terr = thisframe.tlist[thisframe.count-1]
+            territories[terr] = states
+            # Update screen
+            if thisframe.count < len(thisframe.tlist):
+                terr = thisframe.tlist[thisframe.count]
+                thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
+            # Updates the button
+            if thisframe.count == len(thisframe.tlist) - 1:
+                thisframe.nextbtn.config(text="Finish")
+            # Last screen
+            elif thisframe.count == len(thisframe.tlist):
+                thisframe.controller.show_frame(OptionsPage)
 
-            elif territory == "E":
-                thisframe.instructions.config(text="Choose states in the east territory")
-                thisframe.eastc = True
-
-                # Central button
-                browse_text = tk.StringVar()
-                thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("C", states, chosen+1), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-                thisframe.cenbtn.grid(column=2, row=25, pady=20)
-                if chosen == 2:
-                    browse_text.set("Finish")
-                else:
-                    browse_text.set("Set central territory")
-
-            else:
-                thisframe.instructions.config(text="Choose states in the central territory")
-                thisframe.centralc = True
-
-                # West button
-                browse_text = tk.StringVar()
-                thisframe.cenbtn = tk.Button(thisframe, command=lambda:thisframe.choose_terrs("W", states, chosen+1), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-                thisframe.cenbtn.grid(column=2, row=25, pady=20)
-                if chosen == 2:
-                    browse_text.set("Finish")
-                else:
-                    browse_text.set("Set west territory")     
-
-            # Init checkboxes
-            crow = 2
-            ct = 0
-            second = False
-            third = False
-            boxes = []
-            for state in states:
-                if ct <= len(states)/3:
-                    boxes.append(CheckB(thisframe, state))
-                    boxes[ct].grid(column=1, row=crow)
-                elif ct <= (len(states)/3)*2:
-                    # Init second column
-                    if not second:
-                        second = True
-                        crow = 2
-                    boxes.append(CheckB(thisframe, state))
-                    boxes[ct].grid(column=2, row=crow)
-                else:
-                    # Init third column
-                    if not third:
-                        third = True
-                        crow= 2
-                    boxes.append(CheckB(thisframe, state))
-                    boxes[ct].grid(column=3, row=crow)
-
-                ct += 1
-                crow += 1
-
-            thisframe.controller.update_idletasks()
-
-    # Called when a checkbox is clicked
-    def add_state(thisframe, state, territory, states):
-        # This handles states that have already been clicked
-        if state in states:
-            if territory == "W":
-                thisframe.west.append(state)
-                thisframe.west = sorted(thisframe.west)
-            elif territory == "E":
-                thisframe.east.append(state)
-                thisframe.east = sorted(thisframe.east)
-            else:
-                thisframe.central.append(state)
-                thisframe.central = sorted(thisframe.central)
-        # If a state has been clicked and is unclicked
-        else:
-            if territory == "W":
-                thisframe.west.remove(state)
-            elif territory == "E":
-                thisframe.east.remove(state)
-            else:
-                thisframe.central.remove(state)
-
-    # Return to options page after territories have been allocated
-    def roptions(thisframe):
-        global east; east = thisframe.east
-        global west; west = thisframe.west
-        global central; central = thisframe.central
-
-        thisframe.controller.resize()
-        thisframe.controller.show_frame(OptionsPage)
+        # Clear the box
+        thisframe.box.delete("1.0", "end")
+        thisframe.count += 1
 
 
 # Page where date range for cases is set
@@ -811,7 +715,8 @@ class ExcelPage(tk.Frame):
         '''
         For testing:
         '''
-        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+        # C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl
+        with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
             state_df = pickle.load(inp)
 
         class thread(threading.Thread):
@@ -823,11 +728,12 @@ class ExcelPage(tk.Frame):
                 global options
                 #ts = "All": list(info.get_state_codes(True).values())
                 #{"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
-                ts = {"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
-                global sdate, edate
+                #territories = {"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
+                global sdate, edate, territories
                 #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
                 #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
-                self.func(thisframe, "", options, state_df, sdate, edate, ts)
+
+                self.func(thisframe, "", options, state_df, sdate, edate, territories)
 
         thread(nhi.make_sheets).start()
 
