@@ -1,3 +1,4 @@
+from re import T
 import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
@@ -400,17 +401,6 @@ class TerritoriesPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
-        # Lists to represent territories
-        thisframe.east = []
-        thisframe.west = []
-        thisframe.central = []
-        # Bools to determine if a territory has been set yet
-        thisframe.eastc = False
-        thisframe.westc = False
-        thisframe.centralc = False
-        # List of all states
-        states = info.all_states
-
         # Instructions
         thisframe.instructions = ttk.Label(thisframe, text="Enter territory names, each on their own line", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
@@ -444,53 +434,36 @@ class TerritoriesPage(tk.Frame):
     # Lets the user add states
     def add_states(thisframe):
         global territories
-        # If we're on last
-        if thisframe.count == len(thisframe.tlist):
+        # First territory
+        if thisframe.count == 0:
+            thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(thisframe.tlist[0]))
+            thisframe.nextbtn.config(command=lambda:thisframe.add_states())
+        elif thisframe.count > 0:
             # Grab states from box
             states = thisframe.box.get("1.0","end-1c").splitlines()
             states = [x.strip() for x in states if x != '']
             # Update territory hash
+            terr = thisframe.tlist[thisframe.count-1]
             territories[terr] = states
-            thisframe.controller.show_frame(OptionsPage)
-        
-        else:
-            # Get the states from text box
-            terr = thisframe.tlist[thisframe.count]
-            thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
-            if thisframe.count != 0:
-                # Grab states from box
-                states = thisframe.box.get("1.0","end-1c").splitlines()
-                states = [x.strip() for x in states if x != '']
-                # Update territory hash
-                territories[terr] = states
-                thisframe.count += 1
-            
-            # Last call
-            elif thisframe.count == len(list(territories.keys())) - 1:
+            # Update screen
+            if thisframe.count < len(thisframe.tlist):
+                terr = thisframe.tlist[thisframe.count]
+                thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
+            # Updates the button
+            if thisframe.count == len(thisframe.tlist) - 1:
                 thisframe.nextbtn.config(text="Finish")
-            else:
-                thisframe.count += 1
+            # Last screen
+            elif thisframe.count == len(thisframe.tlist):
+                thisframe.controller.show_frame(OptionsPage)
 
-        
-        
-        
-
-        if thisframe.count != len(thisframe.tlist) - 1:
-            nextterr = thisframe.tlist[thisframe.count+1]
-            
-            thisframe.box.delete("1.0", "end")
-        # Last territory
-        else:
-            thisframe.nextbtn.config(text="Finish")
-            thisframe.nextbtn.config(command=lambda:print(territories))
-            #thisframe.controller.show_frame(OptionsPage)
-           
-        # Updates count so we can set next territory
+        # Clear the box
+        thisframe.box.delete("1.0", "end")
         thisframe.count += 1
+        
 
 
 
-
+           
 
 
     # Function for choosing states in territories
