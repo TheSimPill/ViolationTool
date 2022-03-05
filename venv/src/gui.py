@@ -15,11 +15,14 @@ if OS == "Darwin":
     import info as info
     import nhi_functions as nhi
     import fine_scraper as scraper
+    from strip_pdf import tags
 elif OS == "Windows":
     # Windows
     import src.nhi_functions as nhi
     import src.fine_scraper as scraper
     import src.info as info
+    import src.strip_pdf as spdf
+    
 
 # Global variables
 LARGEFONT = ("Verdana", 35)
@@ -37,7 +40,7 @@ edate = None
 userecent = False
 options = None
 territories = {}
-tags = []
+chosen_tags = []
   
 class tkinterApp(tk.Tk):
      
@@ -715,24 +718,37 @@ class TagsPage(tk.Frame):
         thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
         thisframe.box.grid(column=2, row=3, pady=10)
 
+        # All tags button
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn.grid(column=2, row=4, pady=15)
+
         # Finish button
         thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=4, pady=30)
+        thisframe.nextbtn.grid(column=2, row=5, pady=10)
 
 
     # Lets the user add the tags
     def set_tags(thisframe):
+        notags = True
         lines = thisframe.box.get("1.0","end-1c").splitlines()
         lines = [x.strip() for x in lines if x != '']
         if len(lines) != 0:
             # List to hold the tags
-            global tags; tags = lines
-            print(tags)
-    
-        else:
-            thisframe.instructions.config(text="Please enter at least one tag or press again for all tags")
+            global chosen_tags
+            for tag in lines:
+                newtag = '0' + tag
+                # Will only include legal tags
+                if newtag in spdf.tags:
+                    chosen_tags += [newtag]
+                    notags = False
+            
+            
+        if notags:
+            thisframe.instructions.config(text="Please enter at least one valid tag or press again for all tags")
             thisframe.instructions2.grid_forget()
-            thisframe.nextbtn.config(command=lambda:thisframe.controller.show_frame(OptionsPage))
+            #thisframe.nextbtn.config(command=lambda:thisframe.controller.show_frame(OptionsPage))
+        else:
+            thisframe.controller.show_frame(OptionsPage)
     
 
 # Page where excel sheet is made

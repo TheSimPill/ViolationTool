@@ -17,7 +17,7 @@ tags = {}
 def parse_rows(start, end, step, spacing, page):
     for x, row in page.iterrows():
         for i in range(start, end, step):
-            print(i, i+spacing)
+
             tag = row[i]
             desc = row[i+spacing]
 
