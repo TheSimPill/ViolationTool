@@ -89,3 +89,5 @@ finished dynamic territories
 Add tags to include in sheets next
 
 Need to check tag length enetered and make page update once user is done
+
+Want to check if each tag entered is valid and tell user if not, so need to grab all tags from pdf

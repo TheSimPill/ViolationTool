@@ -86,15 +86,19 @@ class tkinterApp(tk.Tk):
     # parameter
     def show_frame(self, cont):
         frame = self.frames[cont]
-        frame.tkraise()
-
-    # Extend the display when we get to options page
-    def resize(self):
-        self.geometry("500x500")
+        frame.tkraise()        
 
     # Set back to start size
     def dresize(self):
         self.geometry("500x300")
+
+    # Window size for options page
+    def resize_optionspage(self):
+        if OS == "Darwin":
+            self.geometry("500x500")
+        elif OS == "Windows":
+            self.geometry("500x600")
+
 
 
 # Default page layout
@@ -312,7 +316,7 @@ class NoPathPage(tk.Frame):
     def choose_path(self):
         global savepath
         global state_df
-        self.controller.resize()
+        self.controller.resize_optionspage()
         self.controller.show_frame(OptionsPage)
         '''
         while True:
@@ -719,10 +723,11 @@ class TagsPage(tk.Frame):
     # Lets the user add the tags
     def set_tags(thisframe):
         lines = thisframe.box.get("1.0","end-1c").splitlines()
-        lines = [x for x in lines if x != '']
+        lines = [x.strip() for x in lines if x != '']
         if len(lines) != 0:
-            # Makes dict to hold territories and their states
+            # List to hold the tags
             global tags; tags = lines
+            print(tags)
     
         else:
             thisframe.instructions.config(text="Please enter at least one tag or press again for all tags")
