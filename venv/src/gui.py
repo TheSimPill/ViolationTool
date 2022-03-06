@@ -719,7 +719,7 @@ class TagsPage(tk.Frame):
         thisframe.box.grid(column=2, row=3, pady=10)
 
         # All tags button
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_all_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.nextbtn.grid(column=2, row=4, pady=15)
 
         # Finish button
@@ -737,19 +737,22 @@ class TagsPage(tk.Frame):
             global chosen_tags
             for tag in lines:
                 newtag = '0' + tag
-                # Will only include legal tags
-                if newtag in spdf.tags:
+                
+                if newtag in spdf.tags.keys():
                     chosen_tags += [newtag]
                     notags = False
             
-            
         if notags:
-            thisframe.instructions.config(text="Please enter at least one valid tag or press again for all tags")
+            thisframe.instructions.config(text="Please enter at least one valid tag")
             thisframe.instructions2.grid_forget()
-            #thisframe.nextbtn.config(command=lambda:thisframe.controller.show_frame(OptionsPage))
         else:
             thisframe.controller.show_frame(OptionsPage)
     
+    # For setting all tags
+    def set_all_tags(thisframe):
+        global chosen_tags; chosen_tags = list(spdf.tags.keys())
+        thisframe.controller.show_frame(OptionsPage)
+
 
 # Page where excel sheet is made
 class ExcelPage(tk.Frame):
