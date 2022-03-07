@@ -136,6 +136,22 @@ def get_proxy(params):
         else:
             return (page, params)
 
+# Merge rows that represent the same violation but with a different tag into one row
+def merge_violations(dfpath, frame, state_df):
+    
+    state_df = state_df.groupby(['Territory', 'State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
+        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
+
+    # Reset indicies to be numbers
+    new = new.reset_index()
+    new = new.drop("index", axis=1)
+    
+    # Save newly condensed state df
+    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
+        pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
+
+    match_violations(dfpath, frame, state_df)
+
 # Match up incidents with corresponding fines
 # state_df -> "Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"
 # fine_df -> "State", "Organization", "Date", "Fine", "Url"
@@ -163,53 +179,8 @@ def match_violations(dfpath, frame, state_df, fine_df):
     #frame.instructions.config(text="Finished matching")
     time.sleep(1)
     print("Finished matching")
-    merge_violations(dfpath, frame, state_df)
-
-# Merge rows that represent the same violation but with a different tag into on row
-def merge_violations(dfpath, frame, state_df):
-    
-    # Convert tags row into str
-    state_df["Tag"] = state_df["Tag"].astype(str)
-
-    #frame.instructions.config(text="Condensing data...")
-    new = pd.DataFrame(columns=["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"])
-    for row in state_df.iterrows():
-            # Grab rows where state, date, and organization are the same
-            matches = state_df.loc[(state_df["State"] == row[1]["State"]) & (state_df["Date"] == row[1]["Date"]) & (state_df["Organization"] == row[1]["Organization"])]
-            # So that only rows that have the unique columns we're checking for aren't processed
-            if len(matches.index) > 1:
-                
-                # Get all tags and severities into a list     
-                taglist = matches["Tag"].tolist()
-                sevlist = matches["Severity"].tolist()
-                
-                # Combine all rows into 
-                combined = matches.groupby(matches["State"]).aggregate({"Territory":"first", "State":"first", \
-                        "Organization":"first", "Date":"first", "Tag":"first", \
-                        "Severity":"first", "Fine":"first", "Url":"first"})
-                
-                # Make the tag and severities columns a string of the list of tags
-                combined["Tag"] = str(taglist)
-                combined["Severity"] = str(sevlist)
-                new.append(combined)
-                new = pd.concat([new, combined])
-
-                # Remove rows that were merged so we don't proccess them again later down the line
-                state_df = state_df.merge(matches, how='left', indicator=True)
-                state_df = state_df[state_df['_merge'] == 'left_only']
-                state_df = state_df.drop("_merge", axis=1)
-
-    # Reset indicies to be numbers
-    new = new.reset_index()
-    new = new.drop("index", axis=1)
-    # Save newly condensed state df
-    state_df = new
-    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
-        pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
-
-    frame.instructions.config(text="Finished condensing")
-    time.sleep(1)
     frame.advance_page()
+
         
 # Sums up fines for a state
 def sum_fines_state(state_incidents_list) -> int:
