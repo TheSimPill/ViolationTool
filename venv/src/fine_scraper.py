@@ -268,8 +268,6 @@ def scrape_facility(args):
                     date = date.find("p").get_text()
                     date = str(datetime.strptime(date, '%b %d, %Y').strftime('%m/%d/%Y'))
 
-                    # Check to see if this case is relevant
-                    # NEED TO CHANGE THIS
 
                     # This checks to see if a case is relevant by comparing it to cases in our data frame
                     matches = cstate_df.loc[(cstate_df["Organization"] == facility.upper()) & (cstate_df["Date"] == date)]
@@ -292,10 +290,10 @@ def scrape_facility(args):
                             # Now make fine just an int
                             numeric_filter = filter(str.isdigit, fine)
                             fine = "".join(numeric_filter)
-                            home_fines.append((state, facility.upper(),date,int(fine), incident_url))
+                            home_fines.append((state, facility.upper(), date, int(fine), incident_url))
 
                         else:
-                            home_fines.append((state, facility.upper(),date, 0, incident_url))
+                            home_fines.append((state, facility.upper(), date, 0, incident_url))
 
 
             # Update home count label                  

@@ -1,18 +1,6 @@
 import pandas as pd
 import pickle
 
-# Tags usually have a zero in front
-tagdata = {
-    761 : "Label/Store Drugs & Biologicals",
-    756 : "Drug Regimen Review, Report Irregular, Act On",
-    757 : "Drug Regimen is Free From Unnecessary Drugs",
-    759 : "Free of Medication Error Rate of 5% or More",
-    758 : "Free from Unnec Psychotropic Meds/PRN Use",
-    554 : "Resident Self-Admin Meds-Clinically Appropriate",
-    760 : "Residents Are Free of Significant Med Errors",
-    605 : "Right to be Free from Chemical Restraints"
-}
-
 severities = {
     "A" : "Isolated - No actual harm with potential for minimal harm",
     "B" : "Pattern - No actual harm with potential for minimal harm",

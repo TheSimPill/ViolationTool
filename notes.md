@@ -91,3 +91,17 @@ Add tags to include in sheets next
 Need to check tag length enetered and make page update once user is done
 
 Want to check if each tag entered is valid and tell user if not, so need to grab all tags from pdf
+
+
+UPDATE:
+    parse_data now gets all rows, not just ones with certain tags
+
+
+LOGIC UPDATE:
+    I'm thinking that excel sheets will only include data in date range, as well chosen tags.
+    Just like date range, if there are no tags chosen then all will be included by default.
+    Want to add a progress bar for merging and matching. Merging takes much longer now.
+
+
+Next:
+    Really want to consider going back to hashing values instead of putting them into dfs right away. It takes much, much longer. 

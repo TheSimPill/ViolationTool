@@ -49,8 +49,6 @@ def download(frame, save_path):
     time.sleep(1.5)
     parse_data(frame, save_path)
 
-# Parses raw data, returns -> 
-# {ST : (facility, date, writeup, fine, severity, tag)}
 '''
     Cases that took place on the same date at the same facility
     are each counted as their own incident in the excel raw data.
@@ -59,7 +57,7 @@ def parse_data(frame, save_path):
     files = os.listdir(save_path)
     start_time = time.time() 
     numtoload = len(files)
-    '''
+    
     frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
     frame.dl_btn.grid_forget()
 
@@ -72,7 +70,7 @@ def parse_data(frame, save_path):
     x = 0
     plabel = Label(frame, text=str(x) + " out of " + str(len(files)) + " workbooks parsed", font=("Times", 15))
     plabel.grid(column=1, row=4, columnspan=3, pady=10)
-    '''
+    
     counter = 1
     dfs = []
 
@@ -89,33 +87,30 @@ def parse_data(frame, save_path):
         col_list = ["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"]
         df = df.reindex(columns=col_list)
 
-        # Get rid of rows that don't have tags we want
-        df = df[df['Tag'].isin(list(info.tagdata.keys()))]
-
         dfs.append(df)
 
         # Update labels and progress bar
-        '''
+        
         frame.instructions.config(text="Workbook " + str(counter) + " parsed in " + str(int(time.time() - start)) + " seconds")
         x += 1
         progress["value"] += (1/len(files))*100
         plabel.config(text=str(x) + " out of " + str(len(files)) + " workbooks parsed", font=("Times", 15))
-        '''
+        
         counter += 1
 
     # Once all excel files are dataframes
-    #plabel.grid_forget()
-    #progress.grid_forget()
+    plabel.grid_forget()
+    progress.grid_forget()
 
     # Merge dataframes and sort by state
-    #frame.instructions.config(text="Merging data frames...")
+    frame.instructions.config(text="Merging data frames...")
     result = pd.concat(dfs, ignore_index=True)
     result = result.sort_values(by=["State"])
     
     # Fix indicies
     result.reset_index(drop=True, inplace=True)
 
-    #frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
+    frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
     # Create a hashes folder in chosen directory and save the states hash
@@ -168,10 +163,9 @@ def match_violations(dfpath, frame, state_df, fine_df):
     #frame.instructions.config(text="Finished matching")
     time.sleep(1)
     print("Finished matching")
-    #merge_violations(dfpath, frame, state_df)
+    merge_violations(dfpath, frame, state_df)
 
 # Merge rows that represent the same violation but with a different tag into on row
-# Takes about 5 min 
 def merge_violations(dfpath, frame, state_df):
     
     # Convert tags row into str
