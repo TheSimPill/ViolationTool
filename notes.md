@@ -1,8 +1,7 @@
 # Notes
 
 FEATURES TO ADD:
-    Screen before scrape to input api key
-    Progress bar during matching
+    
 
 Trying to figure good way to merge tables
 Tables are of uneven length, can extend columns if needed though

@@ -1,5 +1,8 @@
 import pandas as pd
 import pickle
+from platform import system
+
+OS = system()
 
 severities = {
     "A" : "Isolated - No actual harm with potential for minimal harm",
@@ -64,7 +67,12 @@ def get_state_codes(load) -> dict:
         with open("state_codes_table.pkl", 'wb') as outp:
                 pickle.dump(table, outp, pickle.HIGHEST_PROTOCOL)
     else:
-        with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_codes_table.pkl", 'rb') as inp:
+        if OS == "Darwin":
+            path = r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_codes_table.pkl"
+        else:
+            path = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_codes_table.pkl"
+
+        with open(path, 'rb') as inp:
             table = pickle.load(inp)
                
     rows = table.values.tolist()

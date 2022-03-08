@@ -18,7 +18,7 @@ totalhomes = 0
 curframe = None
 
 # Scrape fines for relevant cases for each state using threads
-def scrape_fines(frame, reparse, state_df, dir, dfpath):
+def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
     # Allows frame to be updated in different functions without directly passing it in
     global curframe; curframe = frame
 
@@ -35,7 +35,7 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath):
         session = random.randint(900, 793293)
         # Parameters to use with the requests module
         params = {
-        "api_key":"PHkTKJqWyIcNQ5pA8NnzXf6PLDygeGTT",
+        "api_key":apikey,
         "url":"https://projects.propublica.org/nursing-homes/summary",
         "proxy_type":"datacenter",
         "country":"us",
@@ -109,7 +109,7 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath):
                 facility = 1
                 for home_link in state_home_links:
                     params = {
-                        "api_key":"PHkTKJqWyIcNQ5pA8NnzXf6PLDygeGTT",
+                        "api_key":apikey,
                         "url":home_link,
                         "proxy_type":"datacenter",
                         "country":"us",

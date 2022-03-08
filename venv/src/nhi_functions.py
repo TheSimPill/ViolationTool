@@ -10,6 +10,7 @@ import info
 from tkinter.ttk import Progressbar, Label
 import pandas as pd
 from numpy import int64
+import strip_pdf as spdf
 
 
 #from info import get_state_codes
@@ -455,7 +456,10 @@ def sort_by_date(state_incident_list):
     return sorted(state_incident_list, key=lambda item: item[1], reverse=True)
     
 # Makes the excel sheets based on options chosen by the user 
-def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories):
+def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories, tags):
+
+    # Change state_df's indicies back to numbers for now
+    state_df = state_df.reset_index()
 
     # Get years in range that user chose, or set a default range
     if None in {startdate, enddate}:
@@ -467,6 +471,10 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     years = list(range(startdate.year, enddate.year+1))
     dfs = {}
     choices = 0
+
+    # Check to see if tags were chosen and if not use all
+    if len(tags) == 0:
+        tags = list(spdf.tags.keys())
     
     # Convert states to their two letter code
     if len(territories) == 0:
@@ -726,7 +734,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 dfs[dfname].to_excel(writer, sheet_name=dfname)
                 start_row += len(dfs[dfname])
         # Excel sheet for description of tags and severities
-        items1 = list(info.tagdata.items())
+        items1 = list(spdf.tags.items())
         items2 = list(info.severities.items())
         df1 = pd.DataFrame(items1, columns=["Tag", "Description"])
         df2 = pd.DataFrame(items2, columns=["Rank", "Description"])        
@@ -762,10 +770,12 @@ def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List
 def sort_by_territories(state_df, territories):
     tdict = {}
     territorynames = list(territories.keys())
+
     # Create a hash where key is territory name and value is dataframe of related rows
     for name in territorynames:
-        # Get subframe and reset indicies
+        # Get subframe, add territory column and reset indicies
         tdict[name] = state_df[state_df["State"].isin(territories[name])]
+        tdict[name].insert(0,"Territory", 0)
         tdict[name] = tdict[name].reset_index(drop=True)
 
         # Set territory column

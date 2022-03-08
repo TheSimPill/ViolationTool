@@ -41,6 +41,7 @@ userecent = False
 options = None
 territories = {}
 chosen_tags = []
+apikey = ""
   
 class tkinterApp(tk.Tk):
      
@@ -73,13 +74,13 @@ class tkinterApp(tk.Tk):
         # of the different page layouts
         for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
                   OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage,\
-                  FormatPage, TagsPage, ExcelPage, SendEmailsPage, TestPage):
+                  FormatPage, TagsPage, ExcelPage, SendEmailsPage, TestPage, KeyPage):
   
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row = 0, column = 0, sticky ="nsew")
   
-        self.show_frame(WebscrapingChoicePage)
+        self.show_frame(StartPage)
   
     # to display the current frame passed as
     # parameter
@@ -150,7 +151,7 @@ class DownloadPage(tk.Frame):
         thisframe.instructions2 = ttk.Label(thisframe, text="MAKE SURE FOLDER IS EMPTY", font=("Times", 15))
         thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        thisframe.dl_btn = tk.Button(thisframe, text="Browse", command=lambda:thisframe.download_and_parse(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn = tk.Button(thisframe, text="Browse", command=lambda:thisframe.download_and_parse(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         thisframe.dl_btn.grid(column=2, row=3, pady=10)
 
     # Choose save location and start download
@@ -205,7 +206,7 @@ class WebscrapingChoicePage(tk.Frame):
         global load_scraper; load_scraper = True
         global savepath; savepath = askdirectory()
 
-        self.controller.show_frame(WebscrapingPage)
+        self.controller.show_frame(KeyPage)
     
     # If no is chosen -> means a full scrape will be done
     def fresh_scrape(self):
@@ -217,7 +218,7 @@ class WebscrapingChoicePage(tk.Frame):
         if not exists(savepath):
             os.mkdir(savepath)'''
         
-        self.controller.show_frame(WebscrapingPage)
+        self.controller.show_frame(KeyPage)
 
 # Page to enter API key before scrape starts
 class KeyPage(tk.Frame):
@@ -225,15 +226,21 @@ class KeyPage(tk.Frame):
         PageLayout.__init__(self, parent)
         self.controller = controller
          
-        # Instructions and Start button
+        # Instructions, Text box and Start button
         self.instructions = ttk.Label(self, text="Enter key for WebScrapingApi.com below", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        self.instructions2 = ttk.Label(self, text="Will take ~1hour if limited or no save data used", font=("Times", 15))
-        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=1)
+        self.box.grid(column=2, row=2, pady=1)
 
-        self.start_btn = tk.Button(self, command=lambda:self.scrape(), text="Start Webscraping", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        self.start_btn.grid(column=2, row=3, pady=10)
+        self.start_btn = tk.Button(self, command=lambda:self.save_key(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.start_btn.grid(column=2, row=3, pady=3)
+
+    # Save the api key and advance screen
+    def save_key(thisframe):
+        global apikey; apikey = thisframe.box.get("1.0","end-1c")
+        thisframe.controller.show_frame(WebscrapingPage)
+
 
 # Webscraping page 
 class WebscrapingPage(tk.Frame):
@@ -253,7 +260,7 @@ class WebscrapingPage(tk.Frame):
     
 
     def scrape(thisframe):
-        global fines_hash, state_df, load_scraper, savepath, filepath
+        global fines_hash, state_df, load_scraper, savepath, filepath, apikey
         # On windows for testing
         filepath = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src"
 
@@ -271,9 +278,9 @@ class WebscrapingPage(tk.Frame):
         
             def run(self):
                 if load_scraper:
-                    self.func(thisframe, False, state_df, savepath, filepath)
+                    self.func(thisframe, False, state_df, savepath, filepath, apikey)
                 else:
-                    self.func(thisframe, True, state_df, savepath, filepath)
+                    self.func(thisframe, True, state_df, savepath, filepath, apikey)
         
         thread(scraper.scrape_fines).start()
         #thisframe.advance_page()
@@ -286,7 +293,7 @@ class WebscrapingPage(tk.Frame):
         with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
             global fines_hash; fines_hash = pickle.load(inp)
         '''
-        #thisframe.controller.resize()
+        thisframe.controller.resize_optionspage()
         thisframe.controller.show_frame(OptionsPage)
 
 
@@ -397,6 +404,9 @@ class TerritoriesPage(tk.Frame):
 
         thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_terr(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.nextbtn.grid(column=2, row=4, pady=30)
+
+        # Used for populating territories
+        thisframe.count = 0 
 
 
     # Lets the user add territories
@@ -642,7 +652,7 @@ class FormatPage(tk.Frame):
     # Once user is done selecting options
     def finish(thisframe):
         global options; options = thisframe.options
-        thisframe.controller.resize()
+        thisframe.controller.resize_optionspage()
         thisframe.controller.show_frame(OptionsPage)
 
     # Add a chosen option to a list
@@ -737,19 +747,18 @@ class ExcelPage(tk.Frame):
         thisframe.nextbtn.grid(column=2, row=3, pady=40)
         thisframe.browse_text.set("Make Sheets")
 
-    # Send territories that we chose to nhi functions to sort the violations
-    def sort_terrs(thisframe):
-        global state_df, east, central, west
-        nhi.sort_by_territories(state_df, east, central, west)
-
     # Uses threads to make excel sheets -> need to first break data up by territory
     def make_sheets(thisframe):
 
         '''
         For testing:
         '''
-        # C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl
-        with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
+        if OS == "Darwin":
+            path = r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl"
+        else:
+            path = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl"
+
+        with open(path, 'rb') as inp:
             state_df = pickle.load(inp)
 
         class thread(threading.Thread):
@@ -762,11 +771,11 @@ class ExcelPage(tk.Frame):
                 #ts = "All": list(info.get_state_codes(True).values())
                 #{"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
                 #territories = {"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
-                global sdate, edate, territories
+                global sdate, edate, territories, chosen_tags
                 #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
                 #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
 
-                self.func(thisframe, "", options, state_df, sdate, edate, territories)
+                self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags)
 
         thread(nhi.make_sheets).start()
 
