@@ -14,12 +14,12 @@ if OS == "Darwin":
     # Macbook
     import info as info
     import nhi_functions as nhi
-    import fine_scraper as scraper
+    import scraper as scraper
     from strip_pdf import tags
 elif OS == "Windows":
     # Windows
     import src.nhi_functions as nhi
-    import src.fine_scraper as scraper
+    import src.scraper as scraper
     import src.info as info
     import src.strip_pdf as spdf
     
@@ -55,6 +55,7 @@ class tkinterApp(tk.Tk):
         elif OS == "Windows":
             self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
         
+        # Prevents user from stretching screen
         self.resizable(width=False, height=False)
         self.geometry("500x300")
          
@@ -75,15 +76,10 @@ class tkinterApp(tk.Tk):
                   FormatPage, TagsPage, ExcelPage, SendEmailsPage, TestPage):
   
             frame = F(container, self)
-  
-            # initializing frame of that object from
-            # startpage, page1, page2 respectively with
-            # for loop
             self.frames[F] = frame
-  
             frame.grid(row = 0, column = 0, sticky ="nsew")
   
-        self.show_frame(StartPage)
+        self.show_frame(WebscrapingChoicePage)
   
     # to display the current frame passed as
     # parameter
@@ -101,7 +97,6 @@ class tkinterApp(tk.Tk):
             self.geometry("500x500")
         elif OS == "Windows":
             self.geometry("500x600")
-
 
 
 # Default page layout
@@ -126,20 +121,14 @@ class StartPage(tk.Frame):
         PageLayout.__init__(self, parent)
         self.controller = controller
          
-        # Instructions
+        # Instructions, Yes and No buttons
         start_instructions = ttk.Label(self, text="Reinitialize all data?", font=("Times", 15))
         start_instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Yes button
-        browse_text = tk.StringVar()
-        yes_btn = tk.Button(self, textvariable=browse_text, command=lambda:controller.show_frame(DownloadPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        browse_text.set("Yes")
+        yes_btn = tk.Button(self, text="Yes", command=lambda:controller.show_frame(DownloadPage), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         yes_btn.grid(column=1, row=2, pady=10)
 
-        # No button
-        browse_text = tk.StringVar()
-        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:self.show_options(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        browse_text.set("No")
+        no_btn = tk.Button(self, text="No", command=lambda:self.show_options(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         no_btn.grid(column=3, row=2, pady=10)
 
     # When no button is pressed, extend window and show options pags
@@ -154,25 +143,21 @@ class DownloadPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
          
-        # Instructions
+        # Instructions and Download button
         thisframe.instructions = ttk.Label(thisframe, text="Choose empty folder to save to and download will start", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Instructions line 2
         thisframe.instructions2 = ttk.Label(thisframe, text="MAKE SURE FOLDER IS EMPTY", font=("Times", 15))
         thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Download button
-        browse_text = tk.StringVar()
-        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.download_and_parse(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn = tk.Button(thisframe, text="Browse", command=lambda:thisframe.download_and_parse(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         thisframe.dl_btn.grid(column=2, row=3, pady=10)
-        browse_text.set("Browse")
 
     # Choose save location and start download
     def download_and_parse(thisframe):
-        global filepath
-        filepath = askdirectory()
+        global filepath; filepath = askdirectory()
 
+        # Create a custom thread class so that we can update the screen during download
         class thread(threading.Thread):
             def __init__(self, func):
                 threading.Thread.__init__(self)
@@ -185,6 +170,7 @@ class DownloadPage(tk.Frame):
         # For skipping download
         #thisframe.advance_page()
 
+    # Called after excel sheets are parsed and made into state_df
     def advance_page(thisframe):
         global filepath
 
@@ -200,27 +186,21 @@ class WebscrapingChoicePage(tk.Frame):
         PageLayout.__init__(self, parent)
         self.controller = controller
          
-        # Instructions
+        # Instructions, Yes and No buttons
         instructions = ttk.Label(self, text="Do you have partial webscraping data to use?", font=("Times", 15))
         instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Instructions line 2
         instructions2 = ttk.Label(self, text="If yes, choose folder where partial save data resides", font=("Times", 15))
         instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Yes button
-        browse_text = tk.StringVar()
-        yes_btn = tk.Button(self, textvariable=browse_text, command=lambda:self.open_and_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        browse_text.set("Yes")
+        yes_btn = tk.Button(self, text="Yes", command=lambda:self.open_and_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         yes_btn.grid(column=1, row=3, pady=10)
 
-        # No button
-        browse_text = tk.StringVar()
-        no_btn = tk.Button(self, textvariable=browse_text, command=lambda:self.fresh_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        browse_text.set("No")
+        no_btn = tk.Button(self, text="No", command=lambda:self.fresh_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         no_btn.grid(column=3, row=3, pady=10)
 
-    # If yes is chosen -> Choose location of saved data, scrape will used saved pages when possible
+
+    # If yes is chosen -> Choose location of saved data, scrape will use saved pages when possible
     def open_and_scrape(self):
         global load_scraper; load_scraper = True
         global savepath; savepath = askdirectory()
@@ -229,8 +209,7 @@ class WebscrapingChoicePage(tk.Frame):
     
     # If no is chosen -> means a full scrape will be done
     def fresh_scrape(self):
-        global filepath
-        global savepath
+        global filepath, savepath
         
         savepath = "//Users//Freddie//Impruvon//guiwebscraperproject//venv//src//pages"
         ''' Doesnt work on mac rn
@@ -238,40 +217,51 @@ class WebscrapingChoicePage(tk.Frame):
         if not exists(savepath):
             os.mkdir(savepath)'''
         
-        
         self.controller.show_frame(WebscrapingPage)
 
+# Page to enter API key before scrape starts
+class KeyPage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
+         
+        # Instructions and Start button
+        self.instructions = ttk.Label(self, text="Enter key for WebScrapingApi.com below", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-# Webscraping page - shown if partial data choice is yes
+        self.instructions2 = ttk.Label(self, text="Will take ~1hour if limited or no save data used", font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        self.start_btn = tk.Button(self, command=lambda:self.scrape(), text="Start Webscraping", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.start_btn.grid(column=2, row=3, pady=10)
+
+# Webscraping page 
 class WebscrapingPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
-        self.parent = parent
          
-        # Instructions
+        # Instructions and Start button
         self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Instructions line 2
         self.instructions2 = ttk.Label(self, text="Will take ~1hour if limited or no save data used", font=("Times", 15))
         self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Start button
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.scrape(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        self.dl_btn.grid(column=2, row=3, pady=10)
-        browse_text.set("Start Webscraping")
+        self.start_btn = tk.Button(self, command=lambda:self.scrape(), text="Start Webscraping", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.start_btn.grid(column=2, row=3, pady=10)
+    
 
     def scrape(thisframe):
-        global fines_hash
-        global state_df
-        global load_scraper
-        global savepath
-        global filepath
+        global fines_hash, state_df, load_scraper, savepath, filepath
+        # On windows for testing
+        filepath = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src"
 
         # For testing:
-        with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
+        # MAC
+        #with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
+        #   state_df = pickle.load(inp)
+        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
             state_df = pickle.load(inp)
 
         class thread(threading.Thread):
@@ -300,25 +290,22 @@ class WebscrapingPage(tk.Frame):
         thisframe.controller.show_frame(OptionsPage)
 
 
-# If no is selected, choose where the hashes are located
+# If no is selected, choose where the dataframes are located
 class NoPathPage(tk.Frame):
     def __init__(thisframe, parent, controller):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
          
-        # Instructions
+        # Instructions and Download button
         thisframe.instructions = ttk.Label(thisframe, text="Click browse to select locations of save data", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Download button
-        browse_text = tk.StringVar()
-        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.choose_path(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.choose_path(), text="Browse", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         thisframe.dl_btn.grid(column=2, row=3, pady=10)
-        browse_text.set("Browse")
+
 
     def choose_path(self):
-        global savepath
-        global state_df
+        global savepath, state_df
         self.controller.resize_optionspage()
         self.controller.show_frame(OptionsPage)
         '''
@@ -348,45 +335,28 @@ class OptionsPage(tk.Frame):
         PageLayout.__init__(self, parent)
         self.controller = controller
 
-        # Instructions
+        # Instructions, Buttons for options
         self.instructions = ttk.Label(self, text="Choose your options", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Set territories button
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(TerritoriesPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.dl_btn.grid(column=2, row=2, pady=10)
-        browse_text.set("Set Territories")
+        self.terr_btn = tk.Button(self, command=lambda:controller.show_frame(TerritoriesPage), text="Set Territories", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.terr_btn.grid(column=2, row=2, pady=10)
 
-        # Set date range button
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.show_daterange(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.dl_btn.grid(column=2, row=3, pady=10)
-        browse_text.set("Set Date Range")
+        self.date_btn = tk.Button(self, command=lambda:self.show_daterange(), text="Set Date Range", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.date_btn.grid(column=2, row=3, pady=10)
+  
+        self.email_btn = tk.Button(self, command=lambda:controller.show_frame(EmailsPage), text="Set Emails For Territories/States", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.email_btn.grid(column=2, row=4, pady=10)
 
-        # Set emails
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(EmailsPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.dl_btn.grid(column=2, row=4, pady=10)
-        browse_text.set("Set Emails For Territories/States")
+        self.excel_btn = tk.Button(self, command=lambda:self.show_format(), text="Format Excel Data", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.excel_btn.grid(column=2, row=5, pady=10)
 
-        # Format excel
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.show_format(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.dl_btn.grid(column=2, row=5, pady=10)
-        browse_text.set("Format Excel Data")
+        self.tag_btn = tk.Button(self, command=lambda:controller.show_frame(TagsPage), text="Choose Tags to Include", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.tag_btn.grid(column=2, row=6, pady=10)
 
-        # Choose tags
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:controller.show_frame(TagsPage), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.dl_btn.grid(column=2, row=6, pady=10)
-        browse_text.set("Choose Tags to Include")
+        self.make_btn = tk.Button(self, command=lambda:self.show_excel(), text="Make Excel Files and Send Emails ->", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.make_btn.grid(column=2, row=7, pady=10)
 
-        # Make excel files button
-        browse_text = tk.StringVar()
-        self.dl_btn = tk.Button(self, command=lambda:self.show_excel(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.dl_btn.grid(column=2, row=7, pady=10)
-        browse_text.set("Make Excel Files and Send Emails ->")
 
     def show_daterange(thisframe):
         if OS == "Darwin":
@@ -415,24 +385,19 @@ class TerritoriesPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
-        # Instructions
+        # Instructions, Territory box and Next button 
         thisframe.instructions = ttk.Label(thisframe, text="Enter territory names, each on their own line", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Instructions2
         thisframe.instructions2 = ttk.Label(thisframe, text="", font=("Times", 15))
         thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Territory box
         thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
         thisframe.box.grid(column=2, row=3, pady=10)
 
-        # Next button
         thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_terr(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         thisframe.nextbtn.grid(column=2, row=4, pady=30)
 
-        # Used for populating territories
-        thisframe.count = 0 
 
     # Lets the user add territories
     def set_terr(thisframe):

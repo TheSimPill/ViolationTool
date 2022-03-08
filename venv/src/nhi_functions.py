@@ -84,7 +84,7 @@ def parse_data(frame, save_path):
         df.insert(0, "Territory", 0)
         
         # Format columns 
-        col_list = ["Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"]
+        col_list = ["State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"]
         df = df.reindex(columns=col_list)
 
         dfs.append(df)
@@ -137,48 +137,26 @@ def get_proxy(params):
             return (page, params)
 
 # Match up incidents with corresponding fines
-# state_df -> "Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"
-# fine_df -> "State", "Organization", "Date", "Fine", "Url"
 def match_violations(dfpath, frame, state_df, fine_df):
-    
-    # Convert dfs to dictionary lists
-    finelst = fine_df.to_dict("record")
-    statelst = state_df.to_dict("record")
-    
-    for fvio in finelst:
-        for svio in statelst:
-            if fvio["State"] == svio["State"] and fvio["Date"] == svio["Date"] and \
-            fvio["Organization"] == svio["Organization"]:
-                svio["Fine"] = fvio["Fine"]
-                svio["Url"] = fvio["Url"]
 
-    # Convert back to dataframe
-    state_df = pd.DataFrame(statelst)
-
+    # Combine rows where state, org and date are the same but make a list of the tags and severities in order
+    state_df = state_df.groupby(['State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
+        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
+    
+    # Format the fine_df, get rid of dupes, use it to update the state_df
+    fine_df = fine_df.set_index(['State', 'Organization', 'Date'])
+    fine_df = fine_df[~fine_df.index.duplicated()]
+    state_df.update(fine_df)
+    
     if not exists(dfpath + "/dataframes"):
         os.mkdir(dfpath + "/dataframes")
     with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
             pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
 
-    #frame.instructions.config(text="Finished matching")
+    frame.instructions.config(text="Finished matching")
     time.sleep(1)
-    print("Finished matching")
-    merge_violations(dfpath, frame, state_df)
-    
-
-# Merge rows that represent the same violation but with a different tag into one row
-def merge_violations(dfpath, frame, state_df):
-    
-    state_df = state_df.groupby(['Territory', 'State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
-        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
-    
-    # Save newly condensed state df
-    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
-        pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
-
-    print("Mergy")
     frame.advance_page()
-        
+    
 # Sums up fines for a state
 def sum_fines_state(state_incidents_list) -> int:
     sum = 0

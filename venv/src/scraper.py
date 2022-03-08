@@ -138,7 +138,8 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath):
                         # Appending each incident tuple from all homes in a state
                         states_fines.append(homes_fines)
 
-                with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/states_fines.pkl", 'wb') as outp:
+                # MAC - /Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/states_fines.pkl
+                with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\states_fines.pkl", 'wb') as outp:
                     pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
                 
                 # Updates progress bar label and value
@@ -157,7 +158,8 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath):
             #if not exists(dfpath + "/dataframes"):
                 #os.mkdir(dfpath + "/dataframes")
                 #dfpath + "/dataframes/fine_df.pkl"
-            with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/fine_df.pkl", 'wb') as outp:
+            # MAC - /Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/fine_df.pkl
+            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl", 'wb') as outp:
                 pickle.dump(fine_df, outp, pickle.HIGHEST_PROTOCOL)
             
             # Once all scraping is finished
@@ -165,7 +167,7 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath):
             curframe.instructions2.grid_forget()
             progress.grid_forget()
             plabel.grid_forget()
-            curframe.instructions.config(text="Saved fines_hash.pkl in hashes folder")
+            curframe.instructions.config(text="Saved fines_hash.pkl in dataframes folder")
 
             time.sleep(1)
             curframe.instructions.config(text="Matching fines...")
@@ -174,9 +176,11 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath):
             # dfpath + "/dataframes/fine_df.pkl"
             #C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl
             #C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl
-            with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/fine_df.pkl", 'rb') as inp:
+            #/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/fine_df.pkl
+            #/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl
+            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl", 'rb') as inp:
                 fine_df = pickle.load(inp)
-            with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
+            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
                 state_df = pickle.load(inp)
             nhi.match_violations(dfpath, curframe, state_df, fine_df)
             
