@@ -136,22 +136,6 @@ def get_proxy(params):
         else:
             return (page, params)
 
-# Merge rows that represent the same violation but with a different tag into one row
-def merge_violations(dfpath, frame, state_df):
-    
-    state_df = state_df.groupby(['Territory', 'State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
-        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
-
-    # Reset indicies to be numbers
-    new = new.reset_index()
-    new = new.drop("index", axis=1)
-    
-    # Save newly condensed state df
-    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
-        pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
-
-    match_violations(dfpath, frame, state_df)
-
 # Match up incidents with corresponding fines
 # state_df -> "Territory", "State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"
 # fine_df -> "State", "Organization", "Date", "Fine", "Url"
@@ -179,8 +163,21 @@ def match_violations(dfpath, frame, state_df, fine_df):
     #frame.instructions.config(text="Finished matching")
     time.sleep(1)
     print("Finished matching")
-    frame.advance_page()
+    merge_violations(dfpath, frame, state_df)
+    
 
+# Merge rows that represent the same violation but with a different tag into one row
+def merge_violations(dfpath, frame, state_df):
+    
+    state_df = state_df.groupby(['Territory', 'State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
+        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
+    
+    # Save newly condensed state df
+    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
+        pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
+
+    print("Mergy")
+    frame.advance_page()
         
 # Sums up fines for a state
 def sum_fines_state(state_incidents_list) -> int:
