@@ -108,3 +108,12 @@ LOGIC UPDATE:
 
 Next:
     Really want to consider going back to hashing values instead of putting them into dfs right away. It takes much, much longer. 
+    Fixed lol
+
+
+CURRENT PROBLEM:
+    I'm not getting urls for certain homes, for example PROVIDENCE KODIAK ISLAND MED LTC. It seems to work
+    when I isolate it though.
+
+CURRENT PROBLEM:
+    Also want to see if how I save pages is giving none type errors. GOnna try changing bs(xxx, parser) to bs(xxx)

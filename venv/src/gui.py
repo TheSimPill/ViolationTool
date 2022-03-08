@@ -299,16 +299,16 @@ class WebscrapingPage(tk.Frame):
 
 # If no is selected, choose where the dataframes are located
 class NoPathPage(tk.Frame):
-    def __init__(thisframe, parent, controller):
-        PageLayout.__init__(thisframe, parent)
-        thisframe.controller = controller
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
          
         # Instructions and Download button
-        thisframe.instructions = ttk.Label(thisframe, text="Click browse to select locations of save data", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        self.instructions = ttk.Label(self, text="Click browse to select locations of save data", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        thisframe.dl_btn = tk.Button(thisframe, command=lambda:thisframe.choose_path(), text="Browse", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        thisframe.dl_btn.grid(column=2, row=3, pady=10)
+        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Browse", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn.grid(column=2, row=3, pady=10)
 
 
     def choose_path(self):
@@ -365,160 +365,150 @@ class OptionsPage(tk.Frame):
         self.make_btn.grid(column=2, row=7, pady=10)
 
 
-    def show_daterange(thisframe):
+    def show_daterange(self):
         if OS == "Darwin":
-            thisframe.controller.geometry("500x600")
+            self.controller.geometry("500x600")
         elif OS == "Windows":
-            thisframe.controller.geometry("500x600")
+            self.controller.geometry("500x600")
 
-        thisframe.controller.show_frame(DateRangePage)
+        self.controller.show_frame(DateRangePage)
 
-    def show_format(thisframe):
+    def show_format(self):
         if OS == "Darwin":
-            thisframe.controller.geometry("500x600")
+            self.controller.geometry("500x600")
         elif OS == "Windows":
-            thisframe.controller.geometry("500x600")
+            self.controller.geometry("500x600")
 
-        thisframe.controller.show_frame(FormatPage)
+        self.controller.show_frame(FormatPage)
 
-    def show_excel(thisframe):
-        thisframe.controller.dresize()
-        thisframe.controller.show_frame(ExcelPage)
+    def show_excel(self):
+        self.controller.dresize()
+        self.controller.show_frame(ExcelPage)
 
 
 # Page where states in each territory is set
 class TerritoriesPage(tk.Frame):
-    def __init__(thisframe, parent, controller):
-        PageLayout.__init__(thisframe, parent)
-        thisframe.controller = controller
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
 
         # Instructions, Territory box and Next button 
-        thisframe.instructions = ttk.Label(thisframe, text="Enter territory names, each on their own line", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        self.instructions = ttk.Label(self, text="Enter territory names, each on their own line", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        thisframe.instructions2 = ttk.Label(thisframe, text="", font=("Times", 15))
-        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        self.instructions2 = ttk.Label(self, text="", font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
-        thisframe.box.grid(column=2, row=3, pady=10)
+        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=10)
+        self.box.grid(column=2, row=3, pady=10)
 
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_terr(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=4, pady=30)
+        self.nextbtn = tk.Button(self, command=lambda:self.set_terr(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.nextbtn.grid(column=2, row=4, pady=30)
 
         # Used for populating territories
-        thisframe.count = 0 
+        self.count = 0 
 
 
     # Lets the user add territories
-    def set_terr(thisframe):
-        lines = thisframe.box.get("1.0","end-1c").splitlines()
+    def set_terr(self):
+        lines = self.box.get("1.0","end-1c").splitlines()
         lines = [x for x in lines if x != '']
         if len(lines) != 0:
             # Makes dict to hold territories and their states
             global territories; territories = {key: [] for key in lines}
-            thisframe.tlist = lines
+            self.tlist = lines
 
             # Update screen
-            thisframe.add_states()
+            self.add_states()
     
         else:
-            thisframe.instructions.config(text="Please enter at least one territory")
+            self.instructions.config(text="Please enter at least one territory")
 
     # Lets the user add states
-    def add_states(thisframe):
+    def add_states(self):
         global territories
-        thisframe.instructions2.config(text="Use full state names, with first letter capitalized".format(thisframe.tlist[0]))
+        self.instructions2.config(text="Use full state names, with first letter capitalized".format(self.tlist[0]))
         # First territory
-        if thisframe.count == 0:
-            thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(thisframe.tlist[0]))
-            thisframe.nextbtn.config(command=lambda:thisframe.add_states())
-        elif thisframe.count > 0:
+        if self.count == 0:
+            self.instructions.config(text="Enter states in {} territory, each on their own line".format(self.tlist[0]))
+            self.nextbtn.config(command=lambda:self.add_states())
+        elif self.count > 0:
             # Grab states from box
-            states = thisframe.box.get("1.0","end-1c").splitlines()
+            states = self.box.get("1.0","end-1c").splitlines()
             states = [x.strip() for x in states if x != '']
             # Update territory hash
-            terr = thisframe.tlist[thisframe.count-1]
+            terr = self.tlist[self.count-1]
             territories[terr] = states
             # Update screen
-            if thisframe.count < len(thisframe.tlist):
-                terr = thisframe.tlist[thisframe.count]
-                thisframe.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
+            if self.count < len(self.tlist):
+                terr = self.tlist[self.count]
+                self.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
             # Updates the button
-            if thisframe.count == len(thisframe.tlist) - 1:
-                thisframe.nextbtn.config(text="Finish")
+            if self.count == len(self.tlist) - 1:
+                self.nextbtn.config(text="Finish")
             # Last screen
-            elif thisframe.count == len(thisframe.tlist):
-                thisframe.controller.show_frame(OptionsPage)
+            elif self.count == len(self.tlist):
+                self.controller.show_frame(OptionsPage)
 
         # Clear the box
-        thisframe.box.delete("1.0", "end")
-        thisframe.count += 1
+        self.box.delete("1.0", "end")
+        self.count += 1
 
 
 # Page where date range for cases is set
 class DateRangePage(tk.Frame):
-    def __init__(thisframe, parent, controller):
-        PageLayout.__init__(thisframe, parent)
-        thisframe.controller = controller   
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller   
 
-        # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Choose range of dates to include in excel file", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+        # Instructions, Dates, Buttons
+        self.instructions = ttk.Label(self, text="Choose range of dates to include in excel file", font=("Times", 15))
+        self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Instructions 2
-        thisframe.instructions2 = ttk.Label(thisframe, text="Start date (MM/DD/YYYY)", font=("Times", 15))
-        thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
+        self.instructions2 = ttk.Label(self, text="Start date (MM/DD/YYYY)", font=("Times", 15))
+        self.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
 
-        # Instructions 3
-        thisframe.instructions3 = ttk.Label(thisframe, text="End date (MM/DD/YYYY)", font=("Times", 15))
-        thisframe.instructions3.grid(column=1, row=5, columnspan=3, pady=10)
+        self.instructions3 = ttk.Label(self, text="End date (MM/DD/YYYY)", font=("Times", 15))
+        self.instructions3.grid(column=1, row=5, columnspan=3, pady=10)
 
-        # Start date
-        thisframe.start = tk.Text(thisframe, height=2, width=25)
-        thisframe.start.grid(column=2, row=4, pady=10)
+        self.start = tk.Text(self, height=2, width=25)
+        self.start.grid(column=2, row=4, pady=10)
 
-        # End date
-        thisframe.end = tk.Text(thisframe, height=2, width=25)
-        thisframe.end.grid(column=2, row=6, pady=10)
+        self.end = tk.Text(self, height=2, width=25)
+        self.end.grid(column=2, row=6, pady=10)
 
-        # Finish button
-        browse_text = tk.StringVar()
-        thisframe.finbtn = tk.Button(thisframe, command=lambda:thisframe.check_range(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.finbtn.grid(column=2, row=7, pady=20)
-        browse_text.set("Finish")
+        self.fin_btn = tk.Button(self, command=lambda:self.check_range(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.fin_btn.grid(column=2, row=7, pady=20)
+       
+        self.instructions4 = ttk.Label(self, text=".. or only include new data (Last run XX/XX/XXX)", font=("Times", 15))
+        self.instructions4.grid(column=1, row=8, columnspan=3, pady=10)
 
-        # Instructions 4 -> need to save last run
-        thisframe.instructions3 = ttk.Label(thisframe, text=".. or only include new data (Last run XX/XX/XXX)", font=("Times", 15))
-        thisframe.instructions3.grid(column=1, row=8, columnspan=3, pady=10)
+        self.rec_btn = tk.Button(self, command=lambda:self.use_recent(), text="Use Recent", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.rec_btn.grid(column=2, row=9, pady=20)
+       
 
-        # Use most recent data button
-        browse_text = tk.StringVar()
-        thisframe.finbtn = tk.Button(thisframe, command=lambda:thisframe.use_recent(), textvariable=browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.finbtn.grid(column=2, row=9, pady=20)
-        browse_text.set("Use Recent")
-
-    def use_recent(thisframe):
+    def use_recent(self):
         global userecent; userecent = True
-        thisframe.controller.show_frame(OptionsPage)
+        self.controller.show_frame(OptionsPage)
 
     # Checks to see if dates are in correct format and within range -> need to add earliest date
-    def check_range(thisframe):
+    def check_range(self):
             try:
-                stext = thisframe.start.get("1.0","end-1c")
-                etext = thisframe.end.get("1.0","end-1c")
+                stext = self.start.get("1.0","end-1c")
+                etext = self.end.get("1.0","end-1c")
                 stime = datetime.datetime.strptime(stext, '%m/%d/%Y')
                 etime = datetime.datetime.strptime(etext, '%m/%d/%Y')
 
                 # If user gives start date later than end date
                 if stime > etime:
-                    thisframe.instructions.config(text="Start date must be less than or equal to end date!")
+                    self.instructions.config(text="Start date must be less than or equal to end date!")
                 else:
                     global sdate; sdate = stime
                     global edate; edate = etime
-                    thisframe.controller.show_frame(OptionsPage)
+                    self.controller.show_frame(OptionsPage)
 
             except:
-                thisframe.instructions.config(text="Check date formats and retry")
+                self.instructions.config(text="Check date formats and retry")
 
 
 # Page where emails for each territory are set
@@ -638,16 +628,14 @@ class FormatPage(tk.Frame):
         thisframe.boxes[i].grid()
         i += 1
 
-        # Select all button
-        thisframe.allbtn = tk.Button(thisframe, command=lambda:thisframe.select_all(), text="Select All", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.allbtn.grid(column=2, row=5, pady=15)
+        # Butttons
+        thisframe.all_btn = tk.Button(thisframe, command=lambda:thisframe.select_all(), text="Select All", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.all_btn.grid(column=2, row=5, pady=15)
         thisframe.all = False
 
-        # Finish button
-        thisframe.browse_text = tk.StringVar()
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=6, pady=5)
-        thisframe.browse_text.set("Finish")
+        thisframe.fin_btn = tk.Button(thisframe, command=lambda:thisframe.finish(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.fin_btn.grid(column=2, row=6, pady=5)
+        
 
     # Once user is done selecting options
     def finish(thisframe):
@@ -681,25 +669,21 @@ class TagsPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
-        # Instructions
+        # Instructions, Tags box, buttons
         thisframe.instructions = ttk.Label(thisframe, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        # Instructions2
         thisframe.instructions2 = ttk.Label(thisframe, text="Only include last 3 numbers (ex: F757 -> 757)", font=("Times", 15))
         thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        # Tags box
         thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
         thisframe.box.grid(column=2, row=3, pady=10)
 
-        # All tags button
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_all_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=4, pady=15)
+        thisframe.all_btn = tk.Button(thisframe, command=lambda:thisframe.set_all_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.all_btn.grid(column=2, row=4, pady=15)
 
-        # Finish button
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=5, pady=10)
+        thisframe.fin_btn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.fin_btn.grid(column=2, row=5, pady=10)
 
 
     # Lets the user add the tags
@@ -735,17 +719,13 @@ class ExcelPage(tk.Frame):
         PageLayout.__init__(thisframe, parent)
         thisframe.controller = controller
 
-        # Instructions
+        # Instructions and Make sheets button
         thisframe.instructions = ttk.Label(thisframe, text="Press button to make excel sheets with chosen options", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
-
-        # Start button -- command=lambda:nhi.summarize_data(states_hash, thisframe)
-        # thisframe.finish()
-        global state_df
-        thisframe.browse_text = tk.StringVar()
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.make_sheets(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=3, pady=40)
-        thisframe.browse_text.set("Make Sheets")
+    
+        thisframe.sheet_btn = tk.Button(thisframe, command=lambda:thisframe.make_sheets(), text="Make Sheets", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.sheet_btn.grid(column=2, row=3, pady=40)
+        
 
     # Uses threads to make excel sheets -> need to first break data up by territory
     def make_sheets(thisframe):

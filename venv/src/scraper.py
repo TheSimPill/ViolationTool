@@ -270,6 +270,7 @@ def scrape_facility(args):
                 # This handles rows that aren't actually incident rows
                 if date != None:
                     date = date.find("p").get_text()
+                    print(date)
                     date = str(datetime.strptime(date, '%b %d, %Y').strftime('%m/%d/%Y'))
 
 
