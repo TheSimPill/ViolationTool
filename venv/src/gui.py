@@ -654,42 +654,42 @@ class FormatPage(tk.Frame):
             for box in thisframe.boxes:
                 box.deselect()   
             thisframe.all = False
-            thisframe.allbtn.config(text="Select All")   
+            thisframe.all_btn.config(text="Select All")   
         else:         
             thisframe.options = {k: True for k, _ in thisframe.options.items()}
             for box in thisframe.boxes:
                 box.select()
             thisframe.all = True
-            thisframe.allbtn.config(text="Unselect All")   
+            thisframe.all_btn.config(text="Unselect All")   
 
 
 # Choose which tags to include
 class TagsPage(tk.Frame):
-    def __init__(thisframe, parent, controller):
-        PageLayout.__init__(thisframe, parent)
-        thisframe.controller = controller
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
 
         # Instructions, Tags box, buttons
-        thisframe.instructions = ttk.Label(thisframe, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        self.instructions = ttk.Label(self, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        thisframe.instructions2 = ttk.Label(thisframe, text="Only include last 3 numbers (ex: F757 -> 757)", font=("Times", 15))
-        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        self.instructions2 = ttk.Label(self, text="Only include last 3 numbers (ex: F757 -> 757)", font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
-        thisframe.box.grid(column=2, row=3, pady=10)
+        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=10)
+        self.box.grid(column=2, row=3, pady=10)
 
-        thisframe.all_btn = tk.Button(thisframe, command=lambda:thisframe.set_all_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.all_btn.grid(column=2, row=4, pady=15)
+        self.all_btn = tk.Button(self, command=lambda:self.set_all_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.all_btn.grid(column=2, row=4, pady=15)
 
-        thisframe.fin_btn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.fin_btn.grid(column=2, row=5, pady=10)
+        self.fin_btn = tk.Button(self, command=lambda:self.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.fin_btn.grid(column=2, row=5, pady=10)
 
 
     # Lets the user add the tags
-    def set_tags(thisframe):
+    def set_tags(self):
         notags = True
-        lines = thisframe.box.get("1.0","end-1c").splitlines()
+        lines = self.box.get("1.0","end-1c").splitlines()
         lines = [x.strip() for x in lines if x != '']
         if len(lines) != 0:
             # List to hold the tags
@@ -702,15 +702,15 @@ class TagsPage(tk.Frame):
                     notags = False
             
         if notags:
-            thisframe.instructions.config(text="Please enter at least one valid tag")
-            thisframe.instructions2.grid_forget()
+            self.instructions.config(text="Please enter at least one valid tag")
+            self.instructions2.grid_forget()
         else:
-            thisframe.controller.show_frame(OptionsPage)
+            self.controller.show_frame(OptionsPage)
     
     # For setting all tags
-    def set_all_tags(thisframe):
+    def set_all_tags(self):
         global chosen_tags; chosen_tags = list(spdf.tags.keys())
-        thisframe.controller.show_frame(OptionsPage)
+        self.controller.show_frame(OptionsPage)
 
 
 # Page where excel sheet is made

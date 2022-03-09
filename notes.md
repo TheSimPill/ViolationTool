@@ -117,3 +117,5 @@ CURRENT PROBLEM:
 
 CURRENT PROBLEM:
     Also want to see if how I save pages is giving none type errors. GOnna try changing bs(xxx, parser) to bs(xxx)
+
+Found a bug when I convert severities, fixed it

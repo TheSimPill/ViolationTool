@@ -300,6 +300,8 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # Change state_df's indicies back to numbers for now
     state_df = state_df.reset_index()
 
+    # Setting defaults for missing user choices
+
     # Get years in range that user chose, or set a default range
     if None in {startdate, enddate}:
        startdate = datetime.strptime("01/01/2017", '%m/%d/%Y')
@@ -307,18 +309,19 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
        enddate = datetime.strptime(enddate, '%m/%d/%Y')
        #enddate = datetime.strptime("12/31/2021", '%m/%d/%Y')
 
-    years = list(range(startdate.year, enddate.year+1))
-    dfs = {}
-    choices = 0
-
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
         tags = list(spdf.tags.keys())
     
-    # Convert states to their two letter code
+    # Check to see if territories were chosen and use default if not
     if len(territories) == 0:
         territories = info.territories
+    # Convert states to their two letter code
     territories = convert_states(territories)
+
+    years = list(range(startdate.year, enddate.year+1))
+    dfs = {}
+    choices = 0
 
     # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
     t_dfs = sort_by_territories(state_df, territories)
@@ -357,11 +360,9 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
                 # Initialize indicies
                 dfs["US"].loc["Fines"] = [0] * (len(dfs["US"].columns))
-
-                # Turn all values in fine column to numbers
-                oldcol = state_df["Date"]
-
+                
                 # Conversion to date time objects for comparison
+                oldcol = state_df["Date"]
                 state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
 
                 # Total sum
@@ -567,11 +568,13 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             # Makes the sheets more organized
             t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
             t_dfs[terr].to_excel(writer, sheet_name=terr)
+
         # Excel sheet for each set of options
         for dfname in dfs.keys():
             if not dfs[dfname].empty:
                 dfs[dfname].to_excel(writer, sheet_name=dfname)
                 start_row += len(dfs[dfname])
+
         # Excel sheet for description of tags and severities
         items1 = list(spdf.tags.items())
         items2 = list(info.severities.items())
@@ -675,7 +678,7 @@ def get_most_severe(df, num):
         # Convert the severity column to numeric and sum it
         def convert(x):
             sum = 0
-            lst = x.strip('][').replace("'", "").split(", ") 
+            lst = x.strip('][').replace("'", "").split(",") 
             for severity in lst:
                 sum += info.severity_ranks[severity]
 
