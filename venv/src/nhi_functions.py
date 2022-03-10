@@ -129,11 +129,17 @@ def parse_data(frame, save_path):
 def get_proxy(params):
     url = "https://api.webscrapingapi.com/v1"
     while True:
+        # Random time interval to break up requests
+        time.sleep(random.random() * random.randrange(1, 10))
         try:
             page = requests.request("GET", url, params=params, timeout=9)
+            if page.status_code != 200:
+                print(page.status_code)
+                raise Exception()
         except:
             print("Connection to " + params["url"] + " failed, retrying with new proxy")
-            params["session"] = random.randint(9000, 8000000)
+            print(params["session"])
+            params["session"] = random.randint(1, 384179329732178238179)
         else:
             return (page, params)
 
@@ -343,7 +349,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     dfs["Most Severe"] = pd.DataFrame()
     dfs["State Fines"] = pd.DataFrame(columns=(["Total"] + years))
     dfs["State Violations"] = pd.DataFrame(columns=(["Total"] + years))
-    dfs["Master"] = pd.DataFrame()
+    dfs["All Territories"] = pd.DataFrame()
     dfs["All"] = pd.DataFrame()
 
     # Convert fine column to numeric
@@ -538,20 +544,20 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 combined = pd.DataFrame()
                 for terr in tdfs.keys():
                     combined = pd.concat([combined, tdfs[terr]])
-                dfs["Master"] = combined.reset_index()
+                dfs["All Territories"] = combined.reset_index()
 
                 # Set indicies properly
-                dfs["Master"] = dfs["Master"].drop(["index"], axis=1)
-                dfs["Master"] = dfs["Master"].set_index(["Territory", "State", "Organization", "Date"])
+                dfs["All Territories"] = dfs["All Territories"].drop(["index"], axis=1)
+                dfs["All Territories"] = dfs["All Territories"].set_index(["Territory", "State", "Organization", "Date"])
 
                 # Set fine column as currency
-                dfs["Master"]["Fine"] = dfs["Master"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
-                dfs["Master"]["Fine"] = pd.to_numeric(dfs["Master"]["Fine"], errors="coerce")
-                dfs["Master"]["Fine"] =  dfs["Master"]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
+                dfs["All Territories"]["Fine"] = dfs["All Territories"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
+                dfs["All Territories"]["Fine"] = pd.to_numeric(dfs["All Territories"]["Fine"], errors="coerce")
+                dfs["All Territories"]["Fine"] =  dfs["All Territories"]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
 
             elif option == "All Violations" and options[option]:
-                dfs["All"] = state_df.drop(["Territory"], axis=1).set_index(["State", "Organization", "Date"])
+                dfs["All"] = state_df.set_index(["State", "Organization", "Date"])
 
                 # Set fine column as currency
                 dfs["All"]["Fine"] = dfs["All"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)

@@ -80,7 +80,7 @@ class tkinterApp(tk.Tk):
             self.frames[F] = frame
             frame.grid(row = 0, column = 0, sticky ="nsew")
   
-        self.show_frame(StartPage)
+        self.show_frame(WebscrapingChoicePage)
   
     # to display the current frame passed as
     # parameter
@@ -212,11 +212,13 @@ class WebscrapingChoicePage(tk.Frame):
     def fresh_scrape(self):
         global filepath, savepath
         
-        savepath = "//Users//Freddie//Impruvon//guiwebscraperproject//venv//src//pages"
+        #savepath = "//Users//Freddie//Impruvon//guiwebscraperproject//venv//src//pages"
+        savepath = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\rawdata\pages"
         ''' Doesnt work on mac rn
         savepath = filepath + "/pages"
+        '''
         if not exists(savepath):
-            os.mkdir(savepath)'''
+            os.mkdir(savepath)
         
         self.controller.show_frame(KeyPage)
 
@@ -268,7 +270,11 @@ class WebscrapingPage(tk.Frame):
         # MAC
         #with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
         #   state_df = pickle.load(inp)
-        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+        #with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+         #   state_df = pickle.load(inp)
+
+        # For real run
+        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\rawdata\dataframes\state_df.pkl", 'rb') as inp:
             state_df = pickle.load(inp)
 
         class thread(threading.Thread):
@@ -432,6 +438,11 @@ class TerritoriesPage(tk.Frame):
         if self.count == 0:
             self.instructions.config(text="Enter states in {} territory, each on their own line".format(self.tlist[0]))
             self.nextbtn.config(command=lambda:self.add_states())
+
+            # If there's only one territory
+            if len(self.tlist) == 1:
+                self.nextbtn.config(text="Finish")
+
         elif self.count > 0:
             # Grab states from box
             states = self.box.get("1.0","end-1c").splitlines()

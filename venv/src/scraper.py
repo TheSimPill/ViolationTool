@@ -23,7 +23,7 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
     global curframe; curframe = frame
 
     # Hide elements from previous screen
-    frame.dl_btn.grid_forget()
+    frame.start_btn.grid_forget()
     frame.instructions.config(text="Starting scrape")
     frame.instructions2.grid_forget()
     curframe.instructions2 = Label(curframe, text="", font=("Times", 9))
@@ -57,7 +57,7 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
                 soup = bs(page.content, 'html.parser')
             else:
                 html = sl.load_obj(dir + "/all_states_fines.html")
-                soup = bs(html, "lxml")
+                soup = bs(html, "html.parser")
                 
             # Grab parts of each row that contains the url to each state's page
             rows = soup.find(id="data").find("tbody").find_all("a")
@@ -196,36 +196,37 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
         
 # Gets links from a specific states page for facilities that have fines
 def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
-    try:
-        if (not reparse and not exists(dir + "/" + cur_state + "-html.html")) or reparse:
-            response = get_proxy(state_params)
-            state_page = response[0]
-            state_params = response[1]
-            sl.save_obj(state_page.content, dir + "/" + cur_state + "-html.html")
-            page_soup = bs(state_page.content, "html.parser")
-        else:
-            state_page = sl.load_obj(dir + "/" + cur_state + "-html.html")
-            page_soup = bs(state_page, "lxml")
+    while True:
+        try:
+            if (not reparse and not exists(dir + "/" + cur_state + "-html.html")) or reparse:
+                response = get_proxy(state_params)
+                state_page = response[0]
+                state_params = response[1]
+                sl.save_obj(state_page.content, dir + "/" + cur_state + "-html.html")
+                page_soup = bs(state_page.content, "html.parser")
+            else:
+                state_page = sl.load_obj(dir + "/" + cur_state + "-html.html")
+                page_soup = bs(state_page, "html.parser")
 
-        home_urls = []
-        # Gets list of all homes on a page
-        rows = page_soup.find(id="data").find("tbody").find_all("tr")
-        for col in rows: 
-            # Only grab relevant homes
-            name = col.find("a").contents[0].upper()
-            if name in facilities:    
-                home_url = col.find("a")["href"]
-                home_urls.append("https://projects.propublica.org" + home_url)
+            home_urls = []
+            # Gets list of all homes on a page
+            rows = page_soup.find(id="data").find("tbody").find_all("tr")
+            for col in rows: 
+                # Only grab relevant homes
+                name = col.find("a").contents[0].upper()
+                if name in facilities:    
+                    home_url = col.find("a")["href"]
+                    home_urls.append("https://projects.propublica.org" + home_url)
 
-        return home_urls
-    
-    # If parsing a state page fails for some reason
-    except AttributeError as e:
-        print("Caught Exception at state page!" + str(e) + "---------------------------------------")
-    
-        # Generate a new session and reparse
-        state_params["session"] = random.randint(100, 10000000)
-        reparse = True
+            return home_urls
+        
+        # If parsing a state page fails for some reason
+        except AttributeError as e:
+            print("Caught Exception at state page!" + str(e) + "---------------------------------------")
+        
+            # Generate a new session and reparse
+            state_params["session"] = random.randint(100, 10000000)
+            reparse = True
     
 # Scrapes a specific facilities page for relevant fines.
 def scrape_facility(args):
@@ -253,7 +254,7 @@ def scrape_facility(args):
             home_soup = bs(home_page.content, "html.parser")
         else:
             home_page = sl.load_obj(dir + "/" + state + str(facilitynumber) + "-page.html")
-            home_soup = bs(home_page, "lxml")
+            home_soup = bs(home_page, "html.parser")
             
         try:
             # Scrape a specific home's fines
@@ -270,7 +271,6 @@ def scrape_facility(args):
                 # This handles rows that aren't actually incident rows
                 if date != None:
                     date = date.find("p").get_text()
-                    print(date)
                     date = str(datetime.strptime(date, '%b %d, %Y').strftime('%m/%d/%Y'))
 
 
@@ -285,6 +285,10 @@ def scrape_facility(args):
                         fine = fine_incident.find("span", class_="nd-left nd-entry fine-label")     
                         lst = fine.get_text().strip().split("\n")
                         fine = re.search(".+Fine$", lst[0])
+
+                        if facility == 'apache junction hlth center':
+                            print(facility.upper(), fine, incident_url, date)
+                            time.sleep(3)
                         if not fine is None:
                             fine = fine.group()
 
@@ -309,6 +313,7 @@ def scrape_facility(args):
 
         except AttributeError as e:
             print("Caught Exception!" + str(e) + "---------------------------------------")
+            print("Params: ", state_params)
             print("Session failed: " + str(state_params["session"]))
             time.sleep(1.5)
             retries += 1

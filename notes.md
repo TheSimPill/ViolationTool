@@ -116,7 +116,12 @@ CURRENT PROBLEM:
     when I isolate it though.
 
 CURRENT PROBLEM:
+    I'm going to save the page.content and try loading it and parsing with xml and html parsers and look for dif.
     Also want to see if how I save pages is giving none type errors. GOnna try changing bs(xxx, parser) to bs(xxx)
 
 Found a bug when I convert severities, fixed it
 KeyError: "['Territory'] not found in axis" for df["All"]
+
+
+Trying to make webscraping not get stuck
+
