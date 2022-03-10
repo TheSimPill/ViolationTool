@@ -125,3 +125,11 @@ KeyError: "['Territory'] not found in axis" for df["All"]
 
 Trying to make webscraping not get stuck
 
+
+
+
+Don't see any difference when I load pages with missing urls or even when I use html and xml parsers. So i think it's 
+a problem with multithreading or loading pages. 
+
+Going to start working on a static version for justin. I'll make the emails part work and then branch off for static app. 
+
