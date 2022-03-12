@@ -80,7 +80,7 @@ class tkinterApp(tk.Tk):
             self.frames[F] = frame
             frame.grid(row = 0, column = 0, sticky ="nsew")
   
-        self.show_frame(WebscrapingChoicePage)
+        self.show_frame(StartPage)
   
     # to display the current frame passed as
     # parameter
@@ -350,25 +350,22 @@ class OptionsPage(tk.Frame):
 
         # Instructions, Buttons for options
         self.instructions = ttk.Label(self, text="Choose your options", font=("Times", 15))
-        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=15)
 
         self.terr_btn = tk.Button(self, command=lambda:controller.show_frame(TerritoriesPage), text="Set Territories", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.terr_btn.grid(column=2, row=2, pady=10)
+        self.terr_btn.grid(column=2, row=2, pady=15)
 
         self.date_btn = tk.Button(self, command=lambda:self.show_daterange(), text="Set Date Range", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.date_btn.grid(column=2, row=3, pady=10)
-  
-        self.email_btn = tk.Button(self, command=lambda:controller.show_frame(EmailsPage), text="Set Emails For Territories/States", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.email_btn.grid(column=2, row=4, pady=10)
+        self.date_btn.grid(column=2, row=3, pady=15)
 
         self.excel_btn = tk.Button(self, command=lambda:self.show_format(), text="Format Excel Data", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.excel_btn.grid(column=2, row=5, pady=10)
+        self.excel_btn.grid(column=2, row=4, pady=15)
 
         self.tag_btn = tk.Button(self, command=lambda:controller.show_frame(TagsPage), text="Choose Tags to Include", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.tag_btn.grid(column=2, row=6, pady=10)
+        self.tag_btn.grid(column=2, row=5, pady=15)
 
-        self.make_btn = tk.Button(self, command=lambda:self.show_excel(), text="Make Excel Files and Send Emails ->", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.make_btn.grid(column=2, row=7, pady=10)
+        self.make_btn = tk.Button(self, command=lambda:self.show_excel(), text="Make Excel Files and Set/Send Emails ->", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.make_btn.grid(column=2, row=6, pady=15)
 
 
     def show_daterange(self):
@@ -524,61 +521,65 @@ class DateRangePage(tk.Frame):
 
 # Page where emails for each territory are set
 class EmailsPage(tk.Frame):
-    def __init__(thisframe, parent, controller):
-        PageLayout.__init__(thisframe, parent)
-        thisframe.controller = controller
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
 
-        # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Enter emails (each on their own line) for the east territory", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
-
-        # Instructions2
-        thisframe.instructions2 = ttk.Label(thisframe, text="Please make sure the emails are typed correctly and valid", font=("Times", 15))
-        thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
-
-        # Instructions3
-        thisframe.instructions3 = ttk.Label(thisframe, text="Ex: justin@aol.com\n      ethan@gmail.com\n      ...", font=("Times", 15))
-        thisframe.instructions3.grid(column=1, row=4, columnspan=3, pady=10)
-
-        # Email box
-        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
-        thisframe.box.grid(column=2, row=5, pady=10)
-
-        # Next territory button
-        thisframe.browse_text = tk.StringVar()
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.advance_screen(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=6, pady=40)
-        thisframe.browse_text.set("Next Territory")
-
-        # To represent what territory is being set
-        thisframe.curter = "E"
-
-    # Advance to next territory
-    def advance_screen(thisframe):
+        # Will be used to iterate through territories
+        global territories
+        self.terr_names = list(territories.keys())
         
-        if thisframe.curter == "E":
-            global eemails; eemails = thisframe.box.get("1.0","end-1c").splitlines()
-            thisframe.curter = "C"
-            thisframe.instructions.config(text="Enter emails (each on their own line) for the central territory")
+        self.terr_emails = {}
 
+        # Instructions, Email box, Next/Finish button
+        self.instructions = ttk.Label(self, text="Enter emails (each on their own line) for the {} territory".format(self.terr_names[0]), font=("Times", 15))
+        self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        self.instructions2 = ttk.Label(self, text="Please make sure the emails are typed correctly and valid", font=("Times", 15))
+        self.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
+
+        self.instructions3 = ttk.Label(self, text="Ex: justin@aol.com\n      ethan@gmail.com\n      ...", font=("Times", 15))
+        self.instructions3.grid(column=1, row=4, columnspan=3, pady=10)
+
+        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=5)
+        self.box.grid(column=2, row=5, pady=10)
+        
+        # What the button will say to start
+        if len(self.terr_names) == 1:
+            textfield = "Send Emails"
         else:
-            global cemails; cemails = thisframe.box.get("1.0","end-1c").splitlines()
-            thisframe.curter = "W"
-            thisframe.instructions.config(text="Enter emails (each on their own line) for the west territory")
+            textfield = "Next Territory"
 
-            # Change button and command
-            thisframe.browse_text = tk.StringVar()
-            thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-            thisframe.nextbtn.grid(column=2, row=6, pady=40)
-            thisframe.browse_text.set("Finish")
+        self.nextbtn = tk.Button(self, command=lambda:self.add_emails(), text=textfield, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.nextbtn.grid(column=2, row=6, pady=40)
         
-        # Reset Email box
-        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=5)
-        thisframe.box.grid(column=2, row=5, pady=10)
+        # For counting which territory we're on
+        self.count = 1
+        
+     # Lets the user add states
+    def add_emails(self):
+            
+        if self.count > 0:
+            # Grab states from box
+            emails = self.box.get("1.0","end-1c").splitlines()
+            emails = [x.strip() for x in emails if x != '']
+            # Update territory email hash
+            terr = self.terr_names[self.count-1]
+            self.terr_emails[terr] = emails
+            # Update screen
+            if self.count < len(self.tlist):
+                terr = self.tlist[self.count]
+                self.instructions.config(text="Enter emails (each on their own line) for the {} territory".format(terr))
+            # Updates the button
+            if self.count == len(self.tlist) - 1:
+                self.nextbtn.config(text="Send Emails")
+            # Last screen
+            elif self.count == len(self.tlist):
+                self.controller.show_frame(OptionsPage)
 
-    def finish(thisframe):
-        global wemails; wemails = thisframe.box.get("1.0","end-1c").splitlines()
-        thisframe.controller.show_frame(OptionsPage)
+        # Clear the box
+        self.box.delete("1.0", "end")
+        self.count += 1
 
 
 # Format excel sheets

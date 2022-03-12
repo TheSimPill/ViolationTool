@@ -133,3 +133,12 @@ a problem with multithreading or loading pages.
 
 Going to start working on a static version for justin. I'll make the emails part work and then branch off for static app. 
 
+Going to make emails only send the territory sheets.
+
+Format of send_emails:
+
+    will change make_excel to make one whole workbook per territory.
+    Will send the names of these work books along with the hash that contains
+    emails per territory over to send_emails. I will then iterate through that
+    hash and send an excel sheet for a territory for every corresponding email in that territory.
+

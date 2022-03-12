@@ -280,24 +280,20 @@ def format_top_fines_html(state, state_incidents_list, num_orgs, num_vios) -> St
     return (msg, descriptions)
           
 # Send Email - just a test for now
-def send_emails(states):
+def send_emails():
     msg = EmailMessage()
     msg['Subject'] = "BD DATA"
-    msg['From'] = "freedalmond@gmail.com"  
-    msg['To'] = "freedalmond@gmail.com"
-    #info = format_top_fines_emails(states["MD"], 3, 2)
-    #msg.set_content(info[0])
-    info = format_top_fines_html("MD", states["MD"], 3, 2)
-    msg.set_content(info[0], subtype="html")
+    msg['From'] = "freddie.almond@impruvonhealth.com"  
+    msg['To'] = "freddie.almond@impruvonhealth.com"
 
-    for filename in info[1]:
+
+    for filename in os.listdir("C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\sheets"):
         with open(filename, 'rb') as file:
             msg.add_attachment(file.read(), maintype='application', subtype='octet-stream', filename=file.name)
 
-
     password = getpass.getpass(prompt='Password: ', stream=None) 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login("freedalmond@gmail.com", password)
+        server.login("freddie.almond@impruvonhealth.com", password)
         server.send_message(msg)
     
 # Makes the excel sheets based on options chosen by the user 
