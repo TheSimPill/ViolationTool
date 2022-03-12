@@ -1,5 +1,7 @@
 # Notes
 
+In may 2022, will have to look into a new way to sign into an email 
+
 FEATURES TO ADD:
     
 
@@ -141,4 +143,11 @@ Format of send_emails:
     Will send the names of these work books along with the hash that contains
     emails per territory over to send_emails. I will then iterate through that
     hash and send an excel sheet for a territory for every corresponding email in that territory.
+
+
+Working on static page
+
+For stack overflow:
+I'm writing a program that will send multiple different emails to multiple addresses. However, I see that Google is changing its policy on letting third-party apps log in to a Gmail account soon. I'm worried that this will make my program useless at that point, so I'm wondering if there are any email service providers that are easy to connect to with python. 
+
 

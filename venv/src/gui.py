@@ -70,7 +70,7 @@ class tkinterApp(tk.Tk):
         # initializing frames to an empty dict so that we can access pages by their name
         self.frames = {} 
   
-        self.add_frames([StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
+        self.add_frames([StartPage, StaticStartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
                   OptionsPage, NoPathPage, TerritoriesPage, DateRangePage,\
                   FormatPage, TagsPage, ExcelPage, TestPage, KeyPage])
 
@@ -137,6 +137,43 @@ class StartPage(tk.Frame):
     def show_options(self):
         global nopath; nopath = True
         self.controller.show_frame(NoPathPage)
+
+# Startpage
+class StaticStartPage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
+            
+        # Instructions and Download button
+        self.instructions = ttk.Label(self, text="Welcome! PR", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Browse", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn.grid(column=2, row=3, pady=10)
+
+    def choose_path(self):
+        global savepath, state_df
+        self.controller.resize_optionspage()
+        self.controller.show_frame(OptionsPage)
+        '''
+        while True:
+            savepath = askdirectory()
+            # Checks to see if user gave us path with hash we need, otherwise let them retry
+            if exists(savepath + "/states_hash.pkl"):
+                with open(savepath + "/states_hash.pkl", 'rb') as inp:
+                    states_hash = pickle.load(inp)
+
+                self.controller.resize()
+                self.controller.update_idletasks()
+                self.controller.show_frame(OptionsPage)
+                break
+
+            else:
+                self.instructions.config(text="Folder chosen doesn't contain states_hash.pkl, try again")
+                self.controller.update_idletasks()
+                time.sleep(3)
+
+        '''
 
 
 # Download page
@@ -777,7 +814,8 @@ class EmailsPage(tk.Frame):
             # Last screen
             elif self.count == len(self.terr_names):
                 self.controller.show_frame(OptionsPage)
-                print("Emails sent")
+                print(self.terr_emails)
+                nhi.send_emails(self, self.terr_emails)
 
         # Clear the box
         self.box.delete("1.0", "end")

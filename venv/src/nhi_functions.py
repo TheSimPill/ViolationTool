@@ -279,22 +279,29 @@ def format_top_fines_html(state, state_incidents_list, num_orgs, num_vios) -> St
     msg += "</ol></div></body></html>"
     return (msg, descriptions)
           
-# Send Email - just a test for now
-def send_emails():
-    msg = EmailMessage()
-    msg['Subject'] = "BD DATA"
-    msg['From'] = "freddie.almond@impruvonhealth.com"  
-    msg['To'] = "freddie.almond@impruvonhealth.com"
+# Send Emails to BD Team
+def send_emails(frame, emails):
 
-
-    for filename in os.listdir(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\sheets"):
-        with open(filename, 'rb') as file:
-            msg.add_attachment(file.read(), maintype='application', subtype='octet-stream', filename=file.name)
-
+    # Start the server and get the password
+    path = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\sheets" 
     password = getpass.getpass(prompt='Password: ', stream=None) 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login("freddie.almond@impruvonhealth.com", password)
-        server.send_message(msg)
+        server.login("freedalmond@gmail.com", password)
+
+        # Will make an email for each territory
+        for territory in emails.keys():
+            msg = EmailMessage()
+            msg['Subject'] = "BD DATA"
+            msg['From'] = "freedalmond@gmail.com"  
+            msg['To'] = ", ".join(emails[territory])
+
+            with open(path + "\\" + territory + ".xlsx", 'rb') as file:
+                msg.add_attachment(file.read(), maintype='application', subtype='octet-stream', filename=territory)
+            
+            server.send_message(msg)
+    
+    print("Sent")
+
     
 # Makes the excel sheets based on options chosen by the user 
 def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories, tags):
