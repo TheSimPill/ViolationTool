@@ -565,13 +565,15 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # --- Write to an excel --- #
 
     # Excel workbook for each territory
+    '''
     for terr in t_dfs.keys():
         # Makes the sheets more organized
         t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
         t_dfs[terr].to_excel(terr + ".xlsx", sheet_name=terr)
+        '''
 
     start_row = 1
-    with pd.ExcelWriter('output.xlsx') as writer:
+    with pd.ExcelWriter('OptionalData.xlsx') as writer:
 
         # Excel sheet for each set of options
         for dfname in dfs.keys():
@@ -588,7 +590,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
         df2.to_excel(writer, sheet_name="Descriptions", startrow=len(df1.index)+5, startcol=0)
 
         writer.save()
-        frame.finish()
+        frame.finish(territories)
     
 # Converts states from full name into their two letter code
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:

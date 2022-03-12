@@ -61,25 +61,19 @@ class tkinterApp(tk.Tk):
         self.geometry("500x300")
          
         # creating a container
-        container = tk.Frame(self) 
-        container.pack(side = "top", fill = "both", expand = True)
+        self.container = tk.Frame(self) 
+        self.container.pack(side = "top", fill = "both", expand = True)
   
-        container.grid_rowconfigure(0, weight = 1)
-        container.grid_columnconfigure(0, weight = 1)
+        self.container.grid_rowconfigure(0, weight = 1)
+        self.container.grid_columnconfigure(0, weight = 1)
   
-        # initializing frames to an empty array
+        # initializing frames to an empty dict so that we can access pages by their name
         self.frames = {} 
   
-        # iterating through a tuple consisting
-        # of the different page layouts
-        for F in (StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
-                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage, EmailsPage,\
-                  FormatPage, TagsPage, ExcelPage, SendEmailsPage, TestPage, KeyPage):
-  
-            frame = F(container, self)
-            self.frames[F] = frame
-            frame.grid(row = 0, column = 0, sticky ="nsew")
-  
+        self.add_frames([StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
+                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage,\
+                  FormatPage, TagsPage, ExcelPage, TestPage, KeyPage])
+
         self.show_frame(StartPage)
   
     # to display the current frame passed as
@@ -87,6 +81,13 @@ class tkinterApp(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()        
+
+    # Add a frame to the dict of pages 
+    def add_frames(self, frames):
+        for F in frames:
+            frame = F(self.container, self)
+            self.frames[F] = frame
+            frame.grid(row = 0, column = 0, sticky ="nsew")
 
     # Set back to start size
     def dresize(self):
@@ -519,73 +520,6 @@ class DateRangePage(tk.Frame):
                 self.instructions.config(text="Check date formats and retry")
 
 
-# Page where emails for each territory are set
-class EmailsPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
-
-        # Will be used to iterate through territories
-        global territories
-        self.terr_names = list(territories.keys())
-        
-        self.terr_emails = {}
-
-        # Instructions, Email box, Next/Finish button
-        self.instructions = ttk.Label(self, text="", font=("Times", 15))
-        self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
-
-        self.instructions2 = ttk.Label(self, text="Please make sure the emails are typed correctly and valid", font=("Times", 15))
-        self.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
-
-        self.instructions3 = ttk.Label(self, text="Ex: justin@aol.com\n      ethan@gmail.com\n      ...", font=("Times", 15))
-        self.instructions3.grid(column=1, row=4, columnspan=3, pady=10)
-
-        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=5)
-        self.box.grid(column=2, row=5, pady=10)
-        
-        # What the button will say to start
-        if len(self.terr_names) == 1:
-            textfield = "Send Emails"
-        else:
-            textfield = "Next Territory"
-
-        self.nextbtn = tk.Button(self, command=lambda:self.add_emails(), text=textfield, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.nextbtn.grid(column=2, row=6, pady=40)
-        
-        # For counting which territory we're on
-        self.count = 1
-        
-     # Lets the user add states
-    def add_emails(self):
-            
-        if self.count > 0:
-            # Grab states from box
-            emails = self.box.get("1.0","end-1c").splitlines()
-            emails = [x.strip() for x in emails if x != '']
-            # Update territory email hash
-            terr = self.terr_names[self.count-1]
-            self.terr_emails[terr] = emails
-            # Update screen
-            if self.count < len(self.tlist):
-                terr = self.tlist[self.count]
-                self.instructions.config(text="Enter emails (each on their own line) for the {} territory".format(terr))
-            # Updates the button
-            if self.count == len(self.tlist) - 1:
-                self.nextbtn.config(text="Send Emails")
-            # Last screen
-            elif self.count == len(self.tlist):
-                self.controller.show_frame(OptionsPage)
-
-        # Clear the box
-        self.box.delete("1.0", "end")
-        self.count += 1
-
-    # Called by options page in order to set the instructions
-    def init_page(self):
-        self.instructions.config(text="Enter emails (each on their own line) for the {} territory".format(self.terr_names[0]))
-
-
 # Format excel sheets
 class FormatPage(tk.Frame):
     def __init__(thisframe, parent, controller):
@@ -773,38 +707,81 @@ class ExcelPage(tk.Frame):
 
                 self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags)
 
-        #thread(nhi.make_sheets).start()
-        thisframe.finish()
+        thread(nhi.make_sheets).start()
 
     # Once sheet is made
-    def finish(thisframe):
+    def finish(thisframe, terrs):
+        # This line is in case the user never set territories but called to make sheets
+        global territories; territories = terrs
+
         time.sleep(1.5)
         thisframe.controller.resize_optionspage()
-        EmailsPage.init_page()
+        thisframe.controller.add_frames([EmailsPage])
         thisframe.controller.show_frame(EmailsPage)
 
 
-# Page where emails are sent
-class SendEmailsPage(tk.Frame):
-    def __init__(thisframe, parent, controller):
-        PageLayout.__init__(thisframe, parent)
-        thisframe.controller = controller
+# Page where emails for each territory are set
+class EmailsPage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
 
-        # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Press button to send emails", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
-
-        # Send button
-        thisframe.browse_text = tk.StringVar()
-        thisframe.nextbtn = tk.Button(thisframe, command=lambda:thisframe.finish(), textvariable=thisframe.browse_text, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.nextbtn.grid(column=2, row=3, pady=40)
-        thisframe.browse_text.set("Send Emails")
+        # Will be used to iterate through territories
+        global territories
+        self.terr_names = list(territories.keys())
         
+        self.terr_emails = {}
 
-        # After emails are sent
-    def finish(thisframe):
-        thisframe.instructions.config(text="Emails Sent")
-        thisframe.nextbtn.grid_forget()
+        # Instructions, Email box, Next/Finish button
+        self.instructions = ttk.Label(self, text="Enter emails (each on their own line) for the {} territory".format(self.terr_names[0]), font=("Times", 15))
+        self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        self.instructions2 = ttk.Label(self, text="Please make sure the emails are typed correctly and valid", font=("Times", 15))
+        self.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
+
+        self.instructions3 = ttk.Label(self, text="Ex: justin@aol.com\n      ethan@gmail.com\n      ...", font=("Times", 15))
+        self.instructions3.grid(column=1, row=4, columnspan=3, pady=10)
+
+        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=5)
+        self.box.grid(column=2, row=5, pady=10)
+        
+        # What the button will say to start
+        if len(self.terr_names) == 1:
+            textfield = "Send Emails"
+        else:
+            textfield = "Next Territory"
+
+        self.nextbtn = tk.Button(self, command=lambda:self.add_emails(), text=textfield, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.nextbtn.grid(column=2, row=6, pady=40)
+        
+        # For counting which territory we're on
+        self.count = 1
+        
+     # Lets the user add states
+    def add_emails(self):
+            
+        if self.count > 0:
+            # Grab states from box
+            emails = self.box.get("1.0","end-1c").splitlines()
+            emails = [x.strip() for x in emails if x != '']
+            # Update territory email hash
+            terr = self.terr_names[self.count-1]
+            self.terr_emails[terr] = emails
+            # Update screen
+            if self.count < len(self.terr_names):
+                terr = self.terr_names[self.count]
+                self.instructions.config(text="Enter emails (each on their own line) for the {} territory".format(terr))
+            # Updates the button
+            if self.count == len(self.terr_names) - 1:
+                self.nextbtn.config(text="Send Emails")
+            # Last screen
+            elif self.count == len(self.terr_names):
+                self.controller.show_frame(OptionsPage)
+                print("Emails sent")
+
+        # Clear the box
+        self.box.delete("1.0", "end")
+        self.count += 1
 
 
 class TestPage(tk.Frame):
