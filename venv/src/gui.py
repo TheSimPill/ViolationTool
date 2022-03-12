@@ -532,7 +532,7 @@ class EmailsPage(tk.Frame):
         self.terr_emails = {}
 
         # Instructions, Email box, Next/Finish button
-        self.instructions = ttk.Label(self, text="Enter emails (each on their own line) for the {} territory".format(self.terr_names[0]), font=("Times", 15))
+        self.instructions = ttk.Label(self, text="", font=("Times", 15))
         self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
 
         self.instructions2 = ttk.Label(self, text="Please make sure the emails are typed correctly and valid", font=("Times", 15))
@@ -580,6 +580,10 @@ class EmailsPage(tk.Frame):
         # Clear the box
         self.box.delete("1.0", "end")
         self.count += 1
+
+    # Called by options page in order to set the instructions
+    def init_page(self):
+        self.instructions.config(text="Enter emails (each on their own line) for the {} territory".format(self.terr_names[0]))
 
 
 # Format excel sheets
@@ -769,12 +773,15 @@ class ExcelPage(tk.Frame):
 
                 self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags)
 
-        thread(nhi.make_sheets).start()
+        #thread(nhi.make_sheets).start()
+        thisframe.finish()
 
     # Once sheet is made
     def finish(thisframe):
         time.sleep(1.5)
-        thisframe.controller.show_frame(SendEmailsPage)
+        thisframe.controller.resize_optionspage()
+        EmailsPage.init_page()
+        thisframe.controller.show_frame(EmailsPage)
 
 
 # Page where emails are sent

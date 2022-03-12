@@ -287,7 +287,7 @@ def send_emails():
     msg['To'] = "freddie.almond@impruvonhealth.com"
 
 
-    for filename in os.listdir("C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\sheets"):
+    for filename in os.listdir(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\sheets"):
         with open(filename, 'rb') as file:
             msg.add_attachment(file.read(), maintype='application', subtype='octet-stream', filename=file.name)
 
@@ -562,14 +562,16 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 dfs["All"]["Fine"] =   dfs["All"]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
 
-    # Write to an excel
+    # --- Write to an excel --- #
+
+    # Excel workbook for each territory
+    for terr in t_dfs.keys():
+        # Makes the sheets more organized
+        t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
+        t_dfs[terr].to_excel(terr + ".xlsx", sheet_name=terr)
+
     start_row = 1
     with pd.ExcelWriter('output.xlsx') as writer:
-        # Excel sheet for each territory
-        for terr in t_dfs.keys():
-            # Makes the sheets more organized
-            t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
-            t_dfs[terr].to_excel(writer, sheet_name=terr)
 
         # Excel sheet for each set of options
         for dfname in dfs.keys():
