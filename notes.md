@@ -151,3 +151,12 @@ For stack overflow:
 I'm writing a program that will send multiple different emails to multiple addresses. However, I see that Google is changing its policy on letting third-party apps log in to a Gmail account soon. I'm worried that this will make my program useless at that point, so I'm wondering if there are any email service providers that are easy to connect to with python. 
 
 
+Scrape got all urls, state_df is up to date
+
+Missing data for 17 rows total, 3 orgs:
+    GUAM MEMORIAL HOSPITAL AUTHORITY
+    ADMIRAL’S POINTE CARE CENTER
+    ARK HEALTHCARE & REHABILITATION AT GOVERNOR’S
+
+The apostrophe throws off the html so the name on the website is not the same as in the excel sheets.
+Guam memorial doesn't have data on website at all.

@@ -3,6 +3,7 @@
 from tabula import read_pdf
 import pandas as pd
 import collections
+import pickle
 
 # Grab the pdf as a list of dfs
 df = read_pdf('ftags.pdf', pages='all')
@@ -33,6 +34,9 @@ parse_rows(1, 13, 4, 2, page2)
 
 # Now have a hash where key is string of tag with 0 in front and value is the description
 tags = collections.OrderedDict(sorted(tags.items()))
+
+with open("tags_df.pkl", 'wb') as outp:
+    pickle.dump(tags, outp, pickle.HIGHEST_PROTOCOL)
 
 
 
