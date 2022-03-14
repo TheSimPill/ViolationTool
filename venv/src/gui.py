@@ -15,7 +15,10 @@ if OS == "Darwin":
     import info as info
     import nhi_functions as nhi
     import scraper as scraper
-    from strip_pdf import tags
+    
+    with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/tag_hash.pkl", 'rb') as inp:
+        tag_hash = pickle.load(inp)
+
 elif OS == "Windows":
     # Windows
     import src.nhi_functions as nhi
@@ -468,6 +471,7 @@ class TerritoriesPage(tk.Frame):
     # Lets the user add states
     def add_states(self):
         global territories
+        bad = False
         self.instructions2.config(text="Use full state names, with first letter capitalized".format(self.tlist[0]))
         # First territory
         if self.count == 0:
@@ -482,23 +486,34 @@ class TerritoriesPage(tk.Frame):
             # Grab states from box
             states = self.box.get("1.0","end-1c").splitlines()
             states = [x.strip() for x in states if x != '']
-            # Update territory hash
-            terr = self.tlist[self.count-1]
-            territories[terr] = states
-            # Update screen
-            if self.count < len(self.tlist):
-                terr = self.tlist[self.count]
-                self.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
-            # Updates the button
-            if self.count == len(self.tlist) - 1:
-                self.nextbtn.config(text="Finish")
-            # Last screen
-            elif self.count == len(self.tlist):
-                self.controller.show_frame(OptionsPage)
+
+            # Make sure valid states were given
+            for state in states:
+                if state not in info.all_states:
+                    self.instructions.config(text="Please make sure states are spelled correctly and valid")
+                    self.instructions2.grid_forget()
+                    bad = True
+
+            # Only continue if valid input was given
+            if not bad:
+                # Update territory hash
+                terr = self.tlist[self.count-1]
+                territories[terr] = states
+                # Update screen
+                if self.count < len(self.tlist):
+                    terr = self.tlist[self.count]
+                    self.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
+                # Updates the button
+                if self.count == len(self.tlist) - 1:
+                    self.nextbtn.config(text="Finish")
+                # Last screen
+                elif self.count == len(self.tlist):
+                    self.controller.show_frame(OptionsPage)
 
         # Clear the box
-        self.box.delete("1.0", "end")
-        self.count += 1
+        if not bad:
+            self.box.delete("1.0", "end")
+            self.count += 1
 
 
 # Page where date range for cases is set
@@ -684,7 +699,7 @@ class TagsPage(tk.Frame):
             for tag in lines:
                 newtag = '0' + tag
                 
-                if newtag in spdf.tags.keys():
+                if newtag in tag_hash.keys():
                     chosen_tags += [newtag]
                     notags = False
             
@@ -696,7 +711,7 @@ class TagsPage(tk.Frame):
     
     # For setting all tags
     def set_all_tags(self):
-        global chosen_tags; chosen_tags = list(spdf.tags.keys())
+        global chosen_tags; chosen_tags = list(tag_hash.keys())
         self.controller.show_frame(OptionsPage)
 
 

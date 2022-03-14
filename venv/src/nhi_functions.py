@@ -10,7 +10,6 @@ import info
 from tkinter.ttk import Progressbar, Label
 import pandas as pd
 from numpy import int64
-import strip_pdf as spdf
 
 
 #from info import get_state_codes
@@ -308,6 +307,9 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
     # Change state_df's indicies back to numbers for now
     state_df = state_df.reset_index()
+    # Load in tag data 
+    with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/tag_hash.pkl", 'rb') as inp:
+        tag_hash = pickle.load(inp)
 
     # Setting defaults for missing user choices
 
@@ -320,7 +322,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
-        tags = list(spdf.tags.keys())
+        tags = list(tag_hash.keys())
     
     # Check to see if territories were chosen and use default if not
     if len(territories) == 0:
@@ -589,7 +591,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 start_row += len(dfs[dfname])
 
         # Excel sheet for description of tags and severities
-        items1 = list(spdf.tags.items())
+        items1 = list(tag_hash.items())
         items2 = list(info.severities.items())
         df1 = pd.DataFrame(items1, columns=["Tag", "Description"])
         df2 = pd.DataFrame(items2, columns=["Rank", "Description"])        
