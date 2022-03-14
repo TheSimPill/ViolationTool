@@ -55,7 +55,8 @@ class tkinterApp(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
         if OS == "Darwin":
-            self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+            #self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+            self.iconbitmap("icon.ico")
         elif OS == "Windows":
             self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
         
@@ -111,7 +112,8 @@ class PageLayout(tk.Frame):
 
         # Logo
         if OS == "Darwin":
-            logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+            #logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+            logo = Image.open("logo.png")
         elif OS == "Windows":
             logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)
@@ -317,10 +319,10 @@ class NoPathPage(tk.Frame):
         self.instructions = ttk.Label(self, text="Welcome!", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        self.instructions2 = ttk.Label(self, text="Click browse to select locations of save data", font=("Times", 15))
-        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        #self.instructions2 = ttk.Label(self, text="Click browse to select locations of save data", font=("Times", 15))
+        #self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Browse", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Start", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         self.dl_btn.grid(column=2, row=3, pady=10)
 
 
