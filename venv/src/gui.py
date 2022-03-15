@@ -55,8 +55,8 @@ class tkinterApp(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
         if OS == "Darwin":
-            #self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
-            self.iconbitmap("icon.ico")
+            self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+            #self.iconbitmap("icon.ico")
         elif OS == "Windows":
             self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
         
@@ -112,8 +112,8 @@ class PageLayout(tk.Frame):
 
         # Logo
         if OS == "Darwin":
-            #logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
-            logo = Image.open("logo.png")
+            logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+            #logo = Image.open("logo.png")
         elif OS == "Windows":
             logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)
@@ -690,15 +690,20 @@ class ExcelPage(tk.Frame):
         thisframe.controller = controller
 
         # Instructions and Make sheets button
-        thisframe.instructions = ttk.Label(thisframe, text="Press button to make excel sheets with chosen options", font=("Times", 15))
+        thisframe.instructions = ttk.Label(thisframe, text="Press button to choose where to save excel sheets", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        thisframe.instructions2 = ttk.Label(thisframe, text="Sheet creation will start", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
     
         thisframe.sheet_btn = tk.Button(thisframe, command=lambda:thisframe.make_sheets(), text="Make Sheets", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.sheet_btn.grid(column=2, row=3, pady=40)
+        thisframe.sheet_btn.grid(column=2, row=4, pady=40)
         
 
     # Uses threads to make excel sheets -> need to first break data up by territory
     def make_sheets(thisframe):
+
+        outpath = askdirectory()
 
         '''
         For testing:
@@ -725,7 +730,7 @@ class ExcelPage(tk.Frame):
                 #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
                 #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
 
-                self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags)
+                self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags, outpath)
 
         thread(nhi.make_sheets).start()
 

@@ -303,7 +303,7 @@ def send_emails(frame, emails):
 
     
 # Makes the excel sheets based on options chosen by the user 
-def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories, tags):
+def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories, tags, outpath):
 
     # Change state_df's indicies back to numbers for now
     state_df = state_df.reset_index()
@@ -574,15 +574,13 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # --- Write to an excel --- #
 
     # Excel workbook for each territory
-    '''
     for terr in t_dfs.keys():
         # Makes the sheets more organized
         t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
-        t_dfs[terr].to_excel(terr + ".xlsx", sheet_name=terr)
-        '''
+        t_dfs[terr].to_excel(outpath + "/" + terr + ".xlsx", sheet_name=terr)
 
     start_row = 1
-    with pd.ExcelWriter('OptionalData.xlsx') as writer:
+    with pd.ExcelWriter(outpath + '/OptionalData.xlsx') as writer:
 
         # Excel sheet for each set of options
         for dfname in dfs.keys():

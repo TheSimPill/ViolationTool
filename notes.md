@@ -160,3 +160,10 @@ Missing data for 17 rows total, 3 orgs:
 
 The apostrophe throws off the html so the name on the website is not the same as in the excel sheets.
 Guam memorial doesn't have data on website at all.
+
+
+Having problem getting the logo for my program when I build it. Going to try giving it path to the logo again
+and then if that doesnt work I'll try letting user set path themself. 
+
+Going to try path to logo way.
+May use mailjet to send emails. Posted on stack overflow about logo problem. May have to scrap the logo for now.
