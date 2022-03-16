@@ -305,6 +305,11 @@ def send_emails(frame, emails):
 # Makes the excel sheets based on options chosen by the user 
 def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories, tags, outpath):
 
+    # Update the screen
+    frame.instructions.config(text="Making sheets...")
+    frame.instructions2.grid_forget()
+    frame.sheet_btn.grid_forget()
+
     # Change state_df's indicies back to numbers for now
     state_df = state_df.reset_index()
     # Load in tag data 

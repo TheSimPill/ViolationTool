@@ -4,7 +4,7 @@ from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import pickle, threading, os, time
+import pickle, threading, os, time, sys
 from os.path import exists
 import datetime
 from platform import system
@@ -45,6 +45,17 @@ options = None
 territories = {}
 chosen_tags = []
 apikey = ""
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
   
 class tkinterApp(tk.Tk):
      
@@ -55,8 +66,8 @@ class tkinterApp(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
         if OS == "Darwin":
-            self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
-            #self.iconbitmap("icon.ico")
+            #self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+            self.iconbitmap(resource_path("icon.ico"))
         elif OS == "Windows":
             self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
         
@@ -112,8 +123,8 @@ class PageLayout(tk.Frame):
 
         # Logo
         if OS == "Darwin":
-            logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
-            #logo = Image.open("logo.png")
+            #logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+            logo = Image.open(resource_path("logo.png"))
         elif OS == "Windows":
             logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)

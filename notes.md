@@ -167,3 +167,66 @@ and then if that doesnt work I'll try letting user set path themself.
 
 Going to try path to logo way.
 May use mailjet to send emails. Posted on stack overflow about logo problem. May have to scrap the logo for now.
+
+
+Trying to get logo to load in exe. Tried:
+
+    Raw path in gui, one file and added file in options
+        -> Worked until I moved logo from the src directory
+
+    Raw path in gui, one dir and added file in options
+        -> Worked until I moved logo from the src directory
+
+    Resource path (stack overflow) method, didnt add file to options, used spec file: pyinstaller --noconfirm --onefile --console "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py" gui.spec 
+            # -*- mode: python ; coding: utf-8 -*-
+
+
+block_cipher = None
+
+
+a = Analysis(['gui.py'],
+             pathex=['/Users/Freddie/Impruvon/guiwebscraperproject/venv/src'],
+             binaries=[],
+             datas=[],
+             hiddenimports=[],
+             hookspath=[],
+             hooksconfig={},
+             runtime_hooks=[],
+             excludes=[],
+             win_no_prefer_redirects=False,
+             win_private_assemblies=False,
+             cipher=block_cipher,
+             noarchive=False)
+
+for d in a.datas:
+    if 'pyconfig' in d[0]:
+        a.datas.remove(d)
+        break
+
+a.datas += [('logo.png','/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png', 'Data')]
+pyz = PYZ(a.pure, a.zipped_data,
+             cipher=block_cipher)
+
+exe = EXE(pyz,
+          a.scripts,
+          a.binaries,
+          a.zipfiles,
+          a.datas,  
+          [],
+          name='gui',
+          debug=False,
+          bootloader_ignore_signals=False,
+          strip=False,
+          upx=True,
+          upx_exclude=[],
+          runtime_tmpdir=None,
+          console=True,
+          disable_windowed_traceback=False,
+          target_arch=None,
+          codesign_identity=None,
+          entitlements_file=None )
+
+
+
+Next step - make screen update while sheets are being made
+Then - finalize email sending
