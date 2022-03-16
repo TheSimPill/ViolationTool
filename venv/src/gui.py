@@ -712,12 +712,10 @@ class ExcelPage(tk.Frame):
         For testing:
         '''
         if OS == "Darwin":
-            path = r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl"
+            with open(nhi.resource_path("dataframes/state_df.pkl"), 'rb') as inp:
+                state_df = pickle.load(inp)
         else:
             path = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl"
-
-        with open(path, 'rb') as inp:
-            state_df = pickle.load(inp)
 
         class thread(threading.Thread):
             def __init__(self, func):
@@ -725,13 +723,7 @@ class ExcelPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                global options
-                #ts = "All": list(info.get_state_codes(True).values())
-                #{"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
-                #territories = {"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
-                global sdate, edate, territories, chosen_tags
-                #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
-                #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
+                global options, sdate, edate, territories, chosen_tags
 
                 self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags, outpath)
 
