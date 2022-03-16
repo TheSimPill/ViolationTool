@@ -16,7 +16,7 @@ if OS == "Darwin":
     import nhi_functions as nhi
     import scraper as scraper
     
-    with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/tag_hash.pkl", 'rb') as inp:
+    with open(nhi.resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
         tag_hash = pickle.load(inp)
 
 elif OS == "Windows":
@@ -47,15 +47,7 @@ chosen_tags = []
 apikey = ""
 
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
 
-    return os.path.join(base_path, relative_path)
   
 class tkinterApp(tk.Tk):
      
@@ -67,7 +59,7 @@ class tkinterApp(tk.Tk):
         self.title("NHI Scraper")
         if OS == "Darwin":
             #self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
-            self.iconbitmap(resource_path("icon.ico"))
+            self.iconbitmap(nhi.resource_path("icon.ico"))
         elif OS == "Windows":
             self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
         
@@ -124,7 +116,7 @@ class PageLayout(tk.Frame):
         # Logo
         if OS == "Darwin":
             #logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
-            logo = Image.open(resource_path("logo.png"))
+            logo = Image.open(nhi.resource_path("logo.png"))
         elif OS == "Windows":
             logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)

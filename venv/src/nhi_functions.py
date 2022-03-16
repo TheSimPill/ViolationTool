@@ -5,7 +5,7 @@ import openpyxl.workbook
 from openpyxl.workbook.workbook import Workbook
 import requests, os, zipfile, openpyxl
 from pathlib import Path
-import smtplib, time, getpass, random, pickle
+import smtplib, time, getpass, random, pickle, sys
 import info
 from tkinter.ttk import Progressbar, Label
 import pandas as pd
@@ -15,6 +15,17 @@ from numpy import int64
 #from info import get_state_codes
 from datetime import datetime, date
 from email.message import EmailMessage
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # Download raw data if user says yes, returns ->
 # Nothing
@@ -313,7 +324,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # Change state_df's indicies back to numbers for now
     state_df = state_df.reset_index()
     # Load in tag data 
-    with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/tag_hash.pkl", 'rb') as inp:
+    with open(resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
         tag_hash = pickle.load(inp)
 
     # Setting defaults for missing user choices
