@@ -250,8 +250,10 @@ To run:
 
 Want to
     add greyed out buttons - done
-    all data button for dates
-    change program name
-    add icon
-    remove email screen
-    write up document with details, how to use, assumptions
+
+    IN STATIC V1 BRANCH:
+        all data button for dates - done
+        change program name - done during exe
+        add icon - done during exe
+        remove email screen
+        write up document with details, how to use, assumptions

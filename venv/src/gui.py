@@ -41,7 +41,6 @@ load_scraper = False
 nopath = False
 sdate = None
 edate = None
-userecent = False
 options = None
 territories = {}
 chosen_tags = []
@@ -80,7 +79,7 @@ class tkinterApp(tk.Tk):
   
         self.add_frames([StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
                   OptionsPage, NoPathPage, TerritoriesPage, DateRangePage,\
-                  FormatPage, TagsPage, ExcelPage, TestPage, KeyPage])
+                  FormatPage, TagsPage, ExcelPage, DonePage, KeyPage])
 
         self.show_frame(NoPathPage)
   
@@ -397,21 +396,13 @@ class OptionsPage(tk.Frame):
         self.terr_btn.config(text="", command=())
         self.controller.show_frame(TerritoriesPage)
 
-    def show_daterange(self):
-        if OS == "Darwin":
-            self.controller.geometry("500x600")
-        elif OS == "Windows":
-            self.controller.geometry("500x600")
-
+    def show_daterange(self):     
+        self.controller.geometry("500x600")
         self.date_btn.config(text="", command=())
         self.controller.show_frame(DateRangePage)
 
     def show_format(self):
-        if OS == "Darwin":
-            self.controller.geometry("500x600")
-        elif OS == "Windows":
-            self.controller.geometry("500x600")
-
+        self.controller.geometry("500x600")
         self.excel_btn.config(text="", command=())
         self.controller.show_frame(FormatPage)
 
@@ -535,16 +526,12 @@ class DateRangePage(tk.Frame):
         self.fin_btn = tk.Button(self, command=lambda:self.check_range(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.fin_btn.grid(column=2, row=7, pady=20)
        
-        self.instructions4 = ttk.Label(self, text=".. or only include new data (Last run XX/XX/XXX)", font=("Times", 15))
+        self.instructions4 = ttk.Label(self, text=".. or use all dates in the dataset", font=("Times", 15))
         self.instructions4.grid(column=1, row=8, columnspan=3, pady=10)
 
-        self.rec_btn = tk.Button(self, command=lambda:self.use_recent(), text="Use Recent", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.rec_btn = tk.Button(self, command=lambda:controller.show_frame(OptionsPage), text="All Dates", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.rec_btn.grid(column=2, row=9, pady=20)
        
-
-    def use_recent(self):
-        global userecent; userecent = True
-        self.controller.show_frame(OptionsPage)
 
     # Checks to see if dates are in correct format and within range -> need to add earliest date
     def check_range(self):
@@ -730,15 +717,8 @@ class ExcelPage(tk.Frame):
     def make_sheets(thisframe):
 
         outpath = askdirectory()
-
-        '''
-        For testing:
-        '''
-        if OS == "Darwin":
-            with open(nhi.resource_path("dataframes/state_df.pkl"), 'rb') as inp:
-                state_df = pickle.load(inp)
-        else:
-            path = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl"
+        with open(nhi.resource_path("dataframes/state_df.pkl"), 'rb') as inp:
+            state_df = pickle.load(inp)
 
         class thread(threading.Thread):
             def __init__(self, func):
@@ -748,105 +728,24 @@ class ExcelPage(tk.Frame):
             def run(self):
                 global options, sdate, edate, territories, chosen_tags
 
-                self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags, outpath)
+                self.func(thisframe, options, state_df, sdate, edate, territories, chosen_tags, outpath)
 
         thread(nhi.make_sheets).start()
 
-    # Once sheet is made
-    def finish(thisframe, terrs):
-        # This line is in case the user never set territories but called to make sheets
-        global territories; territories = terrs
-
-        time.sleep(1.5)
-        thisframe.controller.resize_optionspage()
-        thisframe.controller.add_frames([EmailsPage])
-        thisframe.controller.show_frame(EmailsPage)
+    # Once sheets are made
+    def finish(thisframe):
+        thisframe.controller.show_frame(DonePage)
 
 
-# Page where emails for each territory are set
-class EmailsPage(tk.Frame):
+# After excel sheets are made
+class DonePage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
 
-        # Will be used to iterate through territories
-        global territories
-        self.terr_names = list(territories.keys())
-        
-        self.terr_emails = {}
-
-        # Instructions, Email box, Next/Finish button
-        self.instructions = ttk.Label(self, text="Enter emails (each on their own line) for the {} territory".format(self.terr_names[0]), font=("Times", 15))
-        self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
-
-        self.instructions2 = ttk.Label(self, text="Please make sure the emails are typed correctly and valid", font=("Times", 15))
-        self.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
-
-        self.instructions3 = ttk.Label(self, text="Ex: justin@aol.com\n      ethan@gmail.com\n      ...", font=("Times", 15))
-        self.instructions3.grid(column=1, row=4, columnspan=3, pady=10)
-
-        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=5)
-        self.box.grid(column=2, row=5, pady=10)
-        
-        # What the button will say to start
-        if len(self.terr_names) == 1:
-            textfield = "Send Emails"
-        else:
-            textfield = "Next Territory"
-
-        self.nextbtn = tk.Button(self, command=lambda:self.add_emails(), text=textfield, font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.nextbtn.grid(column=2, row=6, pady=40)
-        
-        # For counting which territory we're on
-        self.count = 1
-        
-     # Lets the user add states
-    def add_emails(self):
-            
-        if self.count > 0:
-            # Grab states from box
-            emails = self.box.get("1.0","end-1c").splitlines()
-            emails = [x.strip() for x in emails if x != '']
-            # Update territory email hash
-            terr = self.terr_names[self.count-1]
-            self.terr_emails[terr] = emails
-            # Update screen
-            if self.count < len(self.terr_names):
-                terr = self.terr_names[self.count]
-                self.instructions.config(text="Enter emails (each on their own line) for the {} territory".format(terr))
-            # Updates the button
-            if self.count == len(self.terr_names) - 1:
-                self.nextbtn.config(text="Send Emails")
-            # Last screen
-            elif self.count == len(self.terr_names):
-                self.controller.show_frame(OptionsPage)
-                print(self.terr_emails)
-                nhi.send_emails(self, self.terr_emails)
-
-        # Clear the box
-        self.box.delete("1.0", "end")
-        self.count += 1
-
-
-class TestPage(tk.Frame):
-    def __init__(thisframe, parent, controller):
-        PageLayout.__init__(thisframe, parent)
-        thisframe.controller = controller
-
         # Instructions
-        thisframe.instructions = ttk.Label(thisframe, text="Press button to send emails", font=("Times", 15))
-        thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
-
-        b1 = tk.Checkbutton(thisframe, text="Most severe incidents", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe incidents per organization"))
-        b1.grid(column=1, row=3, sticky="w")
-        b1 = tk.Checkbutton(thisframe, text="Most severe incidents", width=35, anchor="w", command=lambda:thisframe.add_option("Most severe incidents per organization"))
-        b1.grid(column=2, row=3, sticky="w")
-
-        #fm = ttk.Labelframe(thisframe, width=50, border=0)
-        #fm.grid(column=1, row=3)
-        
-        
-
+        self.instructions = ttk.Label(self, text="Sheets made, you may exit the program", font=("Times", 15))
+        self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
     
 
 if __name__ == '__main__':
