@@ -331,10 +331,19 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
     # Get years in range that user chose, or set a default range
     if None in {startdate, enddate}:
-       startdate = datetime.strptime("01/01/2017", '%m/%d/%Y')
-       enddate = datetime.strftime(date.today(), '%m/%d/%Y')
-       enddate = datetime.strptime(enddate, '%m/%d/%Y')
-       #enddate = datetime.strptime("12/31/2021", '%m/%d/%Y')
+
+        # Conversion to date time objects for min and max
+        oldcol = state_df['Date']
+        state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
+
+        startdate = state_df['Date'].min()
+        enddate = state_df['Date'].max()
+
+        # Convert date column back to string 
+        state_df['Date'] = oldcol
+
+        #datetime.strptime(enddate, '%m/%d/%Y')
+        #datetime.strptime("12/31/2021", '%m/%d/%Y')
 
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
@@ -603,6 +612,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
             if not dfs[dfname].empty:
                 dfs[dfname].to_excel(writer, sheet_name=dfname)
                 start_row += len(dfs[dfname])
+                print(dfname)
 
         # Excel sheet for description of tags and severities
         items1 = list(tag_hash.items())
