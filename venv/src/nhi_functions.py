@@ -5,17 +5,27 @@ import openpyxl.workbook
 from openpyxl.workbook.workbook import Workbook
 import requests, os, zipfile, openpyxl
 from pathlib import Path
-import smtplib, time, getpass, random, pickle
+import smtplib, time, getpass, random, pickle, sys
 import info
 from tkinter.ttk import Progressbar, Label
 import pandas as pd
 from numpy import int64
-import strip_pdf as spdf
 
 
 #from info import get_state_codes
 from datetime import datetime, date
 from email.message import EmailMessage
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # Download raw data if user says yes, returns ->
 # Nothing
@@ -304,10 +314,18 @@ def send_emails(frame, emails):
 
     
 # Makes the excel sheets based on options chosen by the user 
-def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories, tags):
+def make_sheets(frame, savepath, options, state_df, startdate, enddate, territories, tags, outpath):
+
+    # Update the screen
+    frame.instructions.config(text="Making sheets...")
+    frame.instructions2.grid_forget()
+    frame.sheet_btn.grid_forget()
 
     # Change state_df's indicies back to numbers for now
     state_df = state_df.reset_index()
+    # Load in tag data 
+    with open(resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
+        tag_hash = pickle.load(inp)
 
     # Setting defaults for missing user choices
 
@@ -320,7 +338,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
 
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
-        tags = list(spdf.tags.keys())
+        tags = list(tag_hash.keys())
     
     # Check to see if territories were chosen and use default if not
     if len(territories) == 0:
@@ -572,15 +590,13 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
     # --- Write to an excel --- #
 
     # Excel workbook for each territory
-    '''
     for terr in t_dfs.keys():
         # Makes the sheets more organized
         t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
-        t_dfs[terr].to_excel(terr + ".xlsx", sheet_name=terr)
-        '''
+        t_dfs[terr].to_excel(outpath + "/" + terr + ".xlsx", sheet_name=terr)
 
     start_row = 1
-    with pd.ExcelWriter('OptionalData.xlsx') as writer:
+    with pd.ExcelWriter(outpath + '/OptionalData.xlsx') as writer:
 
         # Excel sheet for each set of options
         for dfname in dfs.keys():
@@ -589,7 +605,7 @@ def make_sheets(frame, savepath, options, state_df, startdate, enddate, territor
                 start_row += len(dfs[dfname])
 
         # Excel sheet for description of tags and severities
-        items1 = list(spdf.tags.items())
+        items1 = list(tag_hash.items())
         items2 = list(info.severities.items())
         df1 = pd.DataFrame(items1, columns=["Tag", "Description"])
         df2 = pd.DataFrame(items2, columns=["Rank", "Description"])        

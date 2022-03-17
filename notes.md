@@ -160,3 +160,98 @@ Missing data for 17 rows total, 3 orgs:
 
 The apostrophe throws off the html so the name on the website is not the same as in the excel sheets.
 Guam memorial doesn't have data on website at all.
+
+
+Having problem getting the logo for my program when I build it. Going to try giving it path to the logo again
+and then if that doesnt work I'll try letting user set path themself. 
+
+Going to try path to logo way.
+May use mailjet to send emails. Posted on stack overflow about logo problem. May have to scrap the logo for now.
+
+
+Trying to get logo to load in exe. Tried:
+
+    Raw path in gui, one file and added file in options
+        -> Worked until I moved logo from the src directory
+
+    Raw path in gui, one dir and added file in options
+        -> Worked until I moved logo from the src directory
+
+    Resource path (stack overflow) method, didnt add file to options, used spec file: pyinstaller --noconfirm --onefile --console "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py" gui.spec 
+            # -*- mode: python ; coding: utf-8 -*-
+
+
+block_cipher = None
+
+
+a = Analysis(['gui.py'],
+             pathex=['/Users/Freddie/Impruvon/guiwebscraperproject/venv/src'],
+             binaries=[],
+             datas=[],
+             hiddenimports=[],
+             hookspath=[],
+             hooksconfig={},
+             runtime_hooks=[],
+             excludes=[],
+             win_no_prefer_redirects=False,
+             win_private_assemblies=False,
+             cipher=block_cipher,
+             noarchive=False)
+
+for d in a.datas:
+    if 'pyconfig' in d[0]:
+        a.datas.remove(d)
+        break
+
+a.datas += [('logo.png','/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png', 'Data')]
+pyz = PYZ(a.pure, a.zipped_data,
+             cipher=block_cipher)
+
+exe = EXE(pyz,
+          a.scripts,
+          a.binaries,
+          a.zipfiles,
+          a.datas,  
+          [],
+          name='gui',
+          debug=False,
+          bootloader_ignore_signals=False,
+          strip=False,
+          upx=True,
+          upx_exclude=[],
+          runtime_tmpdir=None,
+          console=True,
+          disable_windowed_traceback=False,
+          target_arch=None,
+          codesign_identity=None,
+          entitlements_file=None )
+
+
+
+Next step - make screen update while sheets are being made
+Then - finalize email sending
+
+
+INCLUDES DATAFRAMES:
+
+pyinstaller --noconfirm --onefile --console --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png:." --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes:dataframes/"  "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py"
+
+Everything seems to be bundled into exe: now just need to test it and send to drew
+
+To run:
+
+    download the file
+    drag it onto your desktop
+    type cd Desktop
+    type chmod +x ./gui
+    type ./gui
+    Enjoy yo self
+
+
+Want to
+    add greyed out buttons - done
+    all data button for dates
+    change program name
+    add icon
+    remove email screen
+    write up document with details, how to use, assumptions

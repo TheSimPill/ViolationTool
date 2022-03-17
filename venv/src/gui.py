@@ -4,7 +4,7 @@ from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import pickle, threading, os, time
+import pickle, threading, os, time, sys
 from os.path import exists
 import datetime
 from platform import system
@@ -15,7 +15,11 @@ if OS == "Darwin":
     import info as info
     import nhi_functions as nhi
     import scraper as scraper
-    from strip_pdf import tags
+
+    
+    with open(nhi.resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
+        tag_hash = pickle.load(inp)
+
 elif OS == "Windows":
     # Windows
     import src.nhi_functions as nhi
@@ -42,6 +46,9 @@ options = None
 territories = {}
 chosen_tags = []
 apikey = ""
+
+
+
   
 class tkinterApp(tk.Tk):
      
@@ -52,7 +59,8 @@ class tkinterApp(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
         if OS == "Darwin":
-            self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+            #self.iconbitmap(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/icon.ico")
+            self.iconbitmap(nhi.resource_path("icon.ico"))
         elif OS == "Windows":
             self.iconbitmap(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\icon.ico")
         
@@ -70,11 +78,11 @@ class tkinterApp(tk.Tk):
         # initializing frames to an empty dict so that we can access pages by their name
         self.frames = {} 
   
-        self.add_frames([StartPage, StaticStartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
+        self.add_frames([StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
                   OptionsPage, NoPathPage, TerritoriesPage, DateRangePage,\
                   FormatPage, TagsPage, ExcelPage, TestPage, KeyPage])
 
-        self.show_frame(StartPage)
+        self.show_frame(NoPathPage)
   
     # to display the current frame passed as
     # parameter
@@ -108,7 +116,8 @@ class PageLayout(tk.Frame):
 
         # Logo
         if OS == "Darwin":
-            logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+            #logo = Image.open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png")
+            logo = Image.open(nhi.resource_path("logo.png"))
         elif OS == "Windows":
             logo = Image.open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\logo.png")
         logo = ImageTk.PhotoImage(logo)
@@ -137,43 +146,6 @@ class StartPage(tk.Frame):
     def show_options(self):
         global nopath; nopath = True
         self.controller.show_frame(NoPathPage)
-
-# Startpage
-class StaticStartPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
-            
-        # Instructions and Download button
-        self.instructions = ttk.Label(self, text="Welcome! PR", font=("Times", 15))
-        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
-
-        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Browse", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        self.dl_btn.grid(column=2, row=3, pady=10)
-
-    def choose_path(self):
-        global savepath, state_df
-        self.controller.resize_optionspage()
-        self.controller.show_frame(OptionsPage)
-        '''
-        while True:
-            savepath = askdirectory()
-            # Checks to see if user gave us path with hash we need, otherwise let them retry
-            if exists(savepath + "/states_hash.pkl"):
-                with open(savepath + "/states_hash.pkl", 'rb') as inp:
-                    states_hash = pickle.load(inp)
-
-                self.controller.resize()
-                self.controller.update_idletasks()
-                self.controller.show_frame(OptionsPage)
-                break
-
-            else:
-                self.instructions.config(text="Folder chosen doesn't contain states_hash.pkl, try again")
-                self.controller.update_idletasks()
-                time.sleep(3)
-
-        '''
 
 
 # Download page
@@ -348,10 +320,13 @@ class NoPathPage(tk.Frame):
         self.controller = controller
          
         # Instructions and Download button
-        self.instructions = ttk.Label(self, text="Click browse to select locations of save data", font=("Times", 15))
+        self.instructions = ttk.Label(self, text="Welcome!", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Browse", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        #self.instructions2 = ttk.Label(self, text="Click browse to select locations of save data", font=("Times", 15))
+        #self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Start", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         self.dl_btn.grid(column=2, row=3, pady=10)
 
 
@@ -359,6 +334,7 @@ class NoPathPage(tk.Frame):
         global savepath, state_df
         self.controller.resize_optionspage()
         self.controller.show_frame(OptionsPage)
+        
         '''
         while True:
             savepath = askdirectory()
@@ -376,9 +352,8 @@ class NoPathPage(tk.Frame):
                 self.instructions.config(text="Folder chosen doesn't contain states_hash.pkl, try again")
                 self.controller.update_idletasks()
                 time.sleep(3)
-
         '''
-
+        
 
 # Shown if user didn't reinitialize data, or if reinitialization is complete
 class OptionsPage(tk.Frame):
@@ -387,24 +362,40 @@ class OptionsPage(tk.Frame):
         self.controller = controller
 
         # Instructions, Buttons for options
+        option_count = 1
         self.instructions = ttk.Label(self, text="Choose your options", font=("Times", 15))
-        self.instructions.grid(column=1, row=1, columnspan=3, pady=15)
+        self.instructions.grid(column=1, row=option_count, columnspan=3, pady=15)
+        option_count += 1 
 
-        self.terr_btn = tk.Button(self, command=lambda:controller.show_frame(TerritoriesPage), text="Set Territories", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.terr_btn.grid(column=2, row=2, pady=15)
+        self.instructions2 = ttk.Label(self, text="You will only be able to choose each once!", font=("Times", 15))
+        self.instructions2.grid(column=1, row=option_count, columnspan=3)
+        option_count += 1 
+
+        self.terr_btn = tk.Button(self, command=lambda:self.show_territories(), text="Set Territories", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.terr_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
         self.date_btn = tk.Button(self, command=lambda:self.show_daterange(), text="Set Date Range", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.date_btn.grid(column=2, row=3, pady=15)
+        self.date_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
         self.excel_btn = tk.Button(self, command=lambda:self.show_format(), text="Format Excel Data", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.excel_btn.grid(column=2, row=4, pady=15)
+        self.excel_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
-        self.tag_btn = tk.Button(self, command=lambda:controller.show_frame(TagsPage), text="Choose Tags to Include", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.tag_btn.grid(column=2, row=5, pady=15)
+        self.tag_btn = tk.Button(self, command=lambda:self.show_tags(), text="Choose Tags to Include", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.tag_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
         self.make_btn = tk.Button(self, command=lambda:self.show_excel(), text="Make Excel Files and Set/Send Emails ->", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.make_btn.grid(column=2, row=6, pady=15)
+        self.make_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
+    # Functions to show appropriate screens and disable buttons after press
+
+    def show_territories(self):
+        self.terr_btn.config(text="", command=())
+        self.controller.show_frame(TerritoriesPage)
 
     def show_daterange(self):
         if OS == "Darwin":
@@ -412,6 +403,7 @@ class OptionsPage(tk.Frame):
         elif OS == "Windows":
             self.controller.geometry("500x600")
 
+        self.date_btn.config(text="", command=())
         self.controller.show_frame(DateRangePage)
 
     def show_format(self):
@@ -420,7 +412,12 @@ class OptionsPage(tk.Frame):
         elif OS == "Windows":
             self.controller.geometry("500x600")
 
+        self.excel_btn.config(text="", command=())
         self.controller.show_frame(FormatPage)
+
+    def show_tags(self):
+        self.tag_btn.config(text="", command=())
+        self.controller.show_frame(TagsPage)
 
     def show_excel(self):
         self.controller.dresize()
@@ -468,6 +465,7 @@ class TerritoriesPage(tk.Frame):
     # Lets the user add states
     def add_states(self):
         global territories
+        bad = False
         self.instructions2.config(text="Use full state names, with first letter capitalized".format(self.tlist[0]))
         # First territory
         if self.count == 0:
@@ -482,23 +480,34 @@ class TerritoriesPage(tk.Frame):
             # Grab states from box
             states = self.box.get("1.0","end-1c").splitlines()
             states = [x.strip() for x in states if x != '']
-            # Update territory hash
-            terr = self.tlist[self.count-1]
-            territories[terr] = states
-            # Update screen
-            if self.count < len(self.tlist):
-                terr = self.tlist[self.count]
-                self.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
-            # Updates the button
-            if self.count == len(self.tlist) - 1:
-                self.nextbtn.config(text="Finish")
-            # Last screen
-            elif self.count == len(self.tlist):
-                self.controller.show_frame(OptionsPage)
+
+            # Make sure valid states were given
+            for state in states:
+                if state not in info.all_states:
+                    self.instructions.config(text="Please make sure states are spelled correctly and valid")
+                    self.instructions2.grid_forget()
+                    bad = True
+
+            # Only continue if valid input was given
+            if not bad:
+                # Update territory hash
+                terr = self.tlist[self.count-1]
+                territories[terr] = states
+                # Update screen
+                if self.count < len(self.tlist):
+                    terr = self.tlist[self.count]
+                    self.instructions.config(text="Enter states in {} territory, each on their own line".format(terr))
+                # Updates the button
+                if self.count == len(self.tlist) - 1:
+                    self.nextbtn.config(text="Finish")
+                # Last screen
+                elif self.count == len(self.tlist):
+                    self.controller.show_frame(OptionsPage)
 
         # Clear the box
-        self.box.delete("1.0", "end")
-        self.count += 1
+        if not bad:
+            self.box.delete("1.0", "end")
+            self.count += 1
 
 
 # Page where date range for cases is set
@@ -684,7 +693,7 @@ class TagsPage(tk.Frame):
             for tag in lines:
                 newtag = '0' + tag
                 
-                if newtag in spdf.tags.keys():
+                if newtag in tag_hash.keys():
                     chosen_tags += [newtag]
                     notags = False
             
@@ -696,7 +705,7 @@ class TagsPage(tk.Frame):
     
     # For setting all tags
     def set_all_tags(self):
-        global chosen_tags; chosen_tags = list(spdf.tags.keys())
+        global chosen_tags; chosen_tags = list(tag_hash.keys())
         self.controller.show_frame(OptionsPage)
 
 
@@ -707,26 +716,29 @@ class ExcelPage(tk.Frame):
         thisframe.controller = controller
 
         # Instructions and Make sheets button
-        thisframe.instructions = ttk.Label(thisframe, text="Press button to make excel sheets with chosen options", font=("Times", 15))
+        thisframe.instructions = ttk.Label(thisframe, text="Press button to choose where to save excel sheets", font=("Times", 15))
         thisframe.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        thisframe.instructions2 = ttk.Label(thisframe, text="Sheet creation will start", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=3, columnspan=3, pady=10)
     
         thisframe.sheet_btn = tk.Button(thisframe, command=lambda:thisframe.make_sheets(), text="Make Sheets", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        thisframe.sheet_btn.grid(column=2, row=3, pady=40)
+        thisframe.sheet_btn.grid(column=2, row=4, pady=40)
         
 
     # Uses threads to make excel sheets -> need to first break data up by territory
     def make_sheets(thisframe):
 
+        outpath = askdirectory()
+
         '''
         For testing:
         '''
         if OS == "Darwin":
-            path = r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl"
+            with open(nhi.resource_path("dataframes/state_df.pkl"), 'rb') as inp:
+                state_df = pickle.load(inp)
         else:
             path = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl"
-
-        with open(path, 'rb') as inp:
-            state_df = pickle.load(inp)
 
         class thread(threading.Thread):
             def __init__(self, func):
@@ -734,15 +746,9 @@ class ExcelPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                global options
-                #ts = "All": list(info.get_state_codes(True).values())
-                #{"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
-                #territories = {"East": ["Maryland", "Virginia"], "West": ["Texas", "Alabama"], "Central": ["New Jersey", "Alabama"]}
-                global sdate, edate, territories, chosen_tags
-                #sdate = datetime.datetime.strptime("01/01/2018", '%m/%d/%Y')
-                #edate = datetime.datetime.strptime("12/31/2021", '%m/%d/%Y')
+                global options, sdate, edate, territories, chosen_tags
 
-                self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags)
+                self.func(thisframe, "", options, state_df, sdate, edate, territories, chosen_tags, outpath)
 
         thread(nhi.make_sheets).start()
 
@@ -843,7 +849,7 @@ class TestPage(tk.Frame):
 
     
 
-
-# Driver Code
-app = tkinterApp()
-app.mainloop()
+if __name__ == '__main__':
+    # Driver Code
+    app = tkinterApp()
+    app.mainloop()

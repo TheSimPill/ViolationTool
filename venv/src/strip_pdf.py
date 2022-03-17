@@ -16,7 +16,7 @@ page2 = df[2]
 # Go through rows and match tags with description of tag
 tags = {}
 def parse_rows(start, end, step, spacing, page):
-    for x, row in page.iterrows():
+    for _, row in page.iterrows():
         for i in range(start, end, step):
 
             tag = row[i]
@@ -35,7 +35,7 @@ parse_rows(1, 13, 4, 2, page2)
 # Now have a hash where key is string of tag with 0 in front and value is the description
 tags = collections.OrderedDict(sorted(tags.items()))
 
-with open("tags_df.pkl", 'wb') as outp:
+with open("tag_hash.pkl", 'wb') as outp:
     pickle.dump(tags, outp, pickle.HIGHEST_PROTOCOL)
 
 
