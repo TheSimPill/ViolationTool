@@ -1,21 +1,8 @@
-from os.path import exists
 from typing import Dict, List
 from openpyxl.descriptors.base import String
-import openpyxl.workbook
-from openpyxl.workbook.workbook import Workbook
-import requests, os, zipfile, openpyxl
-from pathlib import Path
-import smtplib, time, getpass, random, pickle, sys
-import info
-from tkinter.ttk import Progressbar, Label
+import pickle, sys, info, os
 import pandas as pd
-from numpy import int64
-
-
-#from info import get_state_codes
-from datetime import datetime, date
-from email.message import EmailMessage
-
+from datetime import datetime
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -56,9 +43,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
         # Convert date column back to string 
         state_df['Date'] = oldcol
-
-        #datetime.strptime(enddate, '%m/%d/%Y')
-        #datetime.strptime("12/31/2021", '%m/%d/%Y')
 
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
@@ -338,7 +322,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
         df2.to_excel(writer, sheet_name="Descriptions", startrow=len(df1.index)+5, startcol=0)
 
         writer.save()
-        frame.finish(territories)
+        frame.finish()
     
 # Converts states from full name into their two letter code
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
