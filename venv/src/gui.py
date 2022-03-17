@@ -15,6 +15,7 @@ if OS == "Darwin":
     import info as info
     import nhi_functions as nhi
     import scraper as scraper
+
     
     with open(nhi.resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
         tag_hash = pickle.load(inp)
@@ -361,24 +362,40 @@ class OptionsPage(tk.Frame):
         self.controller = controller
 
         # Instructions, Buttons for options
+        option_count = 1
         self.instructions = ttk.Label(self, text="Choose your options", font=("Times", 15))
-        self.instructions.grid(column=1, row=1, columnspan=3, pady=15)
+        self.instructions.grid(column=1, row=option_count, columnspan=3, pady=15)
+        option_count += 1 
 
-        self.terr_btn = tk.Button(self, command=lambda:controller.show_frame(TerritoriesPage), text="Set Territories", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.terr_btn.grid(column=2, row=2, pady=15)
+        self.instructions2 = ttk.Label(self, text="You will only be able to choose each once!", font=("Times", 15))
+        self.instructions2.grid(column=1, row=option_count, columnspan=3)
+        option_count += 1 
+
+        self.terr_btn = tk.Button(self, command=lambda:self.show_territories(), text="Set Territories", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.terr_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
         self.date_btn = tk.Button(self, command=lambda:self.show_daterange(), text="Set Date Range", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.date_btn.grid(column=2, row=3, pady=15)
+        self.date_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
         self.excel_btn = tk.Button(self, command=lambda:self.show_format(), text="Format Excel Data", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.excel_btn.grid(column=2, row=4, pady=15)
+        self.excel_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
-        self.tag_btn = tk.Button(self, command=lambda:controller.show_frame(TagsPage), text="Choose Tags to Include", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.tag_btn.grid(column=2, row=5, pady=15)
+        self.tag_btn = tk.Button(self, command=lambda:self.show_tags(), text="Choose Tags to Include", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.tag_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
         self.make_btn = tk.Button(self, command=lambda:self.show_excel(), text="Make Excel Files and Set/Send Emails ->", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.make_btn.grid(column=2, row=6, pady=15)
+        self.make_btn.grid(column=2, row=option_count, pady=15)
+        option_count += 1 
 
+    # Functions to show appropriate screens and disable buttons after press
+
+    def show_territories(self):
+        self.terr_btn.config(text="", command=())
+        self.controller.show_frame(TerritoriesPage)
 
     def show_daterange(self):
         if OS == "Darwin":
@@ -386,6 +403,7 @@ class OptionsPage(tk.Frame):
         elif OS == "Windows":
             self.controller.geometry("500x600")
 
+        self.date_btn.config(text="", command=())
         self.controller.show_frame(DateRangePage)
 
     def show_format(self):
@@ -394,7 +412,12 @@ class OptionsPage(tk.Frame):
         elif OS == "Windows":
             self.controller.geometry("500x600")
 
+        self.excel_btn.config(text="", command=())
         self.controller.show_frame(FormatPage)
+
+    def show_tags(self):
+        self.tag_btn.config(text="", command=())
+        self.controller.show_frame(TagsPage)
 
     def show_excel(self):
         self.controller.dresize()

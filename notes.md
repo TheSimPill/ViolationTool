@@ -249,7 +249,7 @@ To run:
 
 
 Want to
-    add greyed out buttons
+    add greyed out buttons - done
     all data button for dates
     change program name
     add icon
