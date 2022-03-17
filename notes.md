@@ -237,3 +237,21 @@ INCLUDES DATAFRAMES:
 pyinstaller --noconfirm --onefile --console --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png:." --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes:dataframes/"  "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py"
 
 Everything seems to be bundled into exe: now just need to test it and send to drew
+
+To run:
+
+    download the file
+    drag it onto your desktop
+    type cd Desktop
+    type chmod +x ./gui
+    type ./gui
+    Enjoy yo self
+
+
+Want to
+    add greyed out buttons
+    all data button for dates
+    change program name
+    add icon
+    remove email screen
+    write up document with details, how to use, assumptions

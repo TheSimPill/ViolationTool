@@ -826,7 +826,7 @@ class TestPage(tk.Frame):
 
     
 
-
-# Driver Code
-app = tkinterApp()
-app.mainloop()
+if __name__ == '__main__':
+    # Driver Code
+    app = tkinterApp()
+    app.mainloop()
