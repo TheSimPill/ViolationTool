@@ -255,5 +255,6 @@ Want to
         all data button for dates - done
         change program name - done during exe
         add icon - done during exe
-        remove email screen
+        remove email screen and other unecessary stuff
         write up document with details, how to use, assumptions
+
