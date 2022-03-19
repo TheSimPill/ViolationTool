@@ -47,6 +47,8 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
         tags = list(tag_hash.keys())
+    else:
+        state_df["Tag"] = state
     
     # Check to see if territories were chosen and use default if not
     if len(territories) == 0:
@@ -378,7 +380,7 @@ def get_inrange(df, start, end):
 def count_violations_df(df):
     # Turn the tag column into a pandas series of lists
     vios = 0
-    col = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(", ")) 
+    col = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(",")) 
     for lst in col:
         vios += len(lst)
 
@@ -445,3 +447,14 @@ def get_year_range(year, years, startdate, enddate):
         yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
 
     return (yearstart, yearend)
+
+
+# Get violations that include chosen tags
+def get_tag_range(df, tags):
+    # Turn the tag column into a pandas series of lists
+    old = df["Tag"]
+    df["Tag"] = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(",")) 
+    for lst in col:
+        vios += len(lst)
+
+    return df

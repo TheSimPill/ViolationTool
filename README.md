@@ -25,7 +25,7 @@ A user is able to specify a range of dates for which they want to see data for. 
 Each violation recorded by Nursing Home Inspect has a corresponding tag. A tag is simply a way of categorizing a violation based on its nature. For example, tag F757's description is "Drug Regimen is Free From Unnecessary Drugs". A pdf of all F-Tags is included in this repo as "Ftags.pdf". All tags will also be listed in the "OptionalData" excel sheet that is made each time you run the program. 
 
 ## Format Excel Sheet
-This screen allows a user to pick what extra data they would like included in an excel file. This file will be separate from the individual files for each territory. Roughly each option gets its own sheet in a file titled "OptionalData.xlsx". The options are described below.   
+This screen allows a user to pick what extra data they would like included in an excel file. This file will be separate from the individual files for each territory. Roughly each option gets its own sheet in a file titled "OptionalData.xlsx". All of the following options will be derived from the dataset AFTER it has been filtered by a user's chosen tags and date range! The options are described below.   
 
 
 ### Options
