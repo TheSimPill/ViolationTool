@@ -236,6 +236,8 @@ INCLUDES DATAFRAMES:
 
 pyinstaller --noconfirm --onefile --console --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png:." --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes:dataframes/"  "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py"
 
+
+
 Everything seems to be bundled into exe: now just need to test it and send to drew
 
 To run:
@@ -245,6 +247,7 @@ To run:
     type cd Desktop
     type chmod +x ./gui
     type ./gui
+    Click apple logo in top left -> System Preferences -> General -> Allow the program
     Enjoy yo self
 
 

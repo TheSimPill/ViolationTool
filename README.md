@@ -4,6 +4,17 @@ The purpose of this program is to allow a user to easily filter and view data on
 ## A Quick Note to Start
 The data available spans from 2015-2021. It's a lot of data. Around 370,000 rows in an excel sheet, where each row represents a violation on a given date. Given the fact that this is a lot of data, if a user chooses to view all of it, the program will take significantly longer to make the excel sheets than if a user specifies what exactly they want out of that data. The different options that a user has are described below. The program will produce one excel sheet per territory, and an extra one for additional data.
 
+## How to Run the Program
+Please follow these steps, as Apple makes it hard to run a random program downloaded from the Internet (as they should). These steps will give the program permission to run.
+
+1. Download the file
+2. Drag it onto your desktop
+3. Open up your terminal (you can do this via command + space and then searching "Terminal")
+4. In the terminal, type "cd ~/Desktop"
+5. In the terminal, type "chmod +x ./ViolationTool". You should now get a pop up from Apple acting as the Warden between you and malicious actors. Just press "OK".
+6. Click on the apple logo at the top left of your screen. Then System Preferences -> Security & Privacy -> General. You should see a message about how ViolationTool was blocked. Allow it to open. You can trust me :)
+7. Be patient and the program will be at your service. A terminal will pop up and produce text on occasion. If the program doesn't work as expected, or at all, and text pops up in the terminal window, please copy it and send me it. You should be able to just click the program to run it from now on. 
+
 ## Filter by Territories
 A user is able to dynamically input territories of whatever name they choose. A territory is simply a group of states that the user gets to set. As mentioned above, a user will get one excel sheet per territory that they create. If a user skips this option, the default territories are East, West, and Central. The 52 states are divided amongst these.
 
