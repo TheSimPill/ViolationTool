@@ -248,6 +248,7 @@ To run:
     type chmod +x ./gui
     type ./gui
     Click apple logo in top left -> System Preferences -> General -> Allow the program
+    Go back to terminal
     Enjoy yo self
 
 
