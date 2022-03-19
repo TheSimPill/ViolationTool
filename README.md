@@ -48,7 +48,7 @@ This screen allows a user to pick what extra data they would like included in an
     This will include a sheet of all of the territories chosen by the user (or the defaults) combined. 
 
 7. **Create Sheet for All Violations without Territories**
-    This will create a sheet of all states, only filtered by the given date range. **This can take a long time!** The wider the range chosen, the longer it will take. It could take around 20 minutes in my experience, if you include the entire date range.  
+    This will create a sheet of all states, filtered by the given date range and tags. **This can take a long time!** The less filters used, the longer it will take. It could take around 20 minutes in my experience, if you include the entire date and tag range.  
 
 
 ## Format of Data in the Excel Sheets
