@@ -26,7 +26,7 @@ class tkinterApp(tk.Tk):
         # __init__ function for class Tk
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
-        self.iconbitmap(nhi.resource_path("icon.ico"))
+        self.iconbitmap(nhi.resource_path("images/icon.ico"))
     
         # Prevents user from stretching screen
         self.resizable(width=False, height=False)
@@ -70,7 +70,7 @@ class PageLayout(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         # Logo
-        logo = Image.open(nhi.resource_path("logo.png"))
+        logo = Image.open(nhi.resource_path("images/logo.png"))
         logo = ImageTk.PhotoImage(logo)
         logo_label = ttk.Label(self, image=logo)
         logo_label.image = logo
