@@ -1,7 +1,7 @@
-# Nursing Home Data Processor
+# **Nursing Home Data Processor**
 The purpose of this program is to allow a user to easily filter and view data on nursing home violations from https://projects.propublica.org/nursing-homes/ in a clear and concise format via excel sheets that it creates. This repository includes all necessary data, in the form of pandas dataframes, that a user needs to be able to use the full functionality of this program. The data set includes all 50 states, plus Guam and District of Columbia.
 
-## A Quick Foreword
+## A Quick Note to Start
 The data available spans from 2015-2021. It's a lot of data. Around 370,000 rows in an excel sheet, where each row represents a violation on a given date. Given the fact that this is a lot of data, if a user chooses to view all of it, the program will take significantly longer to make the excel sheets than if a user specifies what exactly they want out of that data. The different options that a user has are described below. The program will produce one excel sheet per territory, and an extra one for additional data.
 
 ## Filter by Territories
@@ -12,4 +12,37 @@ A user is able to specify a range of dates for which they want to see data for. 
 
 ## Filter by Tags
 Each violation recorded by Nursing Home Inspect has a corresponding tag. A tag is simply a way of categorizing a violation based on its nature. For example, tag F757's description is "Drug Regimen is Free From Unnecessary Drugs". A pdf of all F-Tags is included in this repo as "Ftags.pdf". All tags will also be listed in the "OptionalData" excel sheet that is made each time you run the program. 
+
+## Format Excel Sheet
+This screen allows a user to pick what extra data they would like included in an excel file. This file will be separate from the individual files for each territory. Roughly each option gets its own sheet in a file titled "OptionalData.xlsx". The options are described below.   
+
+
+### Options
+1. **US Fines:**
+    This will include a total for each year in a given date range, as well as a total for that range. As described above in the "Filter by Date Range" section, the total shown and individual years will only include dates in the given range!
+
+2. **US Violations:**
+    This will include a total for each year in a given date range, as well as a total for that range. The same rules apply for dates in range as described throughout this document.
+
+3. **Top Fined Organizations:**
+    This will include a sheet that will include the top 3 most fined organizations per state, per year, and overall. The same rules apply for dates in range as described throughout this document.
+
+4. **Most Severe Organizations:**
+    This will include a sheet that will include the top 3 most severe organizations per state, per year, and overall. The same rules apply for dates in range as described throughout this document. An organization's severity is ranked via severity scores associated with each violation. The scores are calculated as described at the end of the document.
+
+5. **Sum of Fines and Violations per State:**
+    These will include sheets that will include the total number of violations and fines for each state, for each year in range, and a total for the date range. The same rules apply for dates in range as described throughout this document.
+
+6. **Create Sheet with All Territories Combined**
+    This will include a sheet of all of the territories chosen by the user (or the defaults) combined. 
+
+7. **Create Sheet for All Violations without Territories**
+    This will create a sheet of all states, only filtered by the given date range. **This can take a long time!** The wider the range chosen, the longer it will take. It could take around 20 minutes in my experience, if you include the entire date range.  
+
+
+## Format of Data in the Excel Sheets
+The main excel sheets, which are the ones for the individual territories, combined territories, and without territories, are formatted the same way. Violations are grouped by territory (if relevant), then by state, then by organzation, then by date. Multiple violations may have taken place on the same date! This will be represented by multiple tags separated by commas in the "Tag" column. The number of violations on a date directly correlates to the number of tags in that rows "Tag" column. Tags will be listed without the leading "F". For example, tag F757 will be shown as just 757 in the excel sheets. Each tag and severity also match up. For example, if on 07/10/2021 the tag column has the tags, "757, 796, 869" and the severity column has the severities "D, E, B", then the pairs would be 757 and D, 796 and E, and 869 and B. This would mean that on 07/10/2021 there were 3 violations, one with tag 757 and severity D, etc. The severities' descriptions are included in the "OptionalData" excel file by default. 
+
+## How Severity is Calculated for States and Organizations
+It's simple really. The further along in the alphabet a letter is, the worse the severity is. For example, A is the least serious severity score, and is assigned the value of 1 for that reason. L is the most serious severity score, and therefore gets a 12. So A, B, C, ... have values of 1, 2, 3, etc., which is how an organization's or state's severity is determined. For example, if an organziation had violations of severities A, B, and C for a given range, its severity would be 6 (1 + 2 + 3). 
 

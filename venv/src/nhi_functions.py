@@ -290,8 +290,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
                 # Set fine column as currency
                 dfs["All"]["Fine"] = dfs["All"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
-                #print(dfs["All"]["Fine"])
-                #dfs["All"]["Fine"] = pd.to_numeric(dfs["All"]["Fine"], errors="coerce")
                 dfs["All"]["Fine"] =   dfs["All"]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
 
