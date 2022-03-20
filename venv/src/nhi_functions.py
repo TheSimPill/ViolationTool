@@ -55,8 +55,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     choices = 0
 
     # Get dates in range for state df
-    if not None in {startdate, enddate}:
-        state_df = get_inrange(state_df, startdate, enddate)
+    state_df = get_inrange(state_df, startdate, enddate)
 
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
@@ -66,13 +65,11 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
     # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
     t_dfs = sort_by_territories(state_df, territories)
-    if not None in {startdate, enddate}:
-        for terr in t_dfs.keys():
-            t_dfs[terr] = get_inrange(t_dfs[terr], startdate, enddate)
-            # Convert fine column to currency
-            t_dfs[terr]["Fine"] = t_dfs[terr]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
-            t_dfs[terr]["Fine"] = pd.to_numeric(t_dfs[terr]["Fine"], errors="coerce")
-            t_dfs[terr]["Fine"] =  t_dfs[terr]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
+    for terr in t_dfs.keys():
+        # Convert fine column to currency
+        t_dfs[terr]["Fine"] = t_dfs[terr]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
+        t_dfs[terr]["Fine"] = pd.to_numeric(t_dfs[terr]["Fine"], errors="coerce")
+        t_dfs[terr]["Fine"] =  t_dfs[terr]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
     
     # Optional sheets
@@ -399,11 +396,13 @@ def get_most_fined(df, num):
         # Convert fine column to a number so we can sum
         df["Fine"] = pd.to_numeric(df["Fine"], errors="coerce")
         sum = df.loc[df["Organization"] == name, "Fine"].sum()
+        print(name, sum)
         if sum != 0:
             sums.append((name, '${:,.2f}'.format(sum)))
 
     # Sort the list of tuples by fine
     sums = sorted(sums, key=lambda item: item[1], reverse=True)
+    print(sums)
     # Add place holders if not enough data
     if len(sums) < num:
         sums += [("NA", "$0")] * (num - len(sums))
@@ -457,9 +456,13 @@ def get_year_range(year, years, startdate, enddate):
 def get_tag_range(df, tags):
     newdf = df
     newdf["Tag"] = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(","))
+    newdf["Severity"] = df["Severity"].apply(lambda x: x.strip('][').replace("'", "").split(","))
     newdf = newdf.reset_index()
 
     for i, row in newdf.iterrows():
+        # Map each tag to its severity so that we know which severities to keep
+        pairs = dict(zip(row["Tag"], row["Severity"]))
+
         set1 = set(row["Tag"])
         set2 = set(tags)
 
@@ -468,7 +471,9 @@ def get_tag_range(df, tags):
         if len(matches) == 0:
             newdf = newdf.drop(index=i)
         else:
+            # Update the dataframe to only keep the correct tags and matches
             newdf.at[i, "Tag"] = str(matches)
+            newdf.at[i, "Severity"] = str([pairs[tag] for tag in matches])
 
     return newdf
 
