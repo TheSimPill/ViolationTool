@@ -44,12 +44,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
         # Convert date column back to string 
         state_df['Date'] = oldcol
 
-    # Check to see if tags were chosen and if not use all
-    if len(tags) == 0:
-        tags = list(tag_hash.keys())
-    else:
-        state_df["Tag"] = state
-    
     # Check to see if territories were chosen and use default if not
     if len(territories) == 0:
         territories = info.territories
@@ -59,6 +53,16 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     years = list(range(startdate.year, enddate.year+1))
     dfs = {}
     choices = 0
+
+    # Get dates in range for state df
+    if not None in {startdate, enddate}:
+        state_df = get_inrange(state_df, startdate, enddate)
+
+    # Check to see if tags were chosen and if not use all
+    if len(tags) == 0:
+        tags = list(tag_hash.keys())
+    else:
+        state_df = get_tag_range(state_df, tags)
 
     # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
     t_dfs = sort_by_territories(state_df, territories)
@@ -70,10 +74,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
             t_dfs[terr]["Fine"] = pd.to_numeric(t_dfs[terr]["Fine"], errors="coerce")
             t_dfs[terr]["Fine"] =  t_dfs[terr]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
 
-    # Get dates in range for state df
-    if not None in {startdate, enddate}:
-        state_df = get_inrange(state_df, startdate, enddate)
-
+    
     # Optional sheets
     dfs["US"] = pd.DataFrame(columns=(["Total"] + years))
     dfs["Most Fined"] = pd.DataFrame()
@@ -280,6 +281,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
                 # Set indicies properly
                 dfs["All Territories"] = dfs["All Territories"].drop(["index"], axis=1)
                 dfs["All Territories"] = dfs["All Territories"].set_index(["Territory", "State", "Organization", "Date"])
+                dfs["All Territories"] = dfs["All Territories"].drop("level_0", axis=1)
 
                 # Set fine column as currency
                 dfs["All Territories"]["Fine"] = dfs["All Territories"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
@@ -289,6 +291,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
             elif option == "All Violations" and options[option]:
                 dfs["All"] = state_df.set_index(["State", "Organization", "Date"])
+                dfs["All"] = dfs["All"].drop("index", axis=1)
 
                 # Set fine column as currency
                 dfs["All"]["Fine"] = dfs["All"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
@@ -300,7 +303,8 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     # Excel workbook for each territory
     for terr in t_dfs.keys():
         # Makes the sheets more organized
-        t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
+        t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"])
+        t_dfs[terr] = t_dfs[terr].drop("index", axis=1)
         t_dfs[terr].to_excel(outpath + "/" + terr + ".xlsx", sheet_name=terr)
 
     start_row = 1
@@ -451,10 +455,22 @@ def get_year_range(year, years, startdate, enddate):
 
 # Get violations that include chosen tags
 def get_tag_range(df, tags):
-    # Turn the tag column into a pandas series of lists
-    old = df["Tag"]
-    df["Tag"] = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(",")) 
-    for lst in col:
-        vios += len(lst)
+    newdf = df
+    newdf["Tag"] = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(","))
+    newdf = newdf.reset_index()
 
-    return df
+    for i, row in newdf.iterrows():
+        set1 = set(row["Tag"])
+        set2 = set(tags)
+
+        # If there are no tags in a row that are ones chosen by the user, drop the row
+        matches = list(set1.intersection(set2))
+        if len(matches) == 0:
+            newdf = newdf.drop(index=i)
+        else:
+            newdf.at[i, "Tag"] = str(matches)
+
+    return newdf
+
+
+

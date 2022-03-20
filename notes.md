@@ -261,3 +261,6 @@ Want to
         remove email screen and other unecessary stuff - done
         write up document with details, how to use, assumptions
 
+
+
+NEED TO SPEED UP TAG FILTER 

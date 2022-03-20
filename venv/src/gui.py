@@ -324,11 +324,9 @@ class TagsPage(tk.Frame):
         if len(lines) != 0:
             # List to hold the tags
             global chosen_tags
-            for tag in lines:
-                newtag = '0' + tag
-                
-                if newtag in tag_hash.keys():
-                    chosen_tags += [newtag]
+            for tag in lines:        
+                if tag in tag_hash.keys():
+                    chosen_tags += [tag]
                     notags = False
             
         if notags:
