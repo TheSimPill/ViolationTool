@@ -263,4 +263,4 @@ Want to
 
 
 
-NEED TO SPEED UP TAG FILTER 
+Need to figure out why fines aren't formatted in Most Fined, cant do set becausE it elminates dupes
