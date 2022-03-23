@@ -321,6 +321,26 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
         writer.save()
         frame.finish()
+
+# Match up incidents with corresponding fines
+def match_violations(frame, state_df, fine_df):
+
+    # Combine rows where state, org and date are the same but make a list of the tags and severities in order
+    state_df = state_df.groupby(['State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
+        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
+    
+    # Format the fine_df, get rid of dupes, use it to update the state_df
+    fine_df = fine_df.set_index(['State', 'Organization', 'Date'])
+    fine_df = fine_df[~fine_df.index.duplicated()]
+    state_df.update(fine_df)
+    
+
+    with open(resource_path("/dataframes/state_df.pkl"), 'wb') as outp:
+            pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
+
+    frame.instructions.config(text="Finished matching")
+    time.sleep(1)
+    frame.advance_page()
     
 # Converts states from full name into their two letter code
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
