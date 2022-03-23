@@ -272,3 +272,5 @@ How sheets are made:
     Filter state df on dates
     Check to see if tags were chosen otherwise use all
     Break up states into territories and 
+
+pyinstaller --noconfirm --onefile --console --name "ViolationTool" --add-data "/Users/Freddie/Impruvon/statictoolv1/dataprocessingproject/venv/src/dataframes:dataframes/" --add-data "/Users/Freddie/Impruvon/statictoolv1/dataprocessingproject/venv/src/images:images/"  "/Users/Freddie/Impruvon/statictoolv1/dataprocessingproject/venv/src/gui.py"

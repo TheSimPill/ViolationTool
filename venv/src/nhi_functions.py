@@ -298,7 +298,9 @@ def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territori
     # Excel workbook for each territory
     for terr in t_dfs.keys():
         # Makes the sheets more organized
-        t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"])
+        if not t_dfs[terr].empty:
+            t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"])
+
         t_dfs[terr].to_excel(outpath + "/" + terr + ".xlsx", sheet_name=terr)
 
     start_row = 1
