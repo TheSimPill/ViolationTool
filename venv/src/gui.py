@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import pickle, threading, datetime, info
+import pickle, threading, datetime, info, time
 import nhi_functions as nhi
     
 # Global variables
@@ -327,7 +327,7 @@ class TagsPage(tk.Frame):
             global chosen_tags
             for tag in lines:        
                 if tag in tag_hash.keys():
-                    chosen_tags += [tag]
+                    chosen_tags += [int(tag)]
                     notags = False
                 else:
                     rejected_tags += [tag]
@@ -339,11 +339,7 @@ class TagsPage(tk.Frame):
         else:
             # Display rejected tags if any 
             if len(rejected_tags) != 0:
-                self.box.grid_forget()
-                self.all_btn.grid_forget()
-                self.fin_btn.grid_forget()
-                self.instructions2.grid_forget()
-                self.instructions.config(text="Rejected " + rejected_tags)
+                print("Rejected ", rejected_tags)
 
             self.controller.show_frame(OptionsPage)
     
@@ -467,8 +463,11 @@ class ExcelPage(tk.Frame):
     def make_sheets(thisframe):
 
         outpath = askdirectory()
-        with open(nhi.resource_path("dataframes/state_df.pkl"), 'rb') as inp:
+        # Use the unmatched state_df so it's easier to filter things
+        with open(nhi.resource_path("dataframes/unmatched_state_df.pkl"), 'rb') as inp:
             state_df = pickle.load(inp)
+        with open(nhi.resource_path("dataframes/fine_df.pkl"), 'rb') as inp:
+            fine_df = pickle.load(inp)    
 
         # Create a thread to run make_sheets() so we can update the screen
         class thread(threading.Thread):
@@ -478,7 +477,7 @@ class ExcelPage(tk.Frame):
         
             def run(self):
                 global options, sdate, edate, territories, chosen_tags
-                self.func(thisframe, options, state_df, sdate, edate, territories, chosen_tags, outpath)
+                self.func(thisframe, options, state_df, fine_df, sdate, edate, territories, chosen_tags, outpath)
 
         thread(nhi.make_sheets).start()
 

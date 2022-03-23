@@ -1,6 +1,7 @@
+from stat import FILE_ATTRIBUTE_REPARSE_POINT
 from typing import Dict, List
 from openpyxl.descriptors.base import String
-import pickle, sys, info, os
+import pickle, sys, info, os, time
 import pandas as pd
 from datetime import datetime
 
@@ -16,15 +17,13 @@ def resource_path(relative_path):
 
     
 # Makes the excel sheets based on options chosen by the user 
-def make_sheets(frame, options, state_df, startdate, enddate, territories, tags, outpath):
+def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territories, tags, outpath):
 
     # Update the screen
     frame.instructions.config(text="Making sheets...")
     frame.instructions2.grid_forget()
     frame.sheet_btn.grid_forget()
 
-    # Change state_df's indicies back to numbers for now
-    state_df = state_df.reset_index()
     # Load in tag data 
     with open(resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
         tag_hash = pickle.load(inp)
@@ -53,7 +52,21 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     territories = convert_states(territories)
     print("Converted States to Two-Letter Codes")
 
-    
+    # Check to see if tags were chosen and if not use all
+    if len(tags) == 0:
+        tags = list(tag_hash.keys())
+    else:
+        state_df = state_df.loc[state_df["Tag"].isin(tags)] 
+    print("Filtered Tags")
+
+    # Get dates in range for state df
+    state_df = get_inrange(state_df, startdate, enddate)
+    print("Filtered Dates")
+
+    # Merge rows where state, date, and organization are the same
+    state_df = match_violations(state_df, fine_df)
+    state_df = state_df.reset_index()
+
     # Optional sheets
     dfs = {}
     years = list(range(startdate.year, enddate.year+1))
@@ -64,19 +77,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     dfs["State Violations"] = pd.DataFrame(columns=(["Total"] + years))
     dfs["All Territories"] = pd.DataFrame()
     dfs["All"] = pd.DataFrame()
-
-
-    # Get dates in range for state df
-    state_df = get_inrange(state_df, startdate, enddate)
-    print("Filtered Dates")
-
-    # Check to see if tags were chosen and if not use all
-    if len(tags) == 0:
-        tags = list(tag_hash.keys())
-    else:
-        state_df = get_tag_range(state_df, tags)
-        print(type(tags[0]))
-    print("Filtered Tags")
 
     # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
     t_dfs = sort_by_territories(state_df, territories)
@@ -323,7 +323,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
         frame.finish()
 
 # Match up incidents with corresponding fines
-def match_violations(frame, state_df, fine_df):
+def match_violations(state_df, fine_df):
 
     # Combine rows where state, org and date are the same but make a list of the tags and severities in order
     state_df = state_df.groupby(['State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
@@ -334,13 +334,8 @@ def match_violations(frame, state_df, fine_df):
     fine_df = fine_df[~fine_df.index.duplicated()]
     state_df.update(fine_df)
     
-
-    with open(resource_path("/dataframes/state_df.pkl"), 'wb') as outp:
-            pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
-
-    frame.instructions.config(text="Finished matching")
-    time.sleep(1)
-    frame.advance_page()
+    return state_df
+    
     
 # Converts states from full name into their two letter code
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
