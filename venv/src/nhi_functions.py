@@ -151,7 +151,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
                     # Get subdf of a given state
                     subdf = state_df.loc[state_df["State"] == state]
                     # Get a list of the most fined organizations across entire period
-                    state_orgs["Overall"][state] = get_most_fined(subdf, num, state)
+                    state_orgs["Overall"][state] = get_most_fined(subdf, num)
                     
                 # Go through each year in range
                 for year in years:
@@ -165,7 +165,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
                         subdf = state_df.loc[state_df["State"] == state]
                         subdf = get_inrange(subdf, yearstart, yearend)
                         # Get a list of the most fined organizations across a year
-                        state_orgs[year][state] = get_most_fined(subdf, num, state)
+                        state_orgs[year][state] = get_most_fined(subdf, num)
 
                 # Make the multi-index columns
                 cols = [(["Overall"] + years), ["Organization", "Fines"]]
@@ -278,7 +278,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
                 # Set indicies properly
                 dfs["All Territories"] = dfs["All Territories"].drop(["index"], axis=1)
                 dfs["All Territories"] = dfs["All Territories"].set_index(["Territory", "State", "Organization", "Date"])
-                dfs["All Territories"] = dfs["All Territories"].drop("level_0", axis=1)
 
                 # Set fine column as currency
                 dfs["All Territories"]["Fine"] = dfs["All Territories"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
@@ -288,7 +287,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
             elif option == "All Violations" and options[option]:
                 dfs["All"] = state_df.set_index(["State", "Organization", "Date"])
-                dfs["All"] = dfs["All"].drop("index", axis=1)
 
                 # Set fine column as currency
                 dfs["All"]["Fine"] = dfs["All"]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
@@ -301,7 +299,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     for terr in t_dfs.keys():
         # Makes the sheets more organized
         t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"])
-        t_dfs[terr] = t_dfs[terr].drop("index", axis=1)
         t_dfs[terr].to_excel(outpath + "/" + terr + ".xlsx", sheet_name=terr)
 
     start_row = 1
@@ -388,7 +385,7 @@ def count_violations_df(df):
     return vios
 
 # Returns a sorted list of tuples where each tuple contains an organization and total fines for a period    
-def get_most_fined(df, num, state):
+def get_most_fined(df, num):
     sums = []
     # Get the facility names
     facilities = df["Organization"].unique()
@@ -399,21 +396,18 @@ def get_most_fined(df, num, state):
             sums.append((name, sum))
 
     # Sort the list of tuples by fine
-    if state == "MD":
-        print("Before Sorted: ", sums)
     sums = sorted(sums, key=lambda item: item[1], reverse=True)
-    if state == "MD":
-        print("Sorted: ", sums)
+
     # Add place holders if not enough data
     if len(sums) < num:
         sums += [("NA", "$0")] * (num - len(sums))
     
     # Format the sums to currenices
-    for sum in sums:
+    for i, sum in enumerate(sums):
         if sum[0] != "NA":
             temp = list(sum)
             temp[1] = '${:,.2f}'.format(temp[1])
-            sum = tuple(temp)
+            sums[i] = tuple(temp)
 
     return sums[:num]
 
@@ -427,7 +421,7 @@ def get_most_severe(df, num):
         # Convert the severity column to numeric and sum it
         def convert(x):
             sum = 0
-            lst = x.strip('][').replace("'", "").split(", ") 
+            lst = x.strip('][').replace("'", "").split(",") 
             for severity in lst:
                 sum += info.severity_ranks[severity]
 

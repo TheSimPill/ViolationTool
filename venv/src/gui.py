@@ -321,6 +321,7 @@ class TagsPage(tk.Frame):
         notags = True
         lines = self.box.get("1.0","end-1c").splitlines()
         lines = [x.strip() for x in lines if x != '']
+        rejected_tags = []
         if len(lines) != 0:
             # List to hold the tags
             global chosen_tags
@@ -328,11 +329,22 @@ class TagsPage(tk.Frame):
                 if tag in tag_hash.keys():
                     chosen_tags += [tag]
                     notags = False
-            
+                else:
+                    rejected_tags += [tag]
+                
+        
         if notags:
             self.instructions.config(text="Please enter at least one valid tag")
             self.instructions2.grid_forget()
         else:
+            # Display rejected tags if any 
+            if len(rejected_tags) != 0:
+                self.box.grid_forget()
+                self.all_btn.grid_forget()
+                self.fin_btn.grid_forget()
+                self.instructions2.grid_forget()
+                self.instructions.config(text="Rejected " + rejected_tags)
+
             self.controller.show_frame(OptionsPage)
     
     # For setting all tags

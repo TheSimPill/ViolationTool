@@ -264,3 +264,11 @@ Want to
 
 
 Need to figure out why fines aren't formatted in Most Fined, cant do set becausE it elminates dupes
+
+How sheets are made: 
+    Check if dates were chosen, if not, do min and max dates
+    Check if terrs chosen, if not use defaults
+    Convert states to two letter code
+    Filter state df on dates
+    Check to see if tags were chosen otherwise use all
+    Break up states into territories and 
