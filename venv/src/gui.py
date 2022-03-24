@@ -326,11 +326,14 @@ class TagsPage(tk.Frame):
             # List to hold the tags
             global chosen_tags
             for tag in lines:
-                tag = int(tag)        
-                if tag in tag_hash.keys():
-                    chosen_tags += [tag]
-                    notags = False
-                else:
+                try:
+                    tag = int(tag)
+                    if tag in tag_hash.keys():
+                        chosen_tags += [tag]
+                        notags = False
+                    else:
+                        rejected_tags += [tag]
+                except:        
                     rejected_tags += [tag]
                 
         
