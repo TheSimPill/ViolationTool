@@ -325,9 +325,10 @@ class TagsPage(tk.Frame):
         if len(lines) != 0:
             # List to hold the tags
             global chosen_tags
-            for tag in lines:        
+            for tag in lines:
+                tag = int(tag)        
                 if tag in tag_hash.keys():
-                    chosen_tags += [int(tag)]
+                    chosen_tags += [tag]
                     notags = False
                 else:
                     rejected_tags += [tag]
