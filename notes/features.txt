@@ -1,5 +1,5 @@
 Features to add:
-    Show valid tags given
+    Show invalid tags given
     Email functionality
     Back buttons
     
