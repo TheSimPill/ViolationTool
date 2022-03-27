@@ -213,11 +213,15 @@ class TerritoriesPage(tk.Frame):
             states = [x.strip() for x in states if x != '']
 
             # Make sure valid states were given
-            for state in states:
-                if state not in info.all_states:
-                    self.instructions.config(text="Please make sure states are spelled correctly and valid")
-                    self.instructions2.grid_forget()
-                    bad = True
+            if len(states) != 0:
+                for state in states:
+                    if state not in info.all_states:
+                        self.instructions.config(text="Please make sure states are spelled correctly and valid")
+                        bad = True
+            else:
+                # If there isn't at least one valid state
+                self.instructions.config(text="Please enter at least one valid state")
+                bad = True
 
             # Only continue if valid input was given
             if not bad:
@@ -233,7 +237,9 @@ class TerritoriesPage(tk.Frame):
                     self.nextbtn.config(text="Finish")
                 # Last screen
                 elif self.count == len(self.tlist):
+                    print(territories)
                     self.controller.show_frame(OptionsPage)
+
 
         # Clear the box
         if not bad:
