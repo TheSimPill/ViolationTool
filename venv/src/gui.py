@@ -17,6 +17,19 @@ chosen_tags = []
 with open(nhi.resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
     tag_hash = pickle.load(inp)
 
+
+class TkWait:
+    def __init__(self, master, milliseconds):
+        self.duration = milliseconds
+        self.master = master
+        
+    def __enter__(self):
+        self.resume = tk.BooleanVar(value=False)
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.master.after(self.duration, self.resume.set, True)
+        self.master.wait_variable(self.resume)
   
 class tkinterApp(tk.Tk):
      
@@ -304,6 +317,7 @@ class TagsPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
+        self.parent = parent
 
         # Instructions, Tags box, buttons
         self.instructions = ttk.Label(self, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
@@ -323,9 +337,9 @@ class TagsPage(tk.Frame):
 
 
     # Lets the user add the tags
-    def set_tags(self):
+    def set_tags(thisframe):
         notags = True
-        lines = self.box.get("1.0","end-1c").splitlines()
+        lines = thisframe.box.get("1.0","end-1c").splitlines()
         lines = [x.strip() for x in lines if x != '']
         rejected_tags = []
         if len(lines) != 0:
@@ -344,14 +358,35 @@ class TagsPage(tk.Frame):
                 
         
         if notags:
-            self.instructions.config(text="Please enter at least one valid tag")
-            self.instructions2.grid_forget()
+            thisframe.instructions.config(text="Please enter at least one valid tag")
+            thisframe.instructions2.grid_forget()
         else:
             # Display rejected tags if any 
             if len(rejected_tags) != 0:
                 print("Rejected ", rejected_tags)
 
-            self.controller.show_frame(OptionsPage)
+            # Hide elements
+            thisframe.all_btn.grid_forget()
+            thisframe.fin_btn.grid_forget()
+            thisframe.box.grid_forget()
+            thisframe.instructions2.grid_forget()
+
+            # Make a string of accepted tags that will fit within the screen without stretching it
+            output = ""
+            for i in range(len(chosen_tags)):
+                if i % 10 == 0:
+                    output += "\n"
+                
+                output += str(chosen_tags[i]) + " "
+    
+
+
+            with TkWait(thisframe.parent, 3000):
+                thisframe.instructions.config(text="Tags Accepted: \n" + output)
+
+            # Makes the screen wait for 3 seconds before going back to OptionsPage
+            
+            thisframe.controller.show_frame(OptionsPage)
     
     # For setting all tags
     def set_all_tags(self):

@@ -2,3 +2,9 @@ Features to add:
     Show valid tags given
     Email functionality
     Back buttons
+    
+
+
+Future to do:
+    Put pages each into their own file
+    Clean up TerritoriesPage logic
