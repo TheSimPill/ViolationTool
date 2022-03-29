@@ -64,7 +64,7 @@ class tkinterApp(tk.Tk):
                 OptionsPage, TerritoriesPage, DateRangePage,\
                 FormatPage, TagsPage, ExcelPage, KeyPage, DonePage])
 
-        self.show_frame(StartPage)
+        self.show_frame(WebscrapingChoicePage)
   
     # Shows frame that was passed in as a parameter
     def show_frame(self, cont):
@@ -178,8 +178,11 @@ class WebscrapingChoicePage(tk.Frame):
         with open(nhi.resource_path("assets/lastscrape.pkl"), "rb") as inp:
             lastscrape = pickle.load(inp)
 
-        instructions = ttk.Label(self, text="Did you have an interrupted scraping session? Last scrape: ".format(lastscrape), font=("Times", 15))
+        instructions = ttk.Label(self, text="Did you have an interrupted scraping session?", font=("Times", 15))
         instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        instructions2 = ttk.Label(self, text="Last scrape: {}".format(lastscrape), font=("Times", 15))
+        instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         yes_btn = tk.Button(self, text="Yes", command=lambda:self.scrape(False), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         yes_btn.grid(column=1, row=3, pady=10)
@@ -224,7 +227,7 @@ class WebscrapingPage(tk.Frame):
         self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        self.instructions2 = ttk.Label(self, text="Will take ~1hour if limited or no save data used", font=("Times", 15))
+        self.instructions2 = ttk.Label(self, text="Will take over an hour if doing a fresh scrape", font=("Times", 15))
         self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         self.start_btn = tk.Button(self, command=lambda:self.scrape(), text="Start Webscraping", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
@@ -232,20 +235,11 @@ class WebscrapingPage(tk.Frame):
     
 
     def scrape(thisframe):
-        global fines_hash, state_df, load_scraper, savepath, filepath, apikey
-        # On windows for testing
-        filepath = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src"
-
-        # For testing:
-        # MAC
-        #with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
-        #   state_df = pickle.load(inp)
-        #with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
-         #   state_df = pickle.load(inp)
-
-        # For real run
-        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\rawdata\dataframes\state_df.pkl", 'rb') as inp:
-            state_df = pickle.load(inp)
+        global state_df, apikey
+        
+        # If we skip download when testing:
+        #with open(nhi.resource_path("dataframes/new/state_df.pkl"), 'rb') as inp:
+        #    state_df = pickle.load(inp)
 
         class thread(threading.Thread):
             def __init__(self, func):
@@ -253,22 +247,15 @@ class WebscrapingPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                if load_scraper:
-                    self.func(thisframe, False, state_df, savepath, filepath, apikey)
+                if fresh_scrape:
+                    self.func(thisframe, False, state_df, apikey)
                 else:
-                    self.func(thisframe, True, state_df, savepath, filepath, apikey)
+                    self.func(thisframe, True, state_df, apikey)
         
         thread(scraper.scrape_fines).start()
-        #thisframe.advance_page()
 
-    # Called after scraper is done and fines have been matched
+    # Called after scraper is done
     def advance_page(thisframe):
-        global filepath
-
-        '''
-        with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
-            global fines_hash; fines_hash = pickle.load(inp)
-        '''
         thisframe.controller.resize_optionspage()
         thisframe.controller.show_frame(OptionsPage)
 

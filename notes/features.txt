@@ -1,4 +1,5 @@
 Features to add:
+    Tell date of last scrape
     Make copies of old dataframes when getting new ones
     Show invalid tags given
     Back buttons

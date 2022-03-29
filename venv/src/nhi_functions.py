@@ -157,27 +157,6 @@ def get_proxy(params):
         else:
             return (page, params)
 
-# Match up incidents with corresponding fines
-def match_violations(dfpath, frame, state_df, fine_df):
-
-    # Combine rows where state, org and date are the same but make a list of the tags and severities in order
-    state_df = state_df.groupby(['State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
-        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
-    
-    # Format the fine_df, get rid of dupes, use it to update the state_df
-    fine_df = fine_df.set_index(['State', 'Organization', 'Date'])
-    fine_df = fine_df[~fine_df.index.duplicated()]
-    state_df.update(fine_df)
-    
-    if not exists(dfpath + "/dataframes"):
-        os.mkdir(dfpath + "/dataframes")
-    with open(dfpath + "/dataframes/new/state_df.pkl", 'wb') as outp:
-            pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
-
-    frame.instructions.config(text="Finished matching")
-    time.sleep(1)
-    frame.advance_page()
-
     
 # Makes the excel sheets based on options chosen by the user 
 def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territories, tags, outpath):

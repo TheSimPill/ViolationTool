@@ -17,9 +17,10 @@ totalhomes = 0
 curframe = None
 
 # Scrape fines for relevant cases for each state using threads
-def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
+def scrape_fines(frame, reparse, state_df, apikey):
     # Allows frame to be updated in different functions without directly passing it in
     global curframe; curframe = frame
+    dir = nhi.resource_path("pages")
 
     # Hide elements from previous screen
     frame.start_btn.grid_forget()
@@ -142,8 +143,8 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
                         # Appending each incident tuple from all homes in a state
                         states_fines.append(homes_fines)
 
-                # MAC - /Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/states_fines.pkl
-                with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\states_fines.pkl", 'wb') as outp:
+                # For testing, in case save at end doesn't work
+                with open(nhi.resource_path("dataframes/new/states_fines.pkl"), 'wb') as outp:
                     pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
                 
                 # Updates progress bar label and value
@@ -157,13 +158,8 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
             # Convert fines hash into a data frame once everything is scraped
             fine_df = pd.DataFrame(states_fines, columns =["State", "Organization", "Date", "Fine", "Url"])
 
-            # Check to see if folder exists and if it doesn't, create it
-            # Removed for testing
-            #if not exists(dfpath + "/dataframes"):
-                #os.mkdir(dfpath + "/dataframes")
-                #dfpath + "/dataframes/fine_df.pkl"
-            # MAC - /Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/fine_df.pkl
-            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl", 'wb') as outp:
+            # Save the fine dataframe
+            with open(nhi.resource_path("dataframes/new/fine_df.pkl"), 'wb') as outp:
                 pickle.dump(fine_df, outp, pickle.HIGHEST_PROTOCOL)
             
             # Once all scraping is finished
@@ -171,22 +167,8 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
             curframe.instructions2.grid_forget()
             progress.grid_forget()
             plabel.grid_forget()
-            curframe.instructions.config(text="Saved fines_hash.pkl in dataframes folder")
-
-            time.sleep(1)
-            curframe.instructions.config(text="Matching fines...")
-
-            # Changed for testing
-            # dfpath + "/dataframes/fine_df.pkl"
-            #C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl
-            #C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl
-            #/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/fine_df.pkl
-            #/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl
-            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\fine_df.pkl", 'rb') as inp:
-                fine_df = pickle.load(inp)
-            with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
-                state_df = pickle.load(inp)
-            nhi.match_violations(dfpath, curframe, state_df, fine_df)
+            curframe.instructions.config(text="Saved fines_hash.pkl in dataframes folder")            
+            frame.advance_page()
             
         # If parsing main page fails for some reason
         except AttributeError as e:
@@ -290,9 +272,6 @@ def scrape_facility(args):
                         lst = fine.get_text().strip().split("\n")
                         fine = re.search(".+Fine$", lst[0])
 
-                        if facility == 'apache junction hlth center':
-                            print(facility.upper(), fine, incident_url, date)
-                            time.sleep(3)
                         if not fine is None:
                             fine = fine.group()
 

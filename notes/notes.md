@@ -279,3 +279,11 @@ pyinstaller --noconfirm --onefile --console --name "ViolationTool" --add-data "/
 
 BUG:
     TERRITORIES SCREEN: If you hit finish on the final screen without entering anything it works
+
+
+Thinking of redesigning scrape process as follows:
+
+    Show date that last scrape started - doesn't mean it finished
+    If they choose to do a fresh scrape, wont use saved
+    Other option will be to try and use any saved pages if they exist, this is used for if 
+    a user got interupted midway through
