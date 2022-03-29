@@ -123,23 +123,37 @@ class StartPage(tk.Frame):
                 text = text[8:-1]
 
                 if text == lastlocalupdate:
-                    text += " (You're up to date!)"
+                    lastsiteupdate = text + " (You're up to date!)"
                 else:
-                    text += " (You're not up to date!)"
-                lastsiteupdate = text
-
+                    lastsiteupdate = text + " (You're not up to date!)"
+                
         except:
             lastsiteupdate = "(Failed to fetch last update, check website)"
        
         self.instructions3 =  ttk.Label(self, text=instructions3.format(lastsiteupdate), font=("Times", 15))
         self.instructions3.grid(column=1, row=3, columnspan=3, pady=10)
 
-        self.dl_btn = tk.Button(self, command=lambda:self.show_options(), text="Start", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn = tk.Button(self, command=lambda:self.download_and_parse(text), text="Start", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
         self.dl_btn.grid(column=2, row=4, pady=10)
 
     def show_options(self):
         self.controller.resize_optionspage()
         self.controller.show_frame(OptionsPage)
+
+
+    def download_and_parse(thisframe, text):
+        # Create a custom thread class so that we can update the screen during download
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                self.func(thisframe, text)
+
+        thread(nhi.download).start()
+        # For skipping download
+        #thisframe.advance_page()
 
 
 # Download page

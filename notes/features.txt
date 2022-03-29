@@ -1,7 +1,8 @@
 Features to add:
+    Make copies of old dataframes when getting new ones
     Show invalid tags given
-    Email functionality
     Back buttons
+
     
 
 

@@ -1,6 +1,9 @@
+from tkinter import Label
+from tkinter.ttk import Progressbar
 from typing import Dict, List
 from openpyxl.descriptors.base import String
-import pickle, sys, info, os, time
+import pickle, sys, info, os, time, requests, zipfile, random
+from bs4 import BeautifulSoup as bs
 import pandas as pd
 from datetime import datetime
 
@@ -14,42 +17,63 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-# Download raw data if user says yes, returns ->
-# Nothing
-def download(frame, save_path):
+# Download raw data if user says yes
+def download(frame, date):
     
-    frame.instructions.config(text="Download Started")
+    frame.instructions.config(text="Downloading...")
     frame.instructions2.grid_forget()
+    frame.instructions3.grid_forget()
     frame.dl_btn.grid_forget()
-    '''
-    url = 'http://downloads.cms.gov/files/Full-Statement-of-Deficiencies-October-2021.zip'
-    r = requests.get(url, allow_redirects=True)
-    filename = 'Raw_Data.zip'
-    filepath = os.path.join(save_path, filename)
-    open(filepath, 'wb').write(r.content)
-    frame.instructions.config(text="Download Done")
-    zip_path = save_path + '/Raw_Data.zip'
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(save_path)
-    frame.instructions.config(text="Unzip Done")
-    files_in_directory = os.listdir(save_path)
-    filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
-    for file in filtered_files:
-        path_to_file = os.path.join(save_path, file)
-        os.remove(path_to_file)
-    '''
-    frame.instructions.config(text="Deleted Extra Files")
-    time.sleep(1.5)
-    frame.instructions.config(text="Parsing Data")
-    time.sleep(1.5)
-    parse_data(frame, save_path)
+    
+    # Try and grab the download url, if not, let the user retry
+    try:
+        req = requests.request("GET", "https://projects.propublica.org/nursing-homes/", timeout=9)
+        if req.status_code == 200:
+            soup = bs(req.content, "html.parser")
+            hrefs = soup.find("div", class_="home_about_data").find_all("a")
+            for a in hrefs:
+                if a.text == "raw data files":
+                    url = a["href"]
+                    break
+
+        # Download and save the excel files
+        r = requests.get(url, allow_redirects=True)
+        filepath = resource_path("rawdata/Raw_Data.zip")
+        open(filepath, 'wb').write(r.content)
+        frame.instructions.config(text="Download Done")
+
+        # Unzip the download
+        with zipfile.ZipFile(resource_path("rawdata/Raw_Data.zip"), 'r') as zip_ref:
+            zip_ref.extractall(resource_path("rawdata"))
+        frame.instructions.config(text="Unzip Done")
+
+        # Get rid of extra files
+        files_in_directory = os.listdir(resource_path("rawdata"))
+        filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
+        for file in filtered_files:
+            os.remove(resource_path("rawdata/" + file))
+
+        # Save the date of this download
+        with open(resource_path("assets/lastupdate.pkl"), 'wb') as outp:
+            pickle.dump(date, outp, pickle.HIGHEST_PROTOCOL)
+            print("Saved update date")
+
+        # Update screen
+        frame.instructions.config(text="Deleted Extra Files")
+        time.sleep(1)
+        frame.instructions.config(text="Parsing Data")
+        time.sleep(1)
+        parse_data(frame)
+
+    except:
+        frame.instructions.config(text="Download failed: Please try restarting the program")
 
 '''
     Cases that took place on the same date at the same facility
     are each counted as their own incident in the excel raw data.
 '''
-def parse_data(frame, save_path):
-    files = os.listdir(save_path)
+def parse_data(frame):
+    files = os.listdir(resource_path("rawdata"))
     start_time = time.time() 
     numtoload = len(files)
     
@@ -73,7 +97,7 @@ def parse_data(frame, save_path):
         start = time.time()
 
         # Make excel file into a dataframe
-        df = pd.read_excel(save_path+"/"+file, usecols="A,E,G,H,I", names=["Organization", "State", "Date", "Tag", "Severity"])
+        df = pd.read_excel(resource_path("rawdata")+"/"+file, usecols="A,E,G,H,I", names=["Organization", "State", "Date", "Tag", "Severity"])
         df.insert(5, "Fine", 0)
         df.insert(6, "Url", "")
         df.insert(0, "Territory", 0)
@@ -108,10 +132,7 @@ def parse_data(frame, save_path):
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
-    # Create a hashes folder in chosen directory and save the states hash
-    if not exists(save_path + "/dataframes"):
-        os.mkdir(save_path + "/dataframes")
-    with open(save_path + "/dataframes/state_df.pkl", 'wb') as outp:
+    with open(resource_path("assets/state_df.pkl"), 'wb') as outp:
             pickle.dump(result, outp, pickle.HIGHEST_PROTOCOL)
 
     frame.instructions.config(text="Saved as state_df.pkl in dataframes folder")
