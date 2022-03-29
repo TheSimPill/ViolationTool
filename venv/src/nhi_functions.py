@@ -36,38 +36,37 @@ def download(frame, date):
                 if a.text == "raw data files":
                     url = a["href"]
                     break
-
-        # Download and save the excel files
-        r = requests.get(url, allow_redirects=True)
-        filepath = resource_path("rawdata/Raw_Data.zip")
-        open(filepath, 'wb').write(r.content)
-        frame.instructions.config(text="Download Done")
-
-        # Unzip the download
-        with zipfile.ZipFile(resource_path("rawdata/Raw_Data.zip"), 'r') as zip_ref:
-            zip_ref.extractall(resource_path("rawdata"))
-        frame.instructions.config(text="Unzip Done")
-
-        # Get rid of extra files
-        files_in_directory = os.listdir(resource_path("rawdata"))
-        filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
-        for file in filtered_files:
-            os.remove(resource_path("rawdata/" + file))
-
-        # Save the date of this download
-        with open(resource_path("assets/lastupdate.pkl"), 'wb') as outp:
-            pickle.dump(date, outp, pickle.HIGHEST_PROTOCOL)
-            print("Saved update date")
-
-        # Update screen
-        frame.instructions.config(text="Deleted Extra Files")
-        time.sleep(1)
-        frame.instructions.config(text="Parsing Data")
-        time.sleep(1)
-        parse_data(frame)
-
     except:
         frame.instructions.config(text="Download failed: Please try restarting the program")
+
+    # Download and save the excel files
+    r = requests.get(url, allow_redirects=True)
+    filepath = resource_path("rawdata/Raw_Data.zip")
+    open(filepath, 'wb').write(r.content)
+    frame.instructions.config(text="Download Done")
+
+    # Unzip the download
+    with zipfile.ZipFile(resource_path("rawdata/Raw_Data.zip"), 'r') as zip_ref:
+        zip_ref.extractall(resource_path("rawdata"))
+    frame.instructions.config(text="Unzip Done")
+
+    # Get rid of extra files
+    files_in_directory = os.listdir(resource_path("rawdata"))
+    filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
+    for file in filtered_files:
+        os.remove(resource_path("rawdata/" + file))
+
+    # Save the date of this download
+    with open(resource_path("assets/lastupdate.pkl"), 'wb') as outp:
+        pickle.dump(date, outp, pickle.HIGHEST_PROTOCOL)
+        print("Saved update date")
+
+    # Update screen
+    frame.instructions.config(text="Deleted Extra Files")
+    time.sleep(1)
+    frame.instructions.config(text="Parsing Data")
+    time.sleep(1)
+    parse_data(frame)
 
 '''
     Cases that took place on the same date at the same facility

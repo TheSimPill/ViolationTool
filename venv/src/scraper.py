@@ -20,7 +20,7 @@ curframe = None
 def scrape_fines(frame, reparse, state_df, apikey):
     # Allows frame to be updated in different functions without directly passing it in
     global curframe; curframe = frame
-    dir = nhi.resource_path("pages")
+    dir = nhi.resource_path("assets/pages")
 
     # Hide elements from previous screen
     frame.start_btn.grid_forget()
