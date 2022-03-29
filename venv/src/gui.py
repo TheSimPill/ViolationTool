@@ -2,8 +2,11 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import pickle, threading, datetime, info, time
+import pickle, threading, datetime, info, os
 import nhi_functions as nhi
+from os.path import exists
+import scraper
+
     
 # Global variables
 state_df = None
@@ -55,8 +58,9 @@ class tkinterApp(tk.Tk):
         # Initializing frames to an empty dict so that we can access pages by their name
         self.frames = {} 
   
-        self.add_frames([OptionsPage, StartPage, TerritoriesPage, DateRangePage,\
-                  FormatPage, TagsPage, ExcelPage, DonePage])
+        self.add_frames([StartPage, DownloadPage, WebscrapingChoicePage, WebscrapingPage,\
+                  OptionsPage, NoPathPage, TerritoriesPage, DateRangePage,\
+                  FormatPage, TagsPage, ExcelPage, KeyPage, DonePage])
 
         self.show_frame(StartPage)
   
@@ -105,6 +109,211 @@ class StartPage(tk.Frame):
     def show_options(self):
         self.controller.resize_optionspage()
         self.controller.show_frame(OptionsPage)
+
+
+# Download page
+class DownloadPage(tk.Frame):
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+         
+        # Instructions and Download button
+        thisframe.instructions = ttk.Label(thisframe, text="Choose empty folder to save to and download will start", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        thisframe.instructions2 = ttk.Label(thisframe, text="MAKE SURE FOLDER IS EMPTY", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        thisframe.dl_btn = tk.Button(thisframe, text="Browse", command=lambda:thisframe.download_and_parse(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        thisframe.dl_btn.grid(column=2, row=3, pady=10)
+
+    # Choose save location and start download
+    def download_and_parse(thisframe):
+        global filepath; filepath = askdirectory()
+
+        # Create a custom thread class so that we can update the screen during download
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                self.func(thisframe, filepath)
+
+        thread(nhi.download).start()
+        # For skipping download
+        #thisframe.advance_page()
+
+    # Called after excel sheets are parsed and made into state_df
+    def advance_page(thisframe):
+        global filepath
+
+        with open(filepath + "/dataframes/state_df.pkl", 'rb') as inp:
+            global state_df; state_df = pickle.load(inp)
+            
+        thisframe.controller.show_frame(WebscrapingChoicePage)
+
+
+# Webscraping choice page - shown after downloading raw data if yes is chosen on initial screen
+class WebscrapingChoicePage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
+         
+        # Instructions, Yes and No buttons
+        instructions = ttk.Label(self, text="Do you have partial webscraping data to use?", font=("Times", 15))
+        instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        instructions2 = ttk.Label(self, text="If yes, choose folder where partial save data resides", font=("Times", 15))
+        instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        yes_btn = tk.Button(self, text="Yes", command=lambda:self.open_and_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        yes_btn.grid(column=1, row=3, pady=10)
+
+        no_btn = tk.Button(self, text="No", command=lambda:self.fresh_scrape(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        no_btn.grid(column=3, row=3, pady=10)
+
+
+    # If yes is chosen -> Choose location of saved data, scrape will use saved pages when possible
+    def open_and_scrape(self):
+        global load_scraper; load_scraper = True
+        global savepath; savepath = askdirectory()
+
+        self.controller.show_frame(KeyPage)
+    
+    # If no is chosen -> means a full scrape will be done
+    def fresh_scrape(self):
+        global filepath, savepath
+        
+        #savepath = "//Users//Freddie//Impruvon//guiwebscraperproject//venv//src//pages"
+        savepath = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\rawdata\pages"
+        ''' Doesnt work on mac rn
+        savepath = filepath + "/pages"
+        '''
+        if not exists(savepath):
+            os.mkdir(savepath)
+        
+        self.controller.show_frame(KeyPage)
+
+# Page to enter API key before scrape starts
+class KeyPage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
+         
+        # Instructions, Text box and Start button
+        self.instructions = ttk.Label(self, text="Enter key for WebScrapingApi.com below", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=1)
+        self.box.grid(column=2, row=2, pady=1)
+
+        self.start_btn = tk.Button(self, command=lambda:self.save_key(), text="Next", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.start_btn.grid(column=2, row=3, pady=3)
+
+    # Save the api key and advance screen
+    def save_key(thisframe):
+        global apikey; apikey = thisframe.box.get("1.0","end-1c")
+        thisframe.controller.show_frame(WebscrapingPage)
+
+
+# Webscraping page 
+class WebscrapingPage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
+         
+        # Instructions and Start button
+        self.instructions = ttk.Label(self, text="Press start to begin webscraping", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        self.instructions2 = ttk.Label(self, text="Will take ~1hour if limited or no save data used", font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        self.start_btn = tk.Button(self, command=lambda:self.scrape(), text="Start Webscraping", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.start_btn.grid(column=2, row=3, pady=10)
+    
+
+    def scrape(thisframe):
+        global fines_hash, state_df, load_scraper, savepath, filepath, apikey
+        # On windows for testing
+        filepath = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src"
+
+        # For testing:
+        # MAC
+        #with open(r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_df.pkl", 'rb') as inp:
+        #   state_df = pickle.load(inp)
+        #with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_df.pkl", 'rb') as inp:
+         #   state_df = pickle.load(inp)
+
+        # For real run
+        with open(r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\rawdata\dataframes\state_df.pkl", 'rb') as inp:
+            state_df = pickle.load(inp)
+
+        class thread(threading.Thread):
+            def __init__(self, func):
+                threading.Thread.__init__(self)
+                self.func = func
+        
+            def run(self):
+                if load_scraper:
+                    self.func(thisframe, False, state_df, savepath, filepath, apikey)
+                else:
+                    self.func(thisframe, True, state_df, savepath, filepath, apikey)
+        
+        thread(scraper.scrape_fines).start()
+        #thisframe.advance_page()
+
+    # Called after scraper is done and fines have been matched
+    def advance_page(thisframe):
+        global filepath
+
+        '''
+        with open(filepath + "/hashes/fines_hash.pkl", 'rb') as inp:
+            global fines_hash; fines_hash = pickle.load(inp)
+        '''
+        thisframe.controller.resize_optionspage()
+        thisframe.controller.show_frame(OptionsPage)
+
+
+# If no is selected, choose where the dataframes are located
+class NoPathPage(tk.Frame):
+    def __init__(self, parent, controller):
+        PageLayout.__init__(self, parent)
+        self.controller = controller
+         
+        # Instructions and Download button
+        self.instructions = ttk.Label(self, text="Welcome!", font=("Times", 15))
+        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+
+        #self.instructions2 = ttk.Label(self, text="Click browse to select locations of save data", font=("Times", 15))
+        #self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        self.dl_btn = tk.Button(self, command=lambda:self.choose_path(), text="Start", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.dl_btn.grid(column=2, row=3, pady=10)
+
+
+    def choose_path(self):
+        global savepath, state_df
+        self.controller.resize_optionspage()
+        self.controller.show_frame(OptionsPage)
+        
+        '''
+        while True:
+            savepath = askdirectory()
+            # Checks to see if user gave us path with hash we need, otherwise let them retry
+            if exists(savepath + "/states_hash.pkl"):
+                with open(savepath + "/states_hash.pkl", 'rb') as inp:
+                    states_hash = pickle.load(inp)
+                self.controller.resize()
+                self.controller.update_idletasks()
+                self.controller.show_frame(OptionsPage)
+                break
+            else:
+                self.instructions.config(text="Folder chosen doesn't contain states_hash.pkl, try again")
+                self.controller.update_idletasks()
+                time.sleep(3)
+        '''
              
 
 # Shows users options for the dataset
