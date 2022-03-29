@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
+from bs4 import BeautifulSoup as bs
 from PIL import Image, ImageTk
-import pickle, threading, datetime, info, os
+import pickle, threading, datetime, info, os, requests, re
 import nhi_functions as nhi
 from os.path import exists
 import scraper
@@ -17,7 +18,7 @@ territories = {}
 chosen_tags = []
 
 # Contains tags and their descriptions
-with open(nhi.resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
+with open(nhi.resource_path("assets/tag_hash.pkl"), 'rb') as inp:
     tag_hash = pickle.load(inp)
 
 
@@ -46,7 +47,7 @@ class tkinterApp(tk.Tk):
     
         # Prevents user from stretching screen
         self.resizable(width=False, height=False)
-        self.geometry("500x300")
+        self.geometry("500x320")
          
         # creating a container
         self.container = tk.Frame(self) 
@@ -100,11 +101,41 @@ class StartPage(tk.Frame):
         self.controller = controller
          
         # Instructions and Download button
-        self.instructions = ttk.Label(self, text="Welcome!", font=("Times", 15))
+        self.instructions = ttk.Label(self, text="Welcome! Do you want to re-download all data?", font=("Times", 15))
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
+        instructions2 = "Your save data is from: {}"
+        with open(nhi.resource_path("assets/lastupdate.pkl"), "rb") as inp:
+            lastlocalupdate = pickle.load(inp)
+
+        self.instructions2 =  ttk.Label(self, text=instructions2.format(lastlocalupdate), font=("Times", 15))
+        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+
+        # Try and fetch the date of the last update to Nursing Home Inspect
+        instructions3 = "Last website update was: {}"
+        try:
+            req = requests.request("GET", "https://projects.propublica.org/nursing-homes/", timeout=9)
+            if req.status_code == 200:
+                soup = bs(req.content, "html.parser")
+                divs = soup.find("div", class_="home_about_data")
+                text = re.search("Download the raw data files, updated .+", divs.text).group()
+                text = re.search("updated .+", text).group()
+                text = text[8:-1]
+
+                if text == lastlocalupdate:
+                    text += " (You're up to date!)"
+                else:
+                    text += " (You're not up to date!)"
+                lastsiteupdate = text
+
+        except:
+            lastsiteupdate = "(Failed to fetch last update, check website)"
+       
+        self.instructions3 =  ttk.Label(self, text=instructions3.format(lastsiteupdate), font=("Times", 15))
+        self.instructions3.grid(column=1, row=3, columnspan=3, pady=10)
+
         self.dl_btn = tk.Button(self, command=lambda:self.show_options(), text="Start", font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        self.dl_btn.grid(column=2, row=3, pady=10)
+        self.dl_btn.grid(column=2, row=4, pady=10)
 
     def show_options(self):
         self.controller.resize_optionspage()
@@ -718,9 +749,9 @@ class ExcelPage(tk.Frame):
 
         outpath = askdirectory()
         # Use the unmatched state_df so it's easier to filter things
-        with open(nhi.resource_path("dataframes/unmatched_state_df.pkl"), 'rb') as inp:
+        with open(nhi.resource_path("assets/unmatched_state_df.pkl"), 'rb') as inp:
             state_df = pickle.load(inp)
-        with open(nhi.resource_path("dataframes/fine_df.pkl"), 'rb') as inp:
+        with open(nhi.resource_path("assets/fine_df.pkl"), 'rb') as inp:
             fine_df = pickle.load(inp)    
 
         # Create a thread to run make_sheets() so we can update the screen

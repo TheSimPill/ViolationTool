@@ -1,4 +1,3 @@
-from stat import FILE_ATTRIBUTE_REPARSE_POINT
 from typing import Dict, List
 from openpyxl.descriptors.base import String
 import pickle, sys, info, os, time
@@ -169,7 +168,7 @@ def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territori
     frame.sheet_btn.grid_forget()
 
     # Load in tag data 
-    with open(resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
+    with open(resource_path("assets/tag_hash.pkl"), 'rb') as inp:
         tag_hash = pickle.load(inp)
 
     # Setting defaults for missing user choices
