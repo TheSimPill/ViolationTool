@@ -23,7 +23,8 @@ def download(frame, date):
     frame.instructions.config(text="Downloading...")
     frame.instructions2.grid_forget()
     frame.instructions3.grid_forget()
-    frame.dl_btn.grid_forget()
+    frame.yes_btn.grid_forget()
+    frame.no_btn.grid_forget()
     
     # Try and grab the download url, if not, let the user retry
     try:
@@ -76,10 +77,8 @@ def parse_data(frame):
     files = os.listdir(resource_path("rawdata"))
     start_time = time.time() 
     numtoload = len(files)
-    
     frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
-    frame.dl_btn.grid_forget()
-
+    
     # Initialize Progress Bar
     progress = Progressbar(frame, orient = "horizontal",
         length = 300, mode = 'determinate')

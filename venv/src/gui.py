@@ -1,10 +1,9 @@
-import resource
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
 from bs4 import BeautifulSoup as bs
 from PIL import Image, ImageTk
-import pickle, threading, datetime, info, os, requests, re, scraper
+import pickle, threading, datetime, info, os, requests, re, scraper, shutil
 import nhi_functions as nhi
 from os.path import exists
 
@@ -64,7 +63,7 @@ class tkinterApp(tk.Tk):
                 OptionsPage, TerritoriesPage, DateRangePage,\
                 FormatPage, TagsPage, ExcelPage, KeyPage, DonePage])
 
-        self.show_frame(WebscrapingChoicePage)
+        self.show_frame(StartPage)
   
     # Shows frame that was passed in as a parameter
     def show_frame(self, cont):
@@ -134,11 +133,11 @@ class StartPage(tk.Frame):
         self.instructions3 =  ttk.Label(self, text=instructions3.format(lastsiteupdate), font=("Times", 15))
         self.instructions3.grid(column=1, row=3, columnspan=3, pady=10)
         
-        yes_btn = tk.Button(self, text="Yes", command=lambda:self.download_and_parse(text), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        yes_btn.grid(column=1, row=4, pady=10)
+        self.yes_btn = tk.Button(self, text="Yes", command=lambda:self.download_and_parse(text), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.yes_btn.grid(column=1, row=4, pady=10)
 
-        no_btn = tk.Button(self, text="No", command=lambda:self.show_options(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        no_btn.grid(column=3, row=4, pady=10)
+        self.no_btn = tk.Button(self, text="No", command=lambda:self.show_options(), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
+        self.no_btn.grid(column=3, row=4, pady=10)
 
 
     def download_and_parse(thisframe, text):
@@ -238,8 +237,8 @@ class WebscrapingPage(tk.Frame):
         global state_df, apikey
         
         # If we skip download when testing:
-        #with open(nhi.resource_path("dataframes/new/state_df.pkl"), 'rb') as inp:
-        #    state_df = pickle.load(inp)
+        with open(nhi.resource_path("dataframes/new/state_df.pkl"), 'rb') as inp:
+            state_df = pickle.load(inp)
 
         class thread(threading.Thread):
             def __init__(self, func):
@@ -256,6 +255,23 @@ class WebscrapingPage(tk.Frame):
 
     # Called after scraper is done
     def advance_page(thisframe):
+
+        # Copy old saved into back ups
+        dest = nhi.resource_path("dataframes/backups/")
+        src = nhi.resource_path("dataframes/saved/")
+        for file in os.listdir(src):
+            source = src + file
+            destination = dest + file
+            shutil.copy(source, destination)
+
+        # Copy new dataframes into saved
+        dest = nhi.resource_path("dataframes/saved/")
+        src = nhi.resource_path("dataframes/new/")
+        for file in os.listdir(src):
+            source = src + file
+            destination = dest + file
+            shutil.copy(source, destination)
+ 
         thisframe.controller.resize_optionspage()
         thisframe.controller.show_frame(OptionsPage)
 
