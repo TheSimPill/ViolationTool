@@ -236,6 +236,8 @@ INCLUDES DATAFRAMES:
 
 pyinstaller --noconfirm --onefile --console --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/logo.png:." --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes:dataframes/"  "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py"
 
+
+
 Everything seems to be bundled into exe: now just need to test it and send to drew
 
 To run:
@@ -245,13 +247,35 @@ To run:
     type cd Desktop
     type chmod +x ./gui
     type ./gui
+    Click apple logo in top left -> System Preferences -> General -> Allow the program
+    Go back to terminal
     Enjoy yo self
 
 
 Want to
     add greyed out buttons - done
-    all data button for dates
-    change program name
-    add icon
-    remove email screen
-    write up document with details, how to use, assumptions
+
+    IN STATIC V1 BRANCH:
+        all data button for dates - done
+        change program name - done during exe
+        add icon - done during exe
+        remove email screen and other unecessary stuff - done
+        write up document with details, how to use, assumptions
+
+
+
+Need to figure out why fines aren't formatted in Most Fined, cant do set becausE it elminates dupes
+
+How sheets are made: 
+    Check if dates were chosen, if not, do min and max dates
+    Check if terrs chosen, if not use defaults
+    Convert states to two letter code
+    Filter state df on dates
+    Check to see if tags were chosen otherwise use all
+    Break up states into territories and 
+
+pyinstaller --noconfirm --onefile --console --name "ViolationTool" --add-data "/Users/Freddie/Impruvon/statictoolv1/dataprocessingproject/venv/src/dataframes:dataframes/" --add-data "/Users/Freddie/Impruvon/statictoolv1/dataprocessingproject/venv/src/images:images/"  "/Users/Freddie/Impruvon/statictoolv1/dataprocessingproject/venv/src/gui.py"
+
+
+BUG:
+    TERRITORIES SCREEN: If you hit finish on the final screen without entering anything it works
