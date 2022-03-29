@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
 from PIL import Image, ImageTk
-import pickle, threading, datetime, info
+import pickle, threading, datetime, info, time
 import nhi_functions as nhi
     
 # Global variables
@@ -17,6 +17,19 @@ chosen_tags = []
 with open(nhi.resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
     tag_hash = pickle.load(inp)
 
+
+class TkWait:
+    def __init__(self, master, milliseconds):
+        self.duration = milliseconds
+        self.master = master
+        
+    def __enter__(self):
+        self.resume = tk.BooleanVar(value=False)
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.master.after(self.duration, self.resume.set, True)
+        self.master.wait_variable(self.resume)
   
 class tkinterApp(tk.Tk):
      
@@ -26,7 +39,7 @@ class tkinterApp(tk.Tk):
         # __init__ function for class Tk
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("NHI Scraper")
-        self.iconbitmap(nhi.resource_path("icon.ico"))
+        self.iconbitmap(nhi.resource_path("images/icon.ico"))
     
         # Prevents user from stretching screen
         self.resizable(width=False, height=False)
@@ -70,7 +83,7 @@ class PageLayout(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         # Logo
-        logo = Image.open(nhi.resource_path("logo.png"))
+        logo = Image.open(nhi.resource_path("images/logo.png"))
         logo = ImageTk.PhotoImage(logo)
         logo_label = ttk.Label(self, image=logo)
         logo_label.image = logo
@@ -213,11 +226,15 @@ class TerritoriesPage(tk.Frame):
             states = [x.strip() for x in states if x != '']
 
             # Make sure valid states were given
-            for state in states:
-                if state not in info.all_states:
-                    self.instructions.config(text="Please make sure states are spelled correctly and valid")
-                    self.instructions2.grid_forget()
-                    bad = True
+            if len(states) != 0:
+                for state in states:
+                    if state not in info.all_states:
+                        self.instructions.config(text="Please make sure states are spelled correctly and valid")
+                        bad = True
+            else:
+                # If there isn't at least one valid state
+                self.instructions.config(text="Please enter at least one valid state")
+                bad = True
 
             # Only continue if valid input was given
             if not bad:
@@ -233,7 +250,9 @@ class TerritoriesPage(tk.Frame):
                     self.nextbtn.config(text="Finish")
                 # Last screen
                 elif self.count == len(self.tlist):
+                    print(territories)
                     self.controller.show_frame(OptionsPage)
+
 
         # Clear the box
         if not bad:
@@ -298,6 +317,7 @@ class TagsPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
+        self.parent = parent
 
         # Instructions, Tags box, buttons
         self.instructions = ttk.Label(self, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
@@ -317,25 +337,56 @@ class TagsPage(tk.Frame):
 
 
     # Lets the user add the tags
-    def set_tags(self):
+    def set_tags(thisframe):
         notags = True
-        lines = self.box.get("1.0","end-1c").splitlines()
+        lines = thisframe.box.get("1.0","end-1c").splitlines()
         lines = [x.strip() for x in lines if x != '']
+        rejected_tags = []
         if len(lines) != 0:
             # List to hold the tags
             global chosen_tags
             for tag in lines:
-                newtag = '0' + tag
+                try:
+                    tag = int(tag)
+                    if tag in tag_hash.keys():
+                        chosen_tags += [tag]
+                        notags = False
+                    else:
+                        rejected_tags += [tag]
+                except:        
+                    rejected_tags += [tag]
                 
-                if newtag in tag_hash.keys():
-                    chosen_tags += [newtag]
-                    notags = False
-            
+        
         if notags:
-            self.instructions.config(text="Please enter at least one valid tag")
-            self.instructions2.grid_forget()
+            thisframe.instructions.config(text="Please enter at least one valid tag")
+            thisframe.instructions2.grid_forget()
         else:
-            self.controller.show_frame(OptionsPage)
+            # Display rejected tags if any 
+            if len(rejected_tags) != 0:
+                print("Rejected ", rejected_tags)
+
+            # Hide elements
+            thisframe.all_btn.grid_forget()
+            thisframe.fin_btn.grid_forget()
+            thisframe.box.grid_forget()
+            thisframe.instructions2.grid_forget()
+
+            # Make a string of accepted tags that will fit within the screen without stretching it
+            output = ""
+            for i in range(len(chosen_tags)):
+                if i % 10 == 0:
+                    output += "\n"
+                
+                output += str(chosen_tags[i]) + " "
+    
+
+
+            with TkWait(thisframe.parent, 3000):
+                thisframe.instructions.config(text="Tags Accepted: \n" + output)
+
+            # Makes the screen wait for 3 seconds before going back to OptionsPage
+            
+            thisframe.controller.show_frame(OptionsPage)
     
     # For setting all tags
     def set_all_tags(self):
@@ -457,8 +508,11 @@ class ExcelPage(tk.Frame):
     def make_sheets(thisframe):
 
         outpath = askdirectory()
-        with open(nhi.resource_path("dataframes/state_df.pkl"), 'rb') as inp:
+        # Use the unmatched state_df so it's easier to filter things
+        with open(nhi.resource_path("dataframes/unmatched_state_df.pkl"), 'rb') as inp:
             state_df = pickle.load(inp)
+        with open(nhi.resource_path("dataframes/fine_df.pkl"), 'rb') as inp:
+            fine_df = pickle.load(inp)    
 
         # Create a thread to run make_sheets() so we can update the screen
         class thread(threading.Thread):
@@ -468,7 +522,7 @@ class ExcelPage(tk.Frame):
         
             def run(self):
                 global options, sdate, edate, territories, chosen_tags
-                self.func(thisframe, options, state_df, sdate, edate, territories, chosen_tags, outpath)
+                self.func(thisframe, options, state_df, fine_df, sdate, edate, territories, chosen_tags, outpath)
 
         thread(nhi.make_sheets).start()
 

@@ -1,6 +1,7 @@
+from stat import FILE_ATTRIBUTE_REPARSE_POINT
 from typing import Dict, List
 from openpyxl.descriptors.base import String
-import pickle, sys, info, os
+import pickle, sys, info, os, time
 import pandas as pd
 from datetime import datetime
 
@@ -16,15 +17,13 @@ def resource_path(relative_path):
 
     
 # Makes the excel sheets based on options chosen by the user 
-def make_sheets(frame, options, state_df, startdate, enddate, territories, tags, outpath):
+def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territories, tags, outpath):
 
     # Update the screen
     frame.instructions.config(text="Making sheets...")
     frame.instructions2.grid_forget()
     frame.sheet_btn.grid_forget()
 
-    # Change state_df's indicies back to numbers for now
-    state_df = state_df.reset_index()
     # Load in tag data 
     with open(resource_path("dataframes/tag_hash.pkl"), 'rb') as inp:
         tag_hash = pickle.load(inp)
@@ -43,36 +42,34 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
         # Convert date column back to string 
         state_df['Date'] = oldcol
+        print("Used Default Tags")
+
+    # Check to see if territories were chosen and use default if not
+    if len(territories) == 0:
+        territories = info.territories
+        print("Used Default Territories")
+    # Convert states to their two letter code
+    territories = convert_states(territories)
+    print("Converted States to Two-Letter Codes")
 
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
         tags = list(tag_hash.keys())
-    
-    # Check to see if territories were chosen and use default if not
-    if len(territories) == 0:
-        territories = info.territories
-    # Convert states to their two letter code
-    territories = convert_states(territories)
-
-    years = list(range(startdate.year, enddate.year+1))
-    dfs = {}
-    choices = 0
-
-    # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
-    t_dfs = sort_by_territories(state_df, territories)
-    if not None in {startdate, enddate}:
-        for terr in t_dfs.keys():
-            t_dfs[terr] = get_inrange(t_dfs[terr], startdate, enddate)
-            # Convert fine column to currency
-            t_dfs[terr]["Fine"] = t_dfs[terr]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
-            t_dfs[terr]["Fine"] = pd.to_numeric(t_dfs[terr]["Fine"], errors="coerce")
-            t_dfs[terr]["Fine"] =  t_dfs[terr]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
+    else:
+        state_df = state_df.loc[state_df["Tag"].isin(tags)] 
+    print("Filtered Tags")
 
     # Get dates in range for state df
-    if not None in {startdate, enddate}:
-        state_df = get_inrange(state_df, startdate, enddate)
+    state_df = get_inrange(state_df, startdate, enddate)
+    print("Filtered Dates")
+
+    # Merge rows where state, date, and organization are the same
+    state_df = match_violations(state_df, fine_df)
+    state_df = state_df.reset_index()
 
     # Optional sheets
+    dfs = {}
+    years = list(range(startdate.year, enddate.year+1))
     dfs["US"] = pd.DataFrame(columns=(["Total"] + years))
     dfs["Most Fined"] = pd.DataFrame()
     dfs["Most Severe"] = pd.DataFrame()
@@ -81,6 +78,15 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     dfs["All Territories"] = pd.DataFrame()
     dfs["All"] = pd.DataFrame()
 
+    # Make a dataframe for each territory (saved in a hash) and then only keep violations in date range
+    t_dfs = sort_by_territories(state_df, territories)
+    for terr in t_dfs.keys():
+        # Convert fine column to currency
+        t_dfs[terr]["Fine"] = t_dfs[terr]["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
+        t_dfs[terr]["Fine"] = pd.to_numeric(t_dfs[terr]["Fine"], errors="coerce")
+        t_dfs[terr]["Fine"] =  t_dfs[terr]["Fine"].apply(lambda x: '${:,.2f}'.format(float(x)))
+
+    
     # Convert fine column to numeric
     state_df["Fine"] = state_df["Fine"].apply(lambda x: 0 if x == "No Fine" else x)
     state_df["Fine"] = pd.to_numeric(state_df["Fine"], errors="coerce")
@@ -91,7 +97,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
     
             if option == "US Fines" and options[option]:
-                choices += 1
 
                 # Initialize indicies
                 dfs["US"].loc["Fines"] = [0] * (len(dfs["US"].columns))
@@ -100,7 +105,7 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
                 oldcol = state_df["Date"]
                 state_df['Date'] =  pd.to_datetime(state_df['Date'], format='%m/%d/%Y')
 
-                # Total sum
+                # Total sum -> after the df has been filtered on tags and date 
                 sum = state_df["Fine"].sum()
             
                 # Sum for each year
@@ -117,7 +122,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
                     
                         
             elif option == "US Violations" and options[option]:
-                choices += 1
 
                  # Initialize indicies
                 dfs["US"].loc["Violations"] = [0] * (len(dfs["US"].columns))
@@ -138,7 +142,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
 
             elif option == "Top fined organizations per state" and options[option]:
-                choices += 1
 
                 state_orgs: Dict[String, Dict[String, List]] = {}
                 num = 3
@@ -187,7 +190,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
             
 
             elif option == "Most severe organizations per state" and options[option]:
-                choices += 1
 
                 state_orgs: Dict[String, Dict[String, List]] = {}
                 num = 3
@@ -236,7 +238,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
 
             elif option == "Sum of fines per state per year" and options[option]:
-                choices += 1
 
                 # Initialize indicies
                 for state in info.states_codes:
@@ -252,7 +253,6 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
                 
 
             elif option == "Sum of violations per state per year" and options[option]:
-                choices += 1
 
                 # Initialize indicies
                 for state in info.states_codes:
@@ -298,7 +298,9 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
     # Excel workbook for each territory
     for terr in t_dfs.keys():
         # Makes the sheets more organized
-        t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"]) 
+        if not t_dfs[terr].empty:
+            t_dfs[terr] = t_dfs[terr].set_index(["Territory", "State", "Organization", "Date"])
+
         t_dfs[terr].to_excel(outpath + "/" + terr + ".xlsx", sheet_name=terr)
 
     start_row = 1
@@ -321,6 +323,21 @@ def make_sheets(frame, options, state_df, startdate, enddate, territories, tags,
 
         writer.save()
         frame.finish()
+
+# Match up incidents with corresponding fines
+def match_violations(state_df, fine_df):
+
+    # Combine rows where state, org and date are the same but make a list of the tags and severities in order
+    state_df = state_df.groupby(['State', 'Organization', 'Date']).agg({'Tag':lambda x: ','.join(x.astype(str)),\
+        'Severity':lambda x: ','.join(x.astype(str)), 'Fine':'first', 'Url':'first'})
+    
+    # Format the fine_df, get rid of dupes, use it to update the state_df
+    fine_df = fine_df.set_index(['State', 'Organization', 'Date'])
+    fine_df = fine_df[~fine_df.index.duplicated()]
+    state_df.update(fine_df)
+    
+    return state_df
+    
     
 # Converts states from full name into their two letter code
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
@@ -378,7 +395,7 @@ def get_inrange(df, start, end):
 def count_violations_df(df):
     # Turn the tag column into a pandas series of lists
     vios = 0
-    col = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(", ")) 
+    col = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(",")) 
     for lst in col:
         vios += len(lst)
 
@@ -391,16 +408,23 @@ def get_most_fined(df, num):
     facilities = df["Organization"].unique()
     for name in facilities:
         # Convert fine column to a number so we can sum
-        df["Fine"] = pd.to_numeric(df["Fine"], errors="coerce")
         sum = df.loc[df["Organization"] == name, "Fine"].sum()
         if sum != 0:
-            sums.append((name, '${:,.2f}'.format(sum)))
+            sums.append((name, sum))
 
     # Sort the list of tuples by fine
     sums = sorted(sums, key=lambda item: item[1], reverse=True)
+
     # Add place holders if not enough data
     if len(sums) < num:
         sums += [("NA", "$0")] * (num - len(sums))
+    
+    # Format the sums to currenices
+    for i, sum in enumerate(sums):
+        if sum[0] != "NA":
+            temp = list(sum)
+            temp[1] = '${:,.2f}'.format(temp[1])
+            sums[i] = tuple(temp)
 
     return sums[:num]
 
@@ -445,3 +469,29 @@ def get_year_range(year, years, startdate, enddate):
         yearend = datetime.strptime("12/31/"+str(year), "%m/%d/%Y")
 
     return (yearstart, yearend)
+
+
+# Get violations that include chosen tags
+def get_tag_range(df, tags):
+    newdf = df
+    newdf["Tag"] = df["Tag"].apply(lambda x: x.strip('][').replace("'", "").split(","))
+    newdf["Severity"] = df["Severity"].apply(lambda x: x.strip('][').replace("'", "").split(","))
+    newdf = newdf.reset_index()
+
+    for i, row in newdf.iterrows():
+        # Map each tag to its severity so that we know which severities to keep
+        pairs = list(map(lambda x,y: (x,y), row["Tag"], row["Severity"]))
+        
+        # If there are no tags in a row that are ones chosen by the user, drop the row
+        matches = [pair for pair in pairs if pair[0] in tags]
+        if len(matches) == 0:
+            newdf = newdf.drop(index=i)
+        else:
+            # Update the dataframe to only keep the correct tags and matches
+            newdf.at[i, "Tag"] = str([pair[0] for pair in matches])
+            newdf.at[i, "Severity"] = str([pair[1] for pair in matches])
+
+    return newdf
+
+
+
