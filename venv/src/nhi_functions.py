@@ -100,7 +100,6 @@ def parse_data(frame):
         df = pd.read_excel(resource_path("rawdata")+"/"+file, usecols="A,E,G,H,I", names=["Organization", "State", "Date", "Tag", "Severity"])
         df.insert(5, "Fine", 0)
         df.insert(6, "Url", "")
-        df.insert(0, "Territory", 0)
         
         # Format columns 
         col_list = ["State", "Organization", "Date", "Tag", "Severity", "Fine", "Url"]
@@ -132,7 +131,7 @@ def parse_data(frame):
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
-    with open(resource_path("assets/state_df.pkl"), 'wb') as outp:
+    with open(resource_path("dataframes/new/state_df.pkl"), 'wb') as outp:
             pickle.dump(result, outp, pickle.HIGHEST_PROTOCOL)
 
     frame.instructions.config(text="Saved as state_df.pkl in dataframes folder")
@@ -172,7 +171,7 @@ def match_violations(dfpath, frame, state_df, fine_df):
     
     if not exists(dfpath + "/dataframes"):
         os.mkdir(dfpath + "/dataframes")
-    with open(dfpath + "/dataframes/state_df.pkl", 'wb') as outp:
+    with open(dfpath + "/dataframes/new/state_df.pkl", 'wb') as outp:
             pickle.dump(state_df, outp, pickle.HIGHEST_PROTOCOL)
 
     frame.instructions.config(text="Finished matching")
@@ -507,7 +506,7 @@ def match_violations(state_df, fine_df):
 def convert_states(territories: Dict[String, List[String]]) -> Dict[String, List[String]]:
     
     # Get two letter state code hash
-    codes = info.get_state_codes(False)
+    codes = info.get_state_codes()
     keys = list(codes.keys())
     vals = list(codes.values())
     for territory in territories.keys():

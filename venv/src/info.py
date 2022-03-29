@@ -1,5 +1,4 @@
-import pandas as pd
-import pickle
+import pickle, nhi_functions as nhi
 from platform import system
 
 OS = system()
@@ -60,21 +59,11 @@ states_codes = [ 'AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA
            'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY']
 
 # Creates hash map where key is two letter state code and value is full state
-def get_state_codes(load) -> dict:
+def get_state_codes() -> dict:
     state_codes = {}
-    if load:    
-        table = pd.read_html("https://www.faa.gov/air_traffic/publications/atpubs/cnt_html/appendix_a.html")[0]
-        with open("state_codes_table.pkl", 'wb') as outp:
-                pickle.dump(table, outp, pickle.HIGHEST_PROTOCOL)
-    else:
-        if OS == "Darwin":
-            path = r"/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes/state_codes_table.pkl"
-        else:
-            path = r"C:\Users\FreddieG3\Documents\Job\Impruvon\Web Scraper Project GUI\venv\src\dataframes\state_codes_table.pkl"
-
-        with open(path, 'rb') as inp:
-            table = pickle.load(inp)
-               
+    with open(nhi.resource_path("assets/state_codes_table.pkl"), 'rb') as inp:
+        table = pickle.load(inp)
+        
     rows = table.values.tolist()
     for row in rows:
         state_codes[row[1]] = row[0]

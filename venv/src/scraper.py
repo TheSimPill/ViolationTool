@@ -1,5 +1,5 @@
 from datetime import datetime
-import random, re, concurrent.futures, time, os, pickle
+import random, re, concurrent.futures, time, pickle
 from bs4 import BeautifulSoup as bs
 import save_load_html as sl
 from nhi_functions import get_proxy
@@ -60,6 +60,11 @@ def scrape_fines(frame, reparse, state_df, dir, dfpath, apikey):
                 
             # Grab parts of each row that contains the url to each state's page
             rows = soup.find(id="data").find("tbody").find_all("a")
+
+            # If we get this far, save the date of this scrape
+            today = datetime.strftime(datetime.today(), "%m/%d/%Y")
+            with open(nhi.resource_path("assets/lastscrape.pkl"), 'wb') as outp:
+                pickle.dump(today, outp, pickle.HIGHEST_PROTOCOL)
             
             # Initialize Progress Bar
             progress = Progressbar(frame, orient = "horizontal",
