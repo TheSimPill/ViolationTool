@@ -287,3 +287,6 @@ Thinking of redesigning scrape process as follows:
     If they choose to do a fresh scrape, wont use saved
     Other option will be to try and use any saved pages if they exist, this is used for if 
     a user got interupted midway through
+
+
+Above is done, scrape still has 17 urls missing which is fine

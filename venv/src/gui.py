@@ -504,13 +504,16 @@ class TagsPage(tk.Frame):
         self.fin_btn = tk.Button(self, command=lambda:self.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.fin_btn.grid(column=2, row=5, pady=10)
 
+        # For storing invalid tags
+        self.rejected_tags = []
+
 
     # Lets the user add the tags
-    def set_tags(thisframe):
+    def set_tags(self):
         notags = True
-        lines = thisframe.box.get("1.0","end-1c").splitlines()
+        lines = self.box.get("1.0","end-1c").splitlines()
         lines = [x.strip() for x in lines if x != '']
-        rejected_tags = []
+        
         if len(lines) != 0:
             # List to hold the tags
             global chosen_tags
@@ -521,45 +524,58 @@ class TagsPage(tk.Frame):
                         chosen_tags += [tag]
                         notags = False
                     else:
-                        rejected_tags += [tag]
+                        self.rejected_tags += [tag]
                 except:        
-                    rejected_tags += [tag]
+                    self.rejected_tags += [tag]
                 
         
         if notags:
-            thisframe.instructions.config(text="Please enter at least one valid tag")
-            thisframe.instructions2.grid_forget()
+            self.instructions.config(text="Please enter at least one valid tag")
+            self.instructions2.grid_forget()
         else:
-            # Display rejected tags if any 
-            if len(rejected_tags) != 0:
-                print("Rejected ", rejected_tags)
-
-            # Hide elements
-            thisframe.all_btn.grid_forget()
-            thisframe.fin_btn.grid_forget()
-            thisframe.box.grid_forget()
-            thisframe.instructions2.grid_forget()
-
-            # Make a string of accepted tags that will fit within the screen without stretching it
-            output = ""
-            for i in range(len(chosen_tags)):
-                if i % 10 == 0:
-                    output += "\n"
-                
-                output += str(chosen_tags[i]) + " "
-    
-
-
-            with TkWait(thisframe.parent, 3000):
-                thisframe.instructions.config(text="Tags Accepted: \n" + output)
-
-            # Makes the screen wait for 3 seconds before going back to OptionsPage
-            
-            thisframe.controller.show_frame(OptionsPage)
+            self.show_tags()
     
     # For setting all tags
     def set_all_tags(self):
         global chosen_tags; chosen_tags = list(tag_hash.keys())
+        self.show_tags()
+
+    # Shows tags accepted and rejected
+    def show_tags(self):
+        # Hide elements
+        self.all_btn.grid_forget()
+        self.fin_btn.grid_forget()
+        self.box.grid_forget()
+        self.instructions2.grid_forget()
+        self.controller.geometry("500x600")
+
+        # Make a string of accepted tags that will fit within the screen without stretching it
+        valid_tags = ""
+        invalid_tags = ""
+        global chosen_tags
+        for i in range(len(chosen_tags)):
+            if i % 15 == 0:
+                valid_tags += "\n"
+            
+            valid_tags += str(chosen_tags[i]) + " "
+
+        for i in range(len(self.rejected_tags)):
+            if i % 15 == 0:
+                invalid_tags += "\n"
+            
+            invalid_tags += str(self.rejected_tags[i]) + " "
+
+        # Makes the screen wait for 3 seconds before going back to OptionsPage
+        with TkWait(self.parent, 3000):
+            self.instructions.config(text="Tags Accepted: ")
+            self.instructions2.config(text=valid_tags)
+            self.instructions2.grid(column=1, row=2, columnspan=3, pady=2)
+            self.instructions3 = ttk.Label(self, text="Tags Rejected: ", font=("Times", 15))
+            self.instructions3.grid(column=1, row=3, columnspan=3, pady=10)
+            self.instructions4 = ttk.Label(self, text=invalid_tags, font=("Times", 15))
+            self.instructions4.grid(column=1, row=4, columnspan=3, pady=10)
+
+        self.controller.resize_optionspage()
         self.controller.show_frame(OptionsPage)
 
 
