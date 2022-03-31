@@ -615,7 +615,7 @@ class TagsPage(tk.Frame):
             
             invalid_tags += str(self.rejected_tags[i]) + " "
 
-        # Makes the screen wait for 3 seconds before going back to OptionsPage
+        # Makes the screen wait for 3 seconds going back to OptionsPage
         with TkWait(self.parent, 3000):
             self.instructions.config(text="Tags Accepted: ")
             self.instructions2.config(text=valid_tags)
@@ -696,13 +696,20 @@ class FormatPage(tk.Frame):
         self.fin_btn = tk.Button(self, command=lambda:self.finish(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
         self.fin_btn.grid(column=2, row=6, pady=5)
 
+        # Sets all boxes to have no checkmark - need this so a user can click back in 
+        for box in self.boxes:
+            box.deselect()
+
 
     # Once user is done selecting options
     def finish(self):
         global options; options = self.options
         self.controller.resize_optionspage()
-        print(options)
         self.controller.show_frame(OptionsPage)
+        for button in self.boxes:
+            button.destroy()
+        self.fm.destroy()
+        FormatPage.destroy(self)
 
     # Add a chosen option to a list
     def add_option(self, opt):
@@ -782,8 +789,14 @@ class DonePage(tk.Frame):
         self.controller = controller
 
         # Instructions
-        self.instructions = ttk.Label(self, text="Sheets made, you may exit the program", font=("Times", 15))
+        self.instructions = ttk.Label(self, text="Sheets made", font=("Times", 15))
         self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
+
+        self.sheet_btn = tk.Button(self, command=lambda:self.exit(), text="Exit Program", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        self.sheet_btn.grid(column=2, row=3, pady=40)
+
+    def exit(self):
+        app.quit()
     
 
 if __name__ == '__main__':

@@ -1,23 +1,24 @@
 Features to add:
-    ~~Tell date of last scrape~~
-    ~~Make copies of old dataframes when getting new ones~~
-    ~~Show invalid tags given~~
-    Back buttons:
-        Will start by implementing just for options page ->
-            Cases: 
-                - A user clicks into an option and backs out without pressing anything: 
-                    Let them back out and don't save or reset anything
-                - A user clicks into an option, gets part way through, and hits back:
-                    Save their progress by repopulating screen they just went through
+~~Tell date of last scrape~~
+~~Make copies of old dataframes when getting new ones~~
+~~Show invalid tags given~~
+~Back buttons:~
+    ~Will start by implementing just for options page ->~
+        ~Cases: ~
+            ~- A user clicks into an option and backs out without pressing anything: ~
+               ~ - A user clicks into an option, gets part way through, and hits back:~
+            ~Let them back out and don't save or reset anything~
+                ~Save their progress by repopulating screen they just went through~
                 
-    Being able to click back into an option:
-        Would reset whatever they chose before
+~Being able to click back into an option~
+    ~Would reset whatever they chose before~
 
-    Scrape only new info:
-        Check to see which organizations have new violations, or if any new organizations or states.
+Add ability to make more sheets
+    Have two buttons, one to go back to Options Page, One to Quit Program
 
-    Add ability to make more sheets
-        Have two buttons, one to go back to Options Page, One to Quit Program
+Scrape only new info:
+    Check to see which organizations have new violations, or if any new organizations or states.
+
 
     
 

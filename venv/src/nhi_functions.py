@@ -182,7 +182,7 @@ def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territori
 
         # Convert date column back to string 
         state_df['Date'] = oldcol
-        print("Used Default Tags")
+        print("Used Default Dates")
 
     # Check to see if territories were chosen and use default if not
     if len(territories) == 0:
@@ -195,9 +195,10 @@ def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territori
     # Check to see if tags were chosen and if not use all
     if len(tags) == 0:
         tags = list(tag_hash.keys())
+        print("Used Default Tags")
     else:
         state_df = state_df.loc[state_df["Tag"].isin(tags)] 
-    print("Filtered Tags")
+        print("Filtered Tags")
 
     # Get dates in range for state df
     state_df = get_inrange(state_df, startdate, enddate)
