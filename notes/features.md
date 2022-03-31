@@ -13,6 +13,12 @@ Features to add:
     Being able to click back into an option:
         Would reset whatever they chose before
 
+    Scrape only new info:
+        Check to see which organizations have new violations, or if any new organizations or states.
+
+    Add ability to make more sheets
+        Have two buttons, one to go back to Options Page, One to Quit Program
+
     
 
 
