@@ -1,3 +1,4 @@
+from cgitb import text
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
@@ -60,8 +61,7 @@ class tkinterApp(tk.Tk):
         self.frames = {} 
   
         self.add_frames([StartPage, WebscrapingChoicePage, WebscrapingPage,\
-                OptionsPage, TerritoriesPage, DateRangePage,\
-                FormatPage, TagsPage, ExcelPage, KeyPage, DonePage])
+                OptionsPage, TerritoriesPage, FormatPage, ExcelPage, KeyPage, DonePage])
 
         self.show_frame(StartPage)
   
@@ -318,13 +318,14 @@ class OptionsPage(tk.Frame):
         self.terr_btn.config(text="", command=())
         self.controller.show_frame(TerritoriesPage)
 
-    def show_daterange(self):     
+    def show_daterange(self):    
+        self.controller.add_frames([DateRangePage]) 
         self.controller.geometry("500x600")
-        self.date_btn.config(text="", command=())
         self.controller.show_frame(DateRangePage)
     
     def show_tags(self):
-        self.tag_btn.config(text="", command=())
+        self.controller.add_frames([TagsPage])
+        self.controller.geometry("500x520")
         self.controller.show_frame(TagsPage)
 
     def show_format(self):
@@ -419,7 +420,6 @@ class TerritoriesPage(tk.Frame):
                     self.nextbtn.config(text="Finish")
                 # Last screen
                 elif self.count == len(self.tlist):
-                    print(territories)
                     self.controller.show_frame(OptionsPage)
 
 
@@ -476,6 +476,8 @@ class DateRangePage(tk.Frame):
                     global sdate; sdate = stime
                     global edate; edate = etime
                     self.controller.show_frame(OptionsPage)
+                    print("Date range to be used: ", sdate, " through ", edate)
+                    DateRangePage.destroy()
 
             except:
                 self.instructions.config(text="Check date formats and retry")
@@ -483,30 +485,38 @@ class DateRangePage(tk.Frame):
 
 # Choose which tags to include
 class TagsPage(tk.Frame):
-    def __init__(self, parent, controller):
-        PageLayout.__init__(self, parent)
-        self.controller = controller
-        self.parent = parent
+    def __init__(thisframe, parent, controller):
+        PageLayout.__init__(thisframe, parent)
+        thisframe.controller = controller
+        thisframe.parent = parent
 
         # Instructions, Tags box, buttons
-        self.instructions = ttk.Label(self, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
-        self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
+        thisframe.instructions = ttk.Label(thisframe, text="Enter tags to include in excel sheets, each on their own line", font=("Times", 15))
+        thisframe.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        self.instructions2 = ttk.Label(self, text="Only include last 3 numbers (ex: F757 -> 757)", font=("Times", 15))
-        self.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
+        thisframe.instructions2 = ttk.Label(thisframe, text="Only include last 3 numbers (ex: F757 -> 757)", font=("Times", 15))
+        thisframe.instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
-        self.box = scrolledtext.ScrolledText(self, undo=True, width=40, height=10)
-        self.box.grid(column=2, row=3, pady=10)
+        thisframe.box = scrolledtext.ScrolledText(thisframe, undo=True, width=40, height=10)
+        thisframe.box.grid(column=2, row=3, pady=10)
+        
+        thisframe.all_btn = tk.Button(thisframe, command=lambda:thisframe.set_all_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.all_btn.grid(column=2, row=4, pady=15)
 
-        self.all_btn = tk.Button(self, command=lambda:self.set_all_tags(), text="Include All Tags", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.all_btn.grid(column=2, row=4, pady=15)
+        thisframe.fin_btn = tk.Button(thisframe, command=lambda:thisframe.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
+        thisframe.fin_btn.grid(column=2, row=5, pady=10)
 
-        self.fin_btn = tk.Button(self, command=lambda:self.set_tags(), text="Finish", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
-        self.fin_btn.grid(column=2, row=5, pady=10)
+        thisframe.cancel_btn = tk.Button(thisframe, command=lambda:controller.show_frame(OptionsPage), text="Cancel", font="Times", bg="#000099", fg="#00ace6", height=1, width=5)
+        thisframe.cancel_btn.grid(column=2, row=6, pady=3)
+
+        # Hides the cancel button once user types anything into the box 
+        def hide_cancel_button(self):
+            thisframe.cancel_btn.grid_forget()
+            thisframe.controller.resize_optionspage()
+        thisframe.box.bind('<Key>', hide_cancel_button)
 
         # For storing invalid tags
-        self.rejected_tags = []
-
+        thisframe.rejected_tags = []
 
     # Lets the user add the tags
     def set_tags(self):
@@ -516,7 +526,7 @@ class TagsPage(tk.Frame):
         
         if len(lines) != 0:
             # List to hold the tags
-            global chosen_tags
+            global chosen_tags; chosen_tags = []
             for tag in lines:
                 try:
                     tag = int(tag)
@@ -546,6 +556,7 @@ class TagsPage(tk.Frame):
         self.all_btn.grid_forget()
         self.fin_btn.grid_forget()
         self.box.grid_forget()
+        self.cancel_btn.grid_forget()
         self.instructions2.grid_forget()
         self.controller.geometry("500x600")
 
@@ -577,6 +588,8 @@ class TagsPage(tk.Frame):
 
         self.controller.resize_optionspage()
         self.controller.show_frame(OptionsPage)
+        print("Tags to be included: ", chosen_tags)
+        TagsPage.destroy(self)
 
 
 # Format excel sheets
