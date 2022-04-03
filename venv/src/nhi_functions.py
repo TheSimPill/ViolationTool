@@ -1,3 +1,4 @@
+from fileinput import filename
 from tkinter import Label
 from tkinter.ttk import Progressbar
 from typing import Dict, List
@@ -18,7 +19,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # Download raw data if user says yes
-def download(frame, date):
+def download(frame, date, savepath):
     
     frame.instructions.config(text="Downloading...")
     frame.instructions2.grid_forget()
@@ -41,20 +42,15 @@ def download(frame, date):
 
     # Download and save the excel files
     r = requests.get(url, allow_redirects=True)
-    filepath = resource_path("rawdata/Raw_Data.zip")
+    filepath = resource_path(savepath + "/Raw_Data.zip")
     open(filepath, 'wb').write(r.content)
     frame.instructions.config(text="Download Done")
 
     # Unzip the download
-    with zipfile.ZipFile(resource_path("rawdata/Raw_Data.zip"), 'r') as zip_ref:
-        zip_ref.extractall(resource_path("rawdata"))
+    with zipfile.ZipFile(savepath + "/Raw_Data.zip", 'r') as zip_ref:
+        filenames = zip_ref.namelist()
+        zip_ref.extractall(savepath)
     frame.instructions.config(text="Unzip Done")
-
-    # Get rid of extra files
-    files_in_directory = os.listdir(resource_path("rawdata"))
-    filtered_files = [file for file in files_in_directory if not file.endswith(".xlsx")]
-    for file in filtered_files:
-        os.remove(resource_path("rawdata/" + file))
 
     # Save the date of this download
     with open(resource_path("assets/lastupdate.pkl"), 'wb') as outp:
@@ -62,19 +58,17 @@ def download(frame, date):
         print("Saved update date")
 
     # Update screen
-    frame.instructions.config(text="Deleted Extra Files")
-    time.sleep(1)
     frame.instructions.config(text="Parsing Data")
-    time.sleep(1)
-    parse_data(frame)
+    time.sleep(5)
+    parse_data(frame, savepath, filenames)
 
 '''
     Cases that took place on the same date at the same facility
     are each counted as their own incident in the excel raw data.
 '''
-def parse_data(frame):
-    files = os.listdir(resource_path("rawdata"))
+def parse_data(frame, savepath, filenames):
     start_time = time.time() 
+    files = [file for file in filenames if file.endswith(".xlsx")]
     numtoload = len(files)
     frame.instructions.config(text="Total Workbooks to load: " + str(numtoload))
     
@@ -92,10 +86,12 @@ def parse_data(frame):
     dfs = []
 
     for file in files:
+
+        file = savepath + "/" + file
         start = time.time()
 
         # Make excel file into a dataframe
-        df = pd.read_excel(resource_path("rawdata")+"/"+file, usecols="A,E,G,H,I", names=["Organization", "State", "Date", "Tag", "Severity"])
+        df = pd.read_excel(file, usecols="A,E,G,H,I", names=["Organization", "State", "Date", "Tag", "Severity"])
         df.insert(5, "Fine", 0)
         df.insert(6, "Url", "")
         
@@ -125,6 +121,11 @@ def parse_data(frame):
     
     # Fix indicies
     result.reset_index(drop=True, inplace=True)
+
+    # Get rid of the rawdata afterwords
+    for file in filenames:
+        os.remove(savepath + "/" + file)
+    os.remove(savepath + "/Raw_Data.zip")
 
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)

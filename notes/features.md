@@ -13,16 +13,16 @@ Features to add:
 ~Being able to click back into an option~
     ~Would reset whatever they chose before~
 
-Add ability to make more sheets
-    Have two buttons, one to go back to Options Page, One to Quit Program
+~Add ability to make more sheets~
+    ~Have two buttons, one to go back to Options Page, One to Quit Program~
 
 Scrape only new info:
     Check to see which organizations have new violations, or if any new organizations or states.
-
-
-    
+    I'm thinking the best way to do this would be to wait until the site gets updated. This way I can see
+    what changes and how to detect those changes to make the scraping more efficient
 
 
 Future to do:
     Put Program Pages each into their own file
     Clean up TerritoriesPage logic
+    Need to delete raw data after we get it 

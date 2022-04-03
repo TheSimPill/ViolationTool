@@ -290,3 +290,15 @@ Thinking of redesigning scrape process as follows:
 
 
 Above is done, scrape still has 17 urls missing which is fine
+
+pyinstaller --noconfirm --onefile --console --name "ViolationTool" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/assets:assets/" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes:dataframes/" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/images:images/" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/rawdata:rawdata/"  "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py"
+
+Can't find rawdata folder - maybe don't use resource_path() ? 
+
+I'm going to try asking user where they want to download the raw data to, then delete it once 
+it's been parsed
+
+New command:
+pyinstaller --noconfirm --onefile --console --name "VioTool" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/assets:assets/" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes:dataframes/" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/images:images/"  "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py"
+
+This one doesn't use a rawdata folder.

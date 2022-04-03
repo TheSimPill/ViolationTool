@@ -99,6 +99,7 @@ class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         PageLayout.__init__(self, parent)
         self.controller = controller
+        self.parent = parent
          
         # Instructions and Buttons
         self.instructions = ttk.Label(self, text="Welcome! Do you want to re-download all data?", font=("Times", 15))
@@ -141,6 +142,17 @@ class StartPage(tk.Frame):
 
 
     def download_and_parse(thisframe, text):
+
+        with TkWait(thisframe.parent, 2000):
+            thisframe.instructions.config(text="Choose where to save the raw data to")
+            thisframe.instructions2.grid_forget()
+            thisframe.instructions3.grid_forget()
+            thisframe.yes_btn.grid_forget()
+            thisframe.no_btn.grid_forget()
+
+        # Will be the path to the raw data
+        savepath = askdirectory()
+
         # Create a custom thread class so that we can update the screen during download
         class thread(threading.Thread):
             def __init__(self, func):
@@ -148,7 +160,7 @@ class StartPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                self.func(thisframe, text)
+                self.func(thisframe, text, savepath)
 
         thread(nhi.download).start()
 
@@ -247,9 +259,9 @@ class WebscrapingPage(tk.Frame):
         
             def run(self):
                 if fresh_scrape:
-                    self.func(thisframe, False, state_df, apikey)
-                else:
                     self.func(thisframe, True, state_df, apikey)
+                else:
+                    self.func(thisframe, False, state_df, apikey)
         
         thread(scraper.scrape_fines).start()
 
