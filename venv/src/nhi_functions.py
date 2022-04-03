@@ -164,6 +164,7 @@ def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territori
     frame.instructions.config(text="Making sheets...")
     frame.instructions2.grid_forget()
     frame.sheet_btn.grid_forget()
+    start_time = time.time()
 
     # Load in tag data 
     with open(resource_path("assets/tag_hash.pkl"), 'rb') as inp:
@@ -464,6 +465,9 @@ def make_sheets(frame, options, state_df, fine_df, startdate, enddate, territori
         df2.to_excel(writer, sheet_name="Descriptions", startrow=len(df1.index)+5, startcol=0)
 
         writer.save()
+        
+        frame.instructions.config(text="Sheets made in " + str(int(time.time() - start_time)) + " seconds")
+        time.sleep(3)
         frame.finish()
 
 # Match up incidents with corresponding fines

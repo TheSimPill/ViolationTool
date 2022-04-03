@@ -302,3 +302,7 @@ New command:
 pyinstaller --noconfirm --onefile --console --name "VioTool" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/assets:assets/" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/dataframes:dataframes/" --add-data "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/images:images/"  "/Users/Freddie/Impruvon/guiwebscraperproject/venv/src/gui.py"
 
 This one doesn't use a rawdata folder.
+
+Inputs for testing:
+    - Cancel on all screens, select all for format, make sheets 
+    - Filtered everything, did select all minus all states, make sheets

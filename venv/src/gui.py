@@ -801,7 +801,7 @@ class DonePage(tk.Frame):
         self.controller = controller
 
         # Instructions
-        self.instructions = ttk.Label(self, text="Sheets made", font=("Times", 15))
+        self.instructions = ttk.Label(self, text="Program finished", font=("Times", 15))
         self.instructions.grid(column=1, row=2, columnspan=3, pady=10)
 
         self.sheet_btn = tk.Button(self, command=lambda:self.exit(), text="Exit Program", font="Times", bg="#000099", fg="#00ace6", height=1, width=30)
