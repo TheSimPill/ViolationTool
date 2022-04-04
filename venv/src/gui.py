@@ -15,6 +15,7 @@ edate = None
 options = None
 fresh_scrape = True
 apikey = ""
+scrape_save_path = ""
 territories = {}
 chosen_tags = []
 
@@ -189,21 +190,26 @@ class WebscrapingChoicePage(tk.Frame):
         with open(nhi.resource_path("assets/lastscrape.pkl"), "rb") as inp:
             lastscrape = pickle.load(inp)
 
-        instructions = ttk.Label(self, text="Did you have an interrupted scraping session?", font=("Times", 15))
+        instructions = ttk.Label(self, text="Do you have partial save data? If yes, choose where save data is located", font=("Times", 15))
         instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        instructions2 = ttk.Label(self, text="Last scrape: {}".format(lastscrape), font=("Times", 15))
+        instructions2 = ttk.Label(self, text="If no, choose where to save scrape data (There will be a lot of files made)", font=("Times", 15))
         instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
+        instructions3= ttk.Label(self, text="Last scrape: {}".format(lastscrape), font=("Times", 15))
+        instructions3.grid(column=1, row=3, columnspan=3, pady=10)
+
         yes_btn = tk.Button(self, text="Yes", command=lambda:self.scrape(False), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        yes_btn.grid(column=1, row=3, pady=10)
+        yes_btn.grid(column=1, row=4, pady=10)
 
         no_btn = tk.Button(self, text="No", command=lambda:self.scrape(True), font="Times", bg="#000099", fg="#00ace6", height=2, width=15)
-        no_btn.grid(column=3, row=3, pady=10)
+        no_btn.grid(column=3, row=4, pady=10)
     
     # If no is chosen -> means a full scrape will be done
     def scrape(self, fresh):
         global fresh_scrape; fresh_scrape = fresh
+        global scrape_save_path; scrape_save_path = askdirectory()
+        
         self.controller.show_frame(KeyPage)
 
 # Page to enter API key before scrape starts
@@ -246,7 +252,7 @@ class WebscrapingPage(tk.Frame):
     
 
     def scrape(thisframe):
-        global state_df, apikey
+        global state_df, apikey, scrape_save_path
         
         # If we skip download when testing:
         with open(nhi.resource_path("dataframes/new/state_df.pkl"), 'rb') as inp:
@@ -259,9 +265,9 @@ class WebscrapingPage(tk.Frame):
         
             def run(self):
                 if fresh_scrape:
-                    self.func(thisframe, True, state_df, apikey)
+                    self.func(thisframe, True, state_df, apikey, scrape_save_path)
                 else:
-                    self.func(thisframe, False, state_df, apikey)
+                    self.func(thisframe, False, state_df, apikey, scrape_save_path)
         
         thread(scraper.scrape_fines).start()
 

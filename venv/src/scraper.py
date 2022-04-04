@@ -1,5 +1,5 @@
 from datetime import datetime
-import random, re, concurrent.futures, time, pickle
+import random, re, concurrent.futures, time, pickle, os
 from bs4 import BeautifulSoup as bs
 import save_load_html as sl
 from nhi_functions import get_proxy
@@ -17,17 +17,17 @@ totalhomes = 0
 curframe = None
 
 # Scrape fines for relevant cases for each state using threads
-def scrape_fines(frame, reparse, state_df, apikey):
+def scrape_fines(frame, reparse, state_df, apikey, scrape_save_path):
     # Allows frame to be updated in different functions without directly passing it in
     global curframe; curframe = frame
-    dir = nhi.resource_path("assets/pages")
+    dir = scrape_save_path
 
     # Hide elements from previous screen
     frame.start_btn.grid_forget()
     frame.instructions.config(text="Starting scrape")
     frame.instructions2.grid_forget()
-    curframe.instructions2 = Label(curframe, text="", font=("Times", 9))
-    curframe.instructions2.grid(column=1, row=2, columnspan=3)
+    frame.instructions2 = Label(curframe, text="", font=("Times", 9))
+    frame.instructions2.grid(column=1, row=2, columnspan=3)
 
     # Loop will break once all scraping is done
     while True:

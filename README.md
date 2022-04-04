@@ -18,6 +18,9 @@ Please follow these steps, as Apple makes it hard to run a random program downlo
 
 For your first time running, the program comes with pre-loaded data. The very first screen of the program will tell you if this data is up to date with Nursing Home Inspect's data. If the program is up to date, there is no need to click yes on the first screen. This will not only take a long time, but is unnecessary.
 
+## But if you do choose to redownload everything...
+You will first be asked for a location to save downloaded raw data to. The raw data will take a few minutes to download. The raw data will then be parsed, and the parsing progress will be shown on the screen. Afterwards, a user will be asked if they have any saved data. This question is relevant only if you have run the scraping part of this application before! If you haven't, click no, and choose a location to save the scraping data to. There will be a LOT of files produced, so an empty folder is preferrable. You may delete the files produced after a full scrape has been run if preferred. If you HAVE run the scraper before and have any save data, click yes, and choose the location of it. Whether you click yes or no, you will need an API key from WebScrapingApi.com. Once entered, you can begin the scrape, which will take a very long time, usually over an hour. The screen will let you know the scraper's progress throughout the process.
+
 
 ## Filter by Territories
 A user is able to dynamically input territories of whatever name they choose. A territory is simply a group of states that the user gets to set. As mentioned above, a user will get one excel sheet per territory that they create. If a user skips this option, the default territories are East, West, and Central. The 52 states are divided amongst these.
