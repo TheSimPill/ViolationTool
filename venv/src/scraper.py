@@ -17,10 +17,10 @@ totalhomes = 0
 curframe = None
 
 # Scrape fines for relevant cases for each state using threads
-def scrape_fines(frame, reparse, state_df, apikey, scrape_save_path):
+def scrape_fines(frame, reparse, state_df, apikey, home_folder_path):
     # Allows frame to be updated in different functions without directly passing it in
     global curframe; curframe = frame
-    dir = scrape_save_path
+    dir = home_folder_path + "scraper_pages"
 
     # Hide elements from previous screen
     frame.start_btn.grid_forget()
@@ -64,7 +64,7 @@ def scrape_fines(frame, reparse, state_df, apikey, scrape_save_path):
 
             # If we get this far, save the date of this scrape
             today = datetime.strftime(datetime.today(), "%m/%d/%Y")
-            with open(nhi.resource_path("assets/lastscrape.pkl"), 'wb') as outp:
+            with open(home_folder_path + "assets/lastscrape.pkl", 'wb') as outp:
                 pickle.dump(today, outp, pickle.HIGHEST_PROTOCOL)
             
             # Initialize Progress Bar
@@ -144,7 +144,7 @@ def scrape_fines(frame, reparse, state_df, apikey, scrape_save_path):
                         states_fines.append(homes_fines)
 
                 # For testing, in case save at end doesn't work
-                with open(nhi.resource_path("dataframes/new/states_fines.pkl"), 'wb') as outp:
+                with open(home_folder_path + "dataframes/new/states_fines.pkl", 'wb') as outp:
                     pickle.dump(states_fines, outp, pickle.HIGHEST_PROTOCOL)
                 
                 # Updates progress bar label and value
@@ -159,7 +159,7 @@ def scrape_fines(frame, reparse, state_df, apikey, scrape_save_path):
             fine_df = pd.DataFrame(states_fines, columns =["State", "Organization", "Date", "Fine", "Url"])
 
             # Save the fine dataframe
-            with open(nhi.resource_path("dataframes/new/fine_df.pkl"), 'wb') as outp:
+            with open(home_folder_path + "dataframes/new/fine_df.pkl", 'wb') as outp:
                 pickle.dump(fine_df, outp, pickle.HIGHEST_PROTOCOL)
             
             # Once all scraping is finished
@@ -167,7 +167,7 @@ def scrape_fines(frame, reparse, state_df, apikey, scrape_save_path):
             curframe.instructions2.grid_forget()
             progress.grid_forget()
             plabel.grid_forget()
-            curframe.instructions.config(text="Saved fines_hash.pkl in dataframes folder")            
+            curframe.instructions.config(text="Saved fines_hash.pkl in dataframes/new folder")            
             frame.advance_page()
             
         # If parsing main page fails for some reason

@@ -306,3 +306,10 @@ This one doesn't use a rawdata folder.
 Inputs for testing:
     - Cancel on all screens, select all for format, make sheets 
     - Filtered everything, did select all minus all states, make sheets
+
+Want to create a folder when a user first opens the program. Then save the state of this.
+Basically, at the start of the program, check if a ViolationTool folder has been created in User folder. If not, do it.
+IF we don't do this, new scrape data will never be saved or updated. Neither will last used dates.
+
+Making new folders programatically works
+State and fine df in saved are up to date 

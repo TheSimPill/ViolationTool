@@ -1,4 +1,3 @@
-from fileinput import filename
 from tkinter import Label
 from tkinter.ttk import Progressbar
 from typing import Dict, List
@@ -7,6 +6,10 @@ import pickle, sys, info, os, time, requests, zipfile, random
 from bs4 import BeautifulSoup as bs
 import pandas as pd
 from datetime import datetime
+
+# This is where all the save data lies
+abs_home = os.path.abspath(os.path.expanduser("~"))
+home_folder_path = abs_home + "/ViolationTool/"
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -19,13 +22,9 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # Download raw data if user says yes
-def download(frame, date, savepath):
+def download(frame, date):
     
     frame.instructions.config(text="Downloading...")
-    frame.instructions2.grid_forget()
-    frame.instructions3.grid_forget()
-    frame.yes_btn.grid_forget()
-    frame.no_btn.grid_forget()
     
     # Try and grab the download url, if not, let the user retry
     try:
@@ -41,32 +40,33 @@ def download(frame, date, savepath):
         frame.instructions.config(text="Download failed: Please try restarting the program")
 
     # Download and save the excel files
+    global home_folder_path
     r = requests.get(url, allow_redirects=True)
-    filepath = resource_path(savepath + "/Raw_Data.zip")
-    open(filepath, 'wb').write(r.content)
+    filepath = home_folder_path + "rawdata"
+    open(filepath + "/Raw_Data.zip", 'wb').write(r.content)
     frame.instructions.config(text="Download Done")
 
     # Unzip the download
-    with zipfile.ZipFile(savepath + "/Raw_Data.zip", 'r') as zip_ref:
+    with zipfile.ZipFile(filepath + "/Raw_Data.zip", 'r') as zip_ref:
         filenames = zip_ref.namelist()
-        zip_ref.extractall(savepath)
+        zip_ref.extractall(filepath)
     frame.instructions.config(text="Unzip Done")
 
     # Save the date of this download
-    with open(resource_path("assets/lastupdate.pkl"), 'wb') as outp:
+    with open(home_folder_path + "assets/lastupdate.pkl", 'wb') as outp:
         pickle.dump(date, outp, pickle.HIGHEST_PROTOCOL)
         print("Saved update date")
 
     # Update screen
     frame.instructions.config(text="Parsing Data")
     time.sleep(5)
-    parse_data(frame, savepath, filenames)
+    parse_data(frame, filenames)
 
 '''
     Cases that took place on the same date at the same facility
     are each counted as their own incident in the excel raw data.
 '''
-def parse_data(frame, savepath, filenames):
+def parse_data(frame, filenames):
     start_time = time.time() 
     files = [file for file in filenames if file.endswith(".xlsx")]
     numtoload = len(files)
@@ -87,7 +87,7 @@ def parse_data(frame, savepath, filenames):
 
     for file in files:
 
-        file = savepath + "/" + file
+        file = home_folder_path + "rawdata/" + file
         start = time.time()
 
         # Make excel file into a dataframe
@@ -124,16 +124,16 @@ def parse_data(frame, savepath, filenames):
 
     # Get rid of the rawdata afterwords
     for file in filenames:
-        os.remove(savepath + "/" + file)
-    os.remove(savepath + "/Raw_Data.zip")
+        os.remove(home_folder_path + "rawdata/" + file)
+    os.remove(home_folder_path + "rawdata/" + "Raw_Data.zip")
 
     frame.instructions.config(text="Parsed Raw Data in " + str(int(time.time() - start_time)) + " seconds")
     time.sleep(2)
     
-    with open(resource_path("dataframes/new/state_df.pkl"), 'wb') as outp:
+    with open(home_folder_path + "dataframes/new/state_df.pkl", 'wb') as outp:
             pickle.dump(result, outp, pickle.HIGHEST_PROTOCOL)
 
-    frame.instructions.config(text="Saved as state_df.pkl in dataframes folder")
+    frame.instructions.config(text="Saved as state_df.pkl in dataframes/new folder")
     time.sleep(2)
     frame.advance_page()
 

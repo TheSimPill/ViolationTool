@@ -2,13 +2,14 @@ from cgitb import text
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
+from turtle import home
 from bs4 import BeautifulSoup as bs
 from PIL import Image, ImageTk
 import pickle, threading, datetime, info, os, requests, re, scraper, shutil
 import nhi_functions as nhi
-from os.path import exists
 
 # Global variables
+home_folder_path = ""
 state_df = None
 sdate = None
 edate = None
@@ -59,13 +60,16 @@ class tkinterApp(tk.Tk):
         self.container.grid_columnconfigure(0, weight = 1)
   
         # Initializing frames to an empty dict so that we can access pages by their name
-        self.frames = {} 
+        self.frames = {}
+
+         # Will create a folder at the User's home folder for this programs data
+        self.setup_savedata()
   
         self.add_frames([StartPage, WebscrapingChoicePage, WebscrapingPage,\
                 OptionsPage, FormatPage, ExcelPage, KeyPage, DonePage])
 
         self.show_frame(StartPage)
-  
+        
     # Shows frame that was passed in as a parameter
     def show_frame(self, cont):
         frame = self.frames[cont]
@@ -77,6 +81,39 @@ class tkinterApp(tk.Tk):
             frame = F(self.container, self)
             self.frames[F] = frame
             frame.grid(row = 0, column = 0, sticky ="nsew")
+
+    # Creates a folder for this program's data
+    def setup_savedata(self):
+        global home_folder_path
+        abs_home = os.path.abspath(os.path.expanduser("~"))
+        home_folder_path = abs_home + "/ViolationTool/"
+
+        # Create all folders if they don't already exist
+        if not os.path.exists(home_folder_path):
+            os.mkdir(home_folder_path)
+        
+        # Make all necessary folders
+        folders = ["assets", "rawdata", "scraper_pages", "dataframes", "dataframes/saved", "dataframes/new"]
+        for folder in folders:
+            if not os.path.exists(home_folder_path + folder):
+                os.mkdir(home_folder_path + folder)
+
+        # Copy programs data into newly made local folder
+        # First copy dataframes
+        dest = home_folder_path + "dataframes/saved/"
+        src = nhi.resource_path("dataframes/saved/")
+        for file in os.listdir(src):
+            source = src + file
+            destination = dest + file
+            shutil.copy(source, destination)
+
+        # Copy assets
+        dest = home_folder_path + "assets/"
+        src = nhi.resource_path("assets/")
+        for file in os.listdir(src):
+            source = src + file
+            destination = dest + file
+            shutil.copy(source, destination)
 
     # Window size for options page
     def resize_optionspage(self):
@@ -107,7 +144,8 @@ class StartPage(tk.Frame):
         self.instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
         instructions2 = "Your save data is from: {}"
-        with open(nhi.resource_path("assets/lastupdate.pkl"), "rb") as inp:
+        global home_folder_path
+        with open(home_folder_path + "assets/lastupdate.pkl", "rb") as inp:
             lastlocalupdate = pickle.load(inp)
 
         self.instructions2 =  ttk.Label(self, text=instructions2.format(lastlocalupdate), font=("Times", 15))
@@ -144,15 +182,10 @@ class StartPage(tk.Frame):
 
     def download_and_parse(thisframe, text):
 
-        with TkWait(thisframe.parent, 2000):
-            thisframe.instructions.config(text="Choose where to save the raw data to")
-            thisframe.instructions2.grid_forget()
-            thisframe.instructions3.grid_forget()
-            thisframe.yes_btn.grid_forget()
-            thisframe.no_btn.grid_forget()
-
-        # Will be the path to the raw data
-        savepath = askdirectory()
+        thisframe.instructions2.grid_forget()
+        thisframe.instructions3.grid_forget()
+        thisframe.yes_btn.grid_forget()
+        thisframe.no_btn.grid_forget()
 
         # Create a custom thread class so that we can update the screen during download
         class thread(threading.Thread):
@@ -161,7 +194,7 @@ class StartPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                self.func(thisframe, text, savepath)
+                self.func(thisframe, text)
 
         thread(nhi.download).start()
 
@@ -174,7 +207,8 @@ class StartPage(tk.Frame):
 
     # Called after excel sheets are parsed and made into state_df
     def advance_page(thisframe):
-        with open(nhi.resource_path("dataframes/new/state_df.pkl"), 'rb') as inp:
+        global home_folder_path
+        with open(home_folder_path + "dataframes/new/state_df.pkl", 'rb') as inp:
             global state_df; state_df = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
@@ -187,7 +221,7 @@ class WebscrapingChoicePage(tk.Frame):
         self.controller = controller
          
         # Instructions, Yes and No buttons
-        with open(nhi.resource_path("assets/lastscrape.pkl"), "rb") as inp:
+        with open(home_folder_path + "assets/lastscrape.pkl", "rb") as inp:
             lastscrape = pickle.load(inp)
 
         instructions = ttk.Label(self, text="Do you have partial save data? If yes, choose where save data is located", font=("Times", 15))
@@ -274,17 +308,10 @@ class WebscrapingPage(tk.Frame):
     # Called after scraper is done
     def advance_page(thisframe):
 
-        # Copy old saved into back ups
-        dest = nhi.resource_path("dataframes/backups/")
-        src = nhi.resource_path("dataframes/saved/")
-        for file in os.listdir(src):
-            source = src + file
-            destination = dest + file
-            shutil.copy(source, destination)
-
         # Copy new dataframes into saved
-        dest = nhi.resource_path("dataframes/saved/")
-        src = nhi.resource_path("dataframes/new/")
+        global home_folder_path
+        dest = home_folder_path + "dataframes/saved/"
+        src = home_folder_path + "dataframes/new/"
         for file in os.listdir(src):
             source = src + file
             destination = dest + file
