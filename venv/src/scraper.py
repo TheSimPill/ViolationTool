@@ -154,7 +154,6 @@ def scrape_fines(frame, reparse, state_df, apikey, home_folder_path):
 
                 # Reset home count for the next state
                 homes = 0
-                break
 
             # Convert fines hash into a data frame once everything is scraped
             fine_df = pd.DataFrame(states_fines, columns =["State", "Organization", "Date", "Fine", "Url"])
@@ -170,7 +169,6 @@ def scrape_fines(frame, reparse, state_df, apikey, home_folder_path):
             plabel.grid_forget()
             curframe.instructions.config(text="Saved fines_hash.pkl in dataframes/new folder")            
             frame.advance_page()
-            break
             
         # If parsing main page fails for some reason
         except AttributeError as e:
@@ -182,7 +180,6 @@ def scrape_fines(frame, reparse, state_df, apikey, home_folder_path):
             reparse = True
             time.sleep(1.5)
         
-        break
         
 # Gets links from a specific states page for facilities that have fines
 def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
