@@ -55,7 +55,6 @@ def download(frame, date):
     # Save the date of this download
     with open(home_folder_path + "assets/lastupdate.pkl", 'wb') as outp:
         pickle.dump(date, outp, pickle.HIGHEST_PROTOCOL)
-        print("Saved update date")
 
     # Update screen
     frame.instructions.config(text="Parsing Data")

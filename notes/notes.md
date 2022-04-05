@@ -313,3 +313,17 @@ IF we don't do this, new scrape data will never be saved or updated. Neither wil
 
 Making new folders programatically works
 State and fine df in saved are up to date 
+
+Backups are same as saved 
+SO imn going to try modifying scraper to do one state and see if everything is saved and copied correctly
+Everything seemed to be working properly
+
+GOing to make exe of whole thing, download, scrape on state, see if ebvertythogn works as expected 
+
+Testing:
+    In executable NOT from drive:
+        Download, no to save data, scrape one state, make sheets √
+        Donwload, yes to save data, scrape one state, make sheets √
+    In executable from drive:
+        Download, no to save data, scrape one state, make sheets √
+        Download, yes to save data, scrape one state, make sheets √

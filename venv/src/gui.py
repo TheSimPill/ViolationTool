@@ -1,8 +1,6 @@
-from cgitb import text
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from tkinter.filedialog import askdirectory
-from turtle import home
 from bs4 import BeautifulSoup as bs
 from PIL import Image, ImageTk
 import pickle, threading, datetime, info, os, requests, re, scraper, shutil
@@ -16,7 +14,6 @@ edate = None
 options = None
 fresh_scrape = True
 apikey = ""
-scrape_save_path = ""
 territories = {}
 chosen_tags = []
 
@@ -98,22 +95,23 @@ class tkinterApp(tk.Tk):
             if not os.path.exists(home_folder_path + folder):
                 os.mkdir(home_folder_path + folder)
 
-        # Copy programs data into newly made local folder
-        # First copy dataframes
-        dest = home_folder_path + "dataframes/saved/"
-        src = nhi.resource_path("dataframes/saved/")
-        for file in os.listdir(src):
-            source = src + file
-            destination = dest + file
-            shutil.copy(source, destination)
-
-        # Copy assets
-        dest = home_folder_path + "assets/"
-        src = nhi.resource_path("assets/")
-        for file in os.listdir(src):
-            source = src + file
-            destination = dest + file
-            shutil.copy(source, destination)
+                # The if statements ensure that if folders already exist, nothing is overwritten
+                # In other words only use default program data if this is the first time the program has been run
+                if folder == "dataframes/saved":
+                    dest = home_folder_path + "dataframes/saved/"
+                    src = nhi.resource_path("dataframes/saved/")
+                    for file in os.listdir(src):
+                        source = src + file
+                        destination = dest + file
+                        shutil.copy(source, destination)
+                
+                elif folder == "assets":
+                    dest = home_folder_path + "assets/"
+                    src = nhi.resource_path("assets/")
+                    for file in os.listdir(src):
+                        source = src + file
+                        destination = dest + file
+                        shutil.copy(source, destination)
 
     # Window size for options page
     def resize_optionspage(self):
@@ -224,10 +222,10 @@ class WebscrapingChoicePage(tk.Frame):
         with open(home_folder_path + "assets/lastscrape.pkl", "rb") as inp:
             lastscrape = pickle.load(inp)
 
-        instructions = ttk.Label(self, text="Do you have partial save data? If yes, choose where save data is located", font=("Times", 15))
+        instructions = ttk.Label(self, text="Did you have an interrupted scrape session?", font=("Times", 15))
         instructions.grid(column=1, row=1, columnspan=3, pady=10)
 
-        instructions2 = ttk.Label(self, text="If no, choose where to save scrape data (There will be a lot of files made)", font=("Times", 15))
+        instructions2 = ttk.Label(self, text="If yes, previous scrape's data will be used to speed up this scrape", font=("Times", 15))
         instructions2.grid(column=1, row=2, columnspan=3, pady=10)
 
         instructions3= ttk.Label(self, text="Last scrape: {}".format(lastscrape), font=("Times", 15))
@@ -242,7 +240,6 @@ class WebscrapingChoicePage(tk.Frame):
     # If no is chosen -> means a full scrape will be done
     def scrape(self, fresh):
         global fresh_scrape; fresh_scrape = fresh
-        global scrape_save_path; scrape_save_path = askdirectory()
         
         self.controller.show_frame(KeyPage)
 
@@ -286,11 +283,11 @@ class WebscrapingPage(tk.Frame):
     
 
     def scrape(thisframe):
-        global state_df, apikey, scrape_save_path
+        global state_df, apikey, fresh_scrape, home_folder_path
         
         # If we skip download when testing:
-        with open(nhi.resource_path("dataframes/new/state_df.pkl"), 'rb') as inp:
-            state_df = pickle.load(inp)
+        #with open(home_folder_path + "dataframes/saved/state_df.pkl", 'rb') as inp:
+        #    state_df = pickle.load(inp)
 
         class thread(threading.Thread):
             def __init__(self, func):
@@ -298,10 +295,7 @@ class WebscrapingPage(tk.Frame):
                 self.func = func
         
             def run(self):
-                if fresh_scrape:
-                    self.func(thisframe, True, state_df, apikey, scrape_save_path)
-                else:
-                    self.func(thisframe, False, state_df, apikey, scrape_save_path)
+                self.func(thisframe, fresh_scrape, state_df, apikey, home_folder_path)
         
         thread(scraper.scrape_fines).start()
 
