@@ -21,7 +21,6 @@ chosen_tags = []
 with open(nhi.resource_path("assets/tag_hash.pkl"), 'rb') as inp:
     tag_hash = pickle.load(inp)
 
-
 class TkWait:
     def __init__(self, master, milliseconds):
         self.duration = milliseconds
@@ -79,6 +78,10 @@ class tkinterApp(tk.Tk):
             self.frames[F] = frame
             frame.grid(row = 0, column = 0, sticky ="nsew")
 
+    # Window size for options page
+    def resize_optionspage(self):
+        self.geometry("500x500")
+
     # Creates a folder for this program's data
     def setup_savedata(self):
         global home_folder_path
@@ -112,10 +115,6 @@ class tkinterApp(tk.Tk):
                         source = src + file
                         destination = dest + file
                         shutil.copy(source, destination)
-
-    # Window size for options page
-    def resize_optionspage(self):
-        self.geometry("500x500")
         
 
 # Default page layout
@@ -179,7 +178,6 @@ class StartPage(tk.Frame):
 
 
     def download_and_parse(thisframe, text):
-
         thisframe.instructions2.grid_forget()
         thisframe.instructions3.grid_forget()
         thisframe.yes_btn.grid_forget()
@@ -205,9 +203,9 @@ class StartPage(tk.Frame):
 
     # Called after excel sheets are parsed and made into state_df
     def advance_page(thisframe):
-        global home_folder_path
+        global home_folder_path, state_df
         with open(home_folder_path + "dataframes/new/state_df.pkl", 'rb') as inp:
-            global state_df; state_df = pickle.load(inp)
+            state_df = pickle.load(inp)
             
         thisframe.controller.show_frame(WebscrapingChoicePage)
 
@@ -240,8 +238,8 @@ class WebscrapingChoicePage(tk.Frame):
     # If no is chosen -> means a full scrape will be done
     def scrape(self, fresh):
         global fresh_scrape; fresh_scrape = fresh
-        
         self.controller.show_frame(KeyPage)
+
 
 # Page to enter API key before scrape starts
 class KeyPage(tk.Frame):
@@ -301,7 +299,6 @@ class WebscrapingPage(tk.Frame):
 
     # Called after scraper is done
     def advance_page(thisframe):
-
         # Copy new dataframes into saved
         global home_folder_path
         dest = home_folder_path + "dataframes/saved/"
@@ -352,7 +349,6 @@ class OptionsPage(tk.Frame):
         option_count += 1 
 
     # Functions to show appropriate screens and disable buttons after press
-
     def show_territories(self):
         self.controller.add_frames([TerritoriesPage]) 
         self.controller.show_frame(TerritoriesPage)
@@ -616,7 +612,6 @@ class TagsPage(tk.Frame):
                 except:        
                     self.rejected_tags += [tag]
                 
-        
         if notags:
             self.instructions.config(text="Please enter at least one valid tag")
             self.instructions2.grid_forget()

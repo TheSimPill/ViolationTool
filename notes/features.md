@@ -22,7 +22,5 @@ Scrape only new info:
     what changes and how to detect those changes to make the scraping more efficient
 
 Future to do:
-    Put Program Pages each into their own file
-    Clean up TerritoriesPage logic
     ~Need to delete raw data after we get it ~
     Need to make sure to talk about folder that is created and how user shouldnt move it

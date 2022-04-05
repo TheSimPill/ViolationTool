@@ -5,12 +5,7 @@ import save_load_html as sl
 from nhi_functions import get_proxy
 from os.path import exists
 from tkinter.ttk import Progressbar, Label
-import nhi_functions as nhi
 import pandas as pd
-# Windows
-# import src.save_load_html as sl
-# from src.nhi_functions import get_proxy
-# import src.nhi_functions as nhi
 
 homes = 0
 totalhomes = 0
@@ -31,15 +26,14 @@ def scrape_fines(frame, reparse, state_df, apikey, home_folder_path):
 
     # Loop will break once all scraping is done
     while True:
-        # Generate a random session number, used for proxies
-        session = random.randint(900, 793293)
+
         # Parameters to use with the requests module
         params = {
         "api_key":apikey,
         "url":"https://projects.propublica.org/nursing-homes/summary",
         "proxy_type":"datacenter",
         "country":"us",
-        "session": str(session)
+        "session": random.randint(900, 90000000)
         }
 
         try:
@@ -172,9 +166,6 @@ def scrape_fines(frame, reparse, state_df, apikey, home_folder_path):
             
         # If parsing main page fails for some reason
         except AttributeError as e:
-            print("Caught Exception at NHI page!" + str(e) + "---------------------------------------")
-            print("Session failed: " + str(params["session"]))
-
             # Generate a new session and reparse
             params["session"] = random.randint(100, 10000000)
             reparse = True
@@ -209,17 +200,13 @@ def get_state_fine_links(reparse, state_params, cur_state, dir, facilities):
         
         # If parsing a state page fails for some reason
         except AttributeError as e:
-            print("Caught Exception at state page!" + str(e) + "---------------------------------------")
-        
             # Generate a new session and reparse
             state_params["session"] = random.randint(100, 10000000)
             reparse = True
     
 # Scrapes a specific facilities page for relevant fines.
 def scrape_facility(args):
-    global homes
-    global totalhomes
-    global curframe
+    global homes, totalhomes, curframe
     retries = 0
 
     while True:
@@ -296,8 +283,5 @@ def scrape_facility(args):
             return home_fines
 
         except AttributeError as e:
-            print("Caught Exception!" + str(e) + "---------------------------------------")
-            print("Params: ", state_params)
-            print("Session failed: " + str(state_params["session"]))
             time.sleep(1.5)
             retries += 1
